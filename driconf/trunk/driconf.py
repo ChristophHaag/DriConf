@@ -33,6 +33,20 @@ class DataPixmap (GtkPixmap):
                                                 data)
         GtkPixmap.__init__ (self, pixmap, mask)
 
+class WrappingCheckButton (GtkCheckButton):
+    def __init__ (self, label, justify=JUSTIFY_LEFT, wrap=TRUE,
+                  width=0, height=0):
+        GtkCheckButton.__init__ (self)
+        checkHBox = GtkHBox()
+        checkLabel = GtkLabel(label)
+        checkLabel.set_justify (justify)
+        checkLabel.set_line_wrap (wrap)
+        checkLabel.set_usize (width, height)
+        checkLabel.show()
+        checkHBox.pack_start (checkLabel, FALSE, FALSE, 0)
+        checkHBox.show()
+        self.add (checkHBox)
+
 class OptionLine:
     def __init__ (self, page, i, opt):
         self.page = page
@@ -41,12 +55,12 @@ class OptionLine:
         if opt.valid:
             typeString = typeString+" ["+ \
                          reduce(lambda x,y: x+','+y, map(str,opt.valid))+"]"
-        self.check = GtkCheckButton (opt.name)
+        self.check = WrappingCheckButton (
+            opt.getDesc([lang]).text.encode(encoding), width=240)
         self.check.set_active (page.app.options.has_key (opt.name))
         self.check.connect ("clicked", self.checkOpt)
-        tooltipString = opt.getDesc([lang]).text + " ("+typeString+")"
+        tooltipString = typeString + " " + opt.name
         page.tooltips.set_tip (self.check, tooltipString.encode(encoding))
-                               
         self.check.show()
         page.table.attach (self.check, 0, 1, i, i+1, EXPAND|FILL, 0, 5, 5)
         if page.app.options.has_key (opt.name):
@@ -60,33 +74,33 @@ class OptionLine:
             value = opt.default
         self.initWidget (opt, value)
         page.table.attach (self.widget, 1, 2, i, i+1, FILL, 0, 5, 5)
+        self.resetButton = GtkButton ()
+        pixmap = DataPixmap (mainWindow, tb_undo_xpm)
+        pixmap.show()
+        self.resetButton.add (pixmap)
+        self.resetButton.set_relief (RELIEF_NONE)
+        self.resetButton.connect ("clicked", self.resetOpt)
+        self.resetButton.show()
+        page.table.attach (self.resetButton, 2, 3, i, i+1, 0, 0, 5, 5)
 
     def initWidget (self, opt, value):
         if opt.type == "bool":
             self.toggleLabel = GtkLabel()
-            if value:
-                self.toggleLabel.set_text ("True")
-            else:
-                self.toggleLabel.set_text ("False")
             self.toggleLabel.show()
             self.widget = GtkToggleButton ()
             self.widget.add (self.toggleLabel)
-            self.widget.set_active (value)
             self.widget.connect ("toggled", self.activateSignal)
-            self.widget.show()
         elif opt.type == "int" and opt.valid and len(opt.valid) == 1:
             adjustment = GtkAdjustment (value, opt.valid[0].start,
                                         opt.valid[0].end, 1, 10)
             self.widget = GtkSpinButton (adjustment, digits=0)
             adjustment.connect ("value_changed", self.activateSignal)
-            self.widget.show()
         elif opt.type == "enum" or \
              (opt.valid and reduce (lambda x,y: x and y,
                                     map(lambda r: r.start==r.end, opt.valid))):
             self.widget = GtkCombo ()
             popdownStrings = []
             desc = opt.getDesc([lang])
-            realValue = None
             self.comboEntries = {}
             for r in opt.valid:
                 for v in range (r.start, r.end+1):
@@ -97,21 +111,40 @@ class OptionLine:
                         string = vString
                     self.comboEntries[string] = vString
                     popdownStrings.append (string)
-                    if v == value:
-                        realValue = string
             self.widget.set_popdown_strings (popdownStrings)
-            self.widget.entry.set_text (realValue)
             self.widget.entry.set_editable (FALSE)
             self.widget.list.connect ("select_child", self.activateSignal)
-            self.widget.show()
         else:
             self.widget = GtkEntry ()
             self.widget.set_text (dri.ValueToStr(value, opt.type))
             self.widget.connect ("activate", self.activateSignal)
-            self.widget.show()
             self.invalidStyle = self.widget.get_style().copy()
             self.invalidStyle.fg[STATE_NORMAL] = \
                     self.widget.get_colormap().alloc(65535, 0, 0)
+        self.updateWidget (value)
+        self.widget.show()
+
+    def updateWidget (self, value):
+        active = self.check.get_active()
+        if self.widget.__class__ == GtkToggleButton:
+            if value:
+                self.toggleLabel.set_text ("True")
+            else:
+                self.toggleLabel.set_text ("False")
+            self.widget.set_active (value)
+        elif self.widget.__class__ == GtkSpinButton:
+            self.widget.set_value (value)
+        elif self.widget.__class__ == GtkCombo:
+            valueStr = str(value)
+            textStr = valueStr
+            for text,val in self.comboEntries.items():
+                if val == valueStr:
+                    textStr = text
+                    break
+            self.widget.entry.set_text (textStr)
+        elif self.widget.__class__ == GtkEntry:
+            self.widget.set_text (str(value))
+        self.check.set_active (active)
 
     def getValue (self):
         if self.widget.__class__ == GtkToggleButton:
@@ -144,6 +177,10 @@ class OptionLine:
         self.check.set_active (TRUE)
         self.checkOpt (widget)
 
+    def resetOpt (self, widget):
+        self.updateWidget (self.opt.default)
+        self.check.set_active (FALSE)
+
     def validate (self):
         if not self.check.get_active():
             return 1
@@ -160,11 +197,11 @@ class SectionPage (GtkScrolledWindow):
     def __init__ (self, optSection, app):
         GtkScrolledWindow.__init__ (self)
         self.set_policy (POLICY_AUTOMATIC, POLICY_AUTOMATIC)
-        self.set_usize (400, 200)
+        self.set_usize (500, 200)
         self.optSection = optSection
         self.app = app
         self.tooltips = GtkTooltips()
-        self.table = GtkTable (len(optSection.optList), 2)
+        self.table = GtkTable (len(optSection.optList), 3)
         self.optLines = []
         for i in range (len(optSection.optList)):
             self.optLines.append (OptionLine (self, i, optSection.optList[i]))
