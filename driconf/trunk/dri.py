@@ -402,7 +402,7 @@ class AppConfig:
 
     def __str__ (self):
         result = '        <application name="' + self.name + '"'
-        if self.executable:
+        if self.executable != None:
             result = result + ' executable="' + self.executable + '">\n'
         else:
             result = result + '>\n'
