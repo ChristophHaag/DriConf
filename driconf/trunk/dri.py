@@ -216,6 +216,14 @@ class OptSection:
         result = result + '    </section>'
         return result
 
+    def validate (self, valDict):
+        """ Validate a dictionary of option values agains this OptSection. """
+        allValid = 1
+        for name,opt in self.options.items():
+            if valDict.has_key (name):
+                allValid = allValid and opt.validate (valDict[name])
+        return allValid
+
     def getDesc (self, preferredLangs):
         return GetDesc (self.desc, preferredLangs)
 
@@ -301,6 +309,13 @@ class DriverInfo:
             result = result + str(sect) + '\n'
         result = result + '</driconf>\n'
         return result
+
+    def validate (self, valDict):
+        """ Validate a dictionary of option values against this DriverInfo. """
+        allValid = 1
+        for optSection in self.optSections:
+            allValid = allValid and optSection.validate (valDict)
+        return allValid
 
 class ScreenInfo:
     """ References a DriverInfo object with the real config info. """
@@ -417,6 +432,24 @@ class DeviceConfig:
             result = result + str(a) + '\n'
         result = result + '    </device>'
         return result
+
+    def getDriver (self, display):
+        """ Get the driver object for this device.
+
+        Throws XMLError if the driver's config info is invalid. """
+        driver = None
+        if self.driver:
+            driver = GetDriver (self.driver)
+        elif self.screen:
+            try:
+                screenNum = int(self.screen)
+            except ValueError:
+                pass
+            else:
+                screen = display.getScreen(screenNum)
+                if screen != None:
+                    driver = screen.driver
+        return driver
 
 class DRIConfig:
     """ Configuration object representing one configuration file. """
