@@ -547,7 +547,6 @@ class UnknownSectionPage(gtk.VBox):
     def editedSignal (self, widget, row, newVal, value):
         row = int(row)
         name = self.opts[row]
-        print "%s(%d): %s" % (name, row, newVal)
         iter = self.store.get_iter_first()
         for i in range(row): iter = self.store.iter_next (iter)
         if value:
