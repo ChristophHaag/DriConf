@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: driconf\n"
 "POT-Creation-Date: Sun Mar 20 03:47:42 2005\n"
-"PO-Revision-Date: 2005-03-20 03:46+0100\n"
+"PO-Revision-Date: 2005-03-20 04:03+0100\n"
 "Last-Translator: Felix Kuehling <fxkuehl@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -128,7 +128,7 @@ msgstr "Neues Gerät"
 
 #: driconf.py:1201
 msgid "The configuration contains invalid entries. Save anyway?"
-msgstr "Die Konfiguration enthält ungültige Einträgt. Trotzdem speichern?"
+msgstr "Die Konfiguration enthält ungültige Einträge. Trotzdem speichern?"
 
 #: driconf.py:1212
 msgid "Can't open \"%s\" for writing."

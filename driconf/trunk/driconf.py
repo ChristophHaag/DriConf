@@ -189,7 +189,7 @@ class SlideSpinner (gtk.VBox):
     def setValue (self, value):
         self.adjustment.disconnect (self.adjConn)
         self.adjustment.set_value (value)
-        self.adjConn = self.adjustment.connect ("value_changed", self.callback)
+        self.adjConn = self.adjustment.connect ("value-changed", self.callback)
 
 class OptionLine:
     """ One line in a SectionPage. """
