@@ -876,16 +876,17 @@ class ConfigTree (GtkCTree):
         except SelectionError:
             return
         type, obj = self.node_get_row_data (node)
+        if type == "app":
+            obj = obj.device
+            type = "device"
         if type == "device":
             dialog = NameDialog ("New Application", self.newAppCallback, "",
                                  obj)
         elif type == "config":
             dialog = DeviceDialog ("New Device", self.newDeviceCallback, obj)
-        else:
-            MessageDialog ("Notice", "Select a configuration file or device.")
 
     def newAppCallback (self, name, device):
-        app = dri.AppConfig (device, name)
+        app = dri.AppConfig (device, name, executable=name)
         device.apps.append (app)
         self.addAppNode (device.node, app)
         app.device.config.modifiedCallback()
@@ -1104,7 +1105,7 @@ class MainWindow (GtkWindow):
         writable = app.device.config.writable
         modified = app.device.config.modified
         self.saveButton  .set_sensitive (writable and modified)
-        self.newButton   .set_sensitive (FALSE)
+        self.newButton   .set_sensitive (writable)
         self.removeButton.set_sensitive (writable)
         self.upButton    .set_sensitive (writable)
         self.downButton  .set_sensitive (writable)
