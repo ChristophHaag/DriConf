@@ -638,10 +638,16 @@ class ConfigTree (GtkCTree):
     def getConfigList (self):
         return self.configList
 
-    def addConfig (self, config):
-        self.configList.append (config)
+    def addConfig (self, config, sibling=None):
+        if sibling != None:
+            index = self.configList.index (sibling)
+            self.configList.insert (index, config)
+            siblingNode = sibling.node
+        else:
+            self.configList.append (config)
+            siblingNode = None
         fileName = str(config.fileName)
-        fileNode = self.insert_node (None, None, [fileName], 0,
+        fileNode = self.insert_node (None, siblingNode, [fileName], 0,
                                      None,None,None,None, FALSE, TRUE)
         config.modified = FALSE
         config.modifiedCallback = self.configModified
@@ -914,6 +920,55 @@ class ConfigTree (GtkCTree):
         file.close()
         config.modifiedCallback(FALSE)
 
+    def reloadConfig (self, widget):
+        self.doReloadConfig ()
+
+    def doReloadConfig (self, reallyReload="dunno"):
+        if reallyReload == "No":
+            return
+        try:
+            node = self.getSelection()
+        except SelectionError:
+            return
+        type, config = self.node_get_row_data (node)
+        if type == "app":
+            config = config.device
+            type = "device"
+        if type == "device":
+            config = config.config
+            type = "config"
+        if reallyReload == "dunno":
+            MessageDialog ("Question",
+                           "Really reload " + config.fileName + " from disk?",
+                           ["Yes", "No"], self.doReloadConfig)
+            return
+        try:
+            cfile = open (config.fileName, "r")
+        except IOError:
+            MessageDialog ("Notice",
+                           "Couldn't open " + config.fileName + " for reading. The file was not reloaded.")
+            return
+        # Try to parse the configuration file.
+        try:
+            newConfig = dri.DRIConfig (cfile)
+        except dri.XMLError, problem:
+            MessageDialog ("Error", "Configuration file \""+config.fileName+
+                           "\" contains errors:\n"+str(problem)+
+                           "\nThe file was not reloaded.")
+            close (cfile)
+            return
+        # Check if the file is writable in the end.
+        newConfig.writable = fileIsWritable (config.fileName)
+        # find the position of config
+        index = self.configList.index (config)
+        if index == len(self.configList)-1:
+            sibling = None
+        else:
+            sibling = self.configList[index+1]
+        self.configList.remove (config)
+        self.remove_node (config.node)
+        self.addConfig (newConfig, sibling)
+
 class MainWindow (GtkWindow):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
     def __init__ (self, configList):
@@ -930,9 +985,14 @@ class MainWindow (GtkWindow):
         DataPixmap.window = self
         self.toolbar = GtkToolbar (ORIENTATION_HORIZONTAL, TOOLBAR_BOTH)
         self.toolbar.set_button_relief (RELIEF_NONE)
+        self.toolbar.set_space_style (TOOLBAR_SPACE_LINE)
         self.saveButton = self.toolbar.append_item (
             "Save", "Save selected configuration file", "priv",
             DataPixmap (tb_save_xpm), self.configTree.saveConfig)
+        self.reloadButton = self.toolbar.append_item (
+            "Reload", "Reload selected configuration file", "priv",
+            DataPixmap (tb_revert_xpm), self.configTree.reloadConfig)
+        self.toolbar.append_space()
         self.newButton = self.toolbar.append_item (
             "New", "Create a new device or application", "priv",
             DataPixmap (tb_new_xpm), self.configTree.newItem)
@@ -948,6 +1008,7 @@ class MainWindow (GtkWindow):
         self.renameButton = self.toolbar.append_item (
             "Rename", "Rename selected application", "priv",
             DataPixmap (tb_edit_xpm), self.configTree.renameApp)
+        self.toolbar.append_space()
         self.exitButton = self.toolbar.append_item (
             "Exit", "Exit DRI configuration", "priv",
             DataPixmap (tb_exit_xpm), self.exitHandler)
