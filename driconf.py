@@ -21,6 +21,13 @@
 import os
 import locale
 import dri
+try:
+    import pygtk
+    # make sure gtk version 1.2 is used.
+    pygtk.require ("1.2")
+except ImportError:
+    # not supported everywhere, so ignore import errors
+    pass
 from gtk import *
 from driconf_xpm import *
 
@@ -838,7 +845,7 @@ class ConfigTree (GtkCTree):
             node = self.getSelection()
         except SelectionError:
             return
-        type, obj = self.node_get_row_data (node)
+        type, app = self.node_get_row_data (node)
         if type != "app":
             return
         dialog = NameDialog ("Rename Application", self.renameCallback,
@@ -1125,7 +1132,7 @@ def main():
     # initialize locale
     global lang, encoding
     locale.setlocale(locale.LC_ALL, '')
-    lang,encoding = locale.getlocale()
+    lang,encoding = locale.getlocale(locale.LC_MESSAGES)
     if lang:
         underscore = lang.find ('_')
         if underscore != -1:
