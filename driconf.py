@@ -365,12 +365,13 @@ class SectionPage (gtk.ScrolledWindow):
                     self.app.device.config.modifiedCallback()
                 self.app.options[name] = value
 
-class UnknownSectionPage(gtk.ScrolledWindow):
+class UnknownSectionPage(gtk.VBox):
     """ Special section page for options unknown to the driver. """
     def __init__ (self, driver, app):
         """ Constructor. """
-        gtk.ScrolledWindow.__init__ (self)
-        self.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        gtk.VBox.__init__ (self)
+        scrolledWindow = gtk.ScrolledWindow ()
+        scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.app = app
         # copy options (dict function does not exist in Python 2.1 :( )
         self.opts = {}
@@ -386,19 +387,19 @@ class UnknownSectionPage(gtk.ScrolledWindow):
             return
         # list all remaining options here
         self.list = gtk.CList(2, ["Option", "Value"])
+        self.list.set_selection_mode (gtk.SELECTION_MULTIPLE)
         for name,val in self.opts.items():
             self.list.append ([str(name),str(val)])
         self.list.set_column_justification (1, gtk.JUSTIFY_RIGHT)
         self.list.columns_autosize()
         self.list.show()
-        self.vbox = gtk.VBox()
-        self.vbox.pack_start (self.list, TRUE, TRUE, 0)
-        self.removeButton = gtk.Button ("Remove")
+        scrolledWindow.add (self.list)
+        scrolledWindow.show()
+        self.pack_start (scrolledWindow, TRUE, TRUE, 0)
+        self.removeButton = gtk.Button (stock="gtk-delete")
         self.removeButton.show()
         self.removeButton.connect ("clicked", self.removeSelection)
-        self.vbox.pack_start (self.removeButton, FALSE, FALSE, 0)
-        self.vbox.show()
-        self.add_with_viewport (self.vbox)
+        self.pack_start (self.removeButton, FALSE, FALSE, 0)
 
     def validate (self):
         """ These options can't be validated. """
@@ -410,7 +411,11 @@ class UnknownSectionPage(gtk.ScrolledWindow):
 
     def removeSelection (self, widget):
         """ Remove the selected items from the list and app config. """
-        for row in self.list.selection:
+        # must delete from back to front. make a copy of selection and sort it
+        selection = self.list.selection[:]
+        selection.sort()
+        selection.reverse()
+        for row in selection:
             name = self.list.get_text (row, 0)
             del self.app.options[name]
             self.list.remove (row)
