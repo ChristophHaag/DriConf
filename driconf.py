@@ -622,11 +622,16 @@ class ConfigTree (GtkCTree):
         self.set_selection_mode (SELECTION_BROWSE)
         self.mainWindow = mainWindow
         self.defaultFg = self.get_style().fg[STATE_NORMAL]
+        self.configs = []
         for config in configList:
             self.addConfig (config)
         self.connect ("select_row", self.selectRowSignal, None)
 
+    def getConfigs (self):
+        return self.configs
+
     def addConfig (self, config):
+        self.configs.append (config)
         fileName = str(config.fileName)
         fileNode = self.insert_node (None, None, [fileName], 0,
                                      None,None,None,None, FALSE, TRUE)
@@ -907,7 +912,7 @@ class MainWindow (GtkWindow):
         GtkWindow.__init__ (self)
         self.set_title ("DRI Configuration")
         self.connect ("destroy", mainquit)
-        self.connect ("delete_event", mainquit)
+        self.connect ("delete_event", self.exitHandler)
         self.vbox = GtkVBox()
         self.paned = GtkHPaned()
         self.configTree = ConfigTree (configList, self)
@@ -937,7 +942,7 @@ class MainWindow (GtkWindow):
             DataPixmap (tb_edit_xpm), self.configTree.renameApp)
         self.exitButton = self.toolbar.append_item (
             "Exit", "Exit DRI configuration", "priv",
-            DataPixmap (tb_exit_xpm), mainquit)
+            DataPixmap (tb_exit_xpm), self.exitHandler)
         self.toolbar.show()
         self.vbox.pack_start (self.toolbar, FALSE, TRUE, 0)
         self.vbox.pack_start (self.paned, TRUE, TRUE, 0)
@@ -1010,6 +1015,26 @@ class MainWindow (GtkWindow):
         self.upButton    .set_sensitive (writable)
         self.downButton  .set_sensitive (writable)
         self.renameButton.set_sensitive (writable)
+
+    def exitHandler (self, widget, event=None):
+        modified = FALSE
+        for config in self.configTree.getConfigs():
+            if config.modified:
+                modified = TRUE
+                break
+        if modified:
+            MessageDialog ("Question",
+                           "There are unsaved modifications. Exit anyway?",
+                           ["Yes", "No"], self.doExit)
+            return TRUE
+        elif event == None:
+            mainquit()
+        else:
+            return FALSE
+
+    def doExit (self, choice):
+        if choice == "Yes":
+            mainquit()
 
 def fileIsWritable(filename):
     """ Find out if a file is writable.
