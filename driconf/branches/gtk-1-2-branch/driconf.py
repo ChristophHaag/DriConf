@@ -248,13 +248,17 @@ class OptionLine:
             desc = opt.getDesc([lang])
             optValList = []
             for r in opt.valid:
-                for v in range (r.start, r.end+1):
-                    vString = dri.ValueToStr(v, type)
-                    if type == "enum" and desc and desc.enums.has_key(v):
-                        string = desc.enums[v].encode(encoding)
-                    else:
-                        string = vString
-                    optValList.append ((string, vString))
+                if type == "enum":
+                    for v in range (r.start, r.end+1):
+                        vString = dri.ValueToStr(v, type)
+                        if type == "enum" and desc and desc.enums.has_key(v):
+                            string = desc.enums[v].encode(encoding)
+                        else:
+                            string = vString
+                        optValList.append ((string, vString))
+                else:
+                    vString = dri.ValueToStr(r.start, type)
+                    optValList.append ((vString, vString))
             self.widget = WrappingOptionMenu (optValList, self.activateSignal,
                                               width=180)
             self.widget.setValue(str(value))
