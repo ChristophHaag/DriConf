@@ -11,17 +11,39 @@ documentation on dri.sf.net.
 
 This tool is written in Python. Before installing make sure that a
 Python version and the matching packages xml.parsers.expat and
-python-gtk are installed. Set the variables PYTHON and PREFIX in
-Makefile according to your system. Then run make install as root. If
-everything goes well you should see something like:
+python-gtk are installed. The installation uses Python's distutils
+package.
 
-Byte compiling dri.py ... done.
-Byte compiling driconf_xpm.py ... done.
-Byte compiling driconf.py ... done.
-Installing dri.pyc to /usr/local/lib/python2.1/site-packages ... done.
-Installing driconf_xpm.pyc to /usr/local/lib/python2.1/site-packages ... done.
-Installing driconf.pyc to /usr/local/lib/python2.1/site-packages ... done.
-Installing driconf to /usr/local/bin ... done.
+By default driconf will be installed into /usr/local/bin and
+/usr/local/lib/python?.?/site-packages. You can change this using the
+prefix option in setup.cfg. For installing run the following command
+as root:
+
+python setup.py install
+
+If everything goes well you should see something like this:
+
+running install
+running build
+running build_py
+creating build
+creating build/lib
+copying dri.py -> build/lib
+copying driconf.py -> build/lib
+copying driconf_xpm.py -> build/lib
+running build_scripts
+creating build/scripts
+copying and adjusting driconf -> build/scripts
+running install_lib
+copying build/lib/driconf.py -> /usr/local/lib/python2.1/site-packages
+copying build/lib/dri.py -> /usr/local/lib/python2.1/site-packages
+copying build/lib/driconf_xpm.py -> /usr/local/lib/python2.1/site-packages
+byte-compiling /usr/local/lib/python2.1/site-packages/driconf.py to driconf.pyc
+byte-compiling /usr/local/lib/python2.1/site-packages/dri.py to dri.pyc
+byte-compiling /usr/local/lib/python2.1/site-packages/driconf_xpm.py to driconf_xpm.pyc
+running install_scripts
+copying build/scripts/driconf -> /usr/local/bin
+changing mode of /usr/local/bin/driconf to 100755
 
 After successful installation you can run driconf from the shell.
 
