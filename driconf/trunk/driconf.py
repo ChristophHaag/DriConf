@@ -29,13 +29,16 @@ import gtk
 from gtk import TRUE, FALSE
 import gobject
 
-# Install translations, fall back to current directory if not found in
-# the default location (for testing).
+# Install translations. Search in the default location and in
+# /usr/local/share/locale and in the current directory. If all this
+# fails fall back to the null translation.
 try:
     _ = gettext.translation ("driconf").ugettext
 except IOError:
-    # If even this fails, fall back to NullTranslation
-    _ = gettext.translation ("driconf", ".", fallback=TRUE).ugettext
+    try:
+        _ = gettext.translation ("driconf", "/usr/local/share/locale").ugettext
+    except IOError:
+        _ = gettext.translation ("driconf", ".", fallback=TRUE).ugettext
 
 # global variable: main window
 mainWindow = None
