@@ -1213,7 +1213,7 @@ class MainWindow (gtk.Window):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
     def __init__ (self, configList):
         gtk.Window.__init__ (self)
-        self.set_title ("DRI Configuration")
+        self.set_title ("DRIconf")
         self.connect ("destroy", lambda dummy: gtk.main_quit())
         self.connect ("delete_event", self.exitHandler)
         self.vbox = gtk.VBox()
@@ -1252,6 +1252,10 @@ class MainWindow (gtk.Window):
         self.renameButton = self.toolbar.append_item (
             "Rename", "Rename selected application", "priv",
             StockImage ("gtk-properties", iconSize), self.configTree.renameApp)
+        self.toolbar.append_space()
+        self.aboutButton = self.toolbar.insert_stock (
+            "gtk-about", "About DRIconf", "priv",
+            self.aboutHandler, None, -1)
         self.toolbar.append_space()
         self.exitButton = self.toolbar.insert_stock (
             "gtk-quit", "Exit DRI configuration", "priv",
@@ -1354,6 +1358,21 @@ class MainWindow (gtk.Window):
         self.upButton    .set_sensitive (writable)
         self.downButton  .set_sensitive (writable)
         self.renameButton.set_sensitive (writable)
+
+    def aboutHandler (self, widget):
+        dialog = gtk.MessageDialog (
+            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
+            gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
+            u"DRIconf 0.2.4\n\
+A configuration GUI for DRI drivers\n\
+Copyright \u00a9 2003-2005  Felix K\u00fchling\n\
+\n\
+License: GNU General Public License version 2\n\
+Website: http://dri.freedesktop.org/wiki/DriConf\n\
+Feedback: dri-users@lists.sourceforge.net")
+        dialog.set_title("About DRIconf")
+        dialog.connect("response", lambda dialog, response: dialog.destroy())
+        dialog.show()
 
     def exitHandler (self, widget, event=None):
         modified = FALSE
