@@ -1,3 +1,14 @@
+driconf-0.2.3: Mon Mar 14 02:13:30 CET 2005
+
+- Added a new widget for float and integer ranges: spin button + slider.
+  (The slider is not shown on small integer ranges.)
+- Usability improvements: Automatically select new nodes. Adjust scrolling
+  of the configuration tree when the selection is changed automatically.
+- Updated README. Added a little help for getting started.
+- Fixed: A bad bug when entry widgets get used.
+- Fixed: Some (not all) deprecation warnings with gtk+ 2.6.
+- Fixed: Saving when a file node was selected in the configuration tree.
+
 driconf-0.2.2: Mon Jan  5 03:51:35 CET 2004
 
 - Fixed a problem with floating point options that specify a list of valid
