@@ -41,6 +41,13 @@ class DataPixmap (gtk.Image):
                                                                  None, data)
         self.set_from_pixmap (pixmap, mask)
 
+class StockImage (gtk.Image):
+    """ A stock image. """
+    def __init__ (self, stock, size=gtk.ICON_SIZE_LARGE_TOOLBAR):
+        """ Constructor. """
+        gtk.Image.__init__ (self)
+        self.set_from_stock (stock, size)
+
 class WrappingCheckButton (gtk.CheckButton):
     """ Check button with a line wrapping label. """
     def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=TRUE,
@@ -150,7 +157,7 @@ class OptionLine:
         # a button to reset the option to its default value
         sensitive = self.check.get_active() and page.app.device.config.writable
         self.resetButton = gtk.Button ()
-        pixmap = DataPixmap (tb_undo_xpm)
+        pixmap = StockImage ("gtk-undo", gtk.ICON_SIZE_SMALL_TOOLBAR)
         pixmap.show()
         self.resetButton.add (pixmap)
         self.resetButton.set_relief (gtk.RELIEF_NONE)
@@ -996,30 +1003,30 @@ class MainWindow (gtk.Window):
         self.toolbar = gtk.Toolbar ()
         self.saveButton = self.toolbar.append_item (
             "Save", "Save selected configuration file", "priv",
-            DataPixmap (tb_save_xpm), self.configTree.saveConfig)
+            StockImage ("gtk-save"), self.configTree.saveConfig)
         self.reloadButton = self.toolbar.append_item (
             "Reload", "Reload selected configuration file", "priv",
-            DataPixmap (tb_revert_xpm), self.configTree.reloadConfig)
+            StockImage ("gtk-revert-to-saved"), self.configTree.reloadConfig)
         self.toolbar.append_space()
         self.newButton = self.toolbar.append_item (
             "New", "Create a new device or application", "priv",
-            DataPixmap (tb_new_xpm), self.configTree.newItem)
+            StockImage ("gtk-new"), self.configTree.newItem)
         self.removeButton = self.toolbar.append_item (
             "Remove", "Remove selected device or application", "priv",
-            DataPixmap (tb_trash_xpm), self.configTree.removeItem)
+            StockImage ("gtk-delete"), self.configTree.removeItem)
         self.upButton = self.toolbar.append_item (
             "Up", "Move selected item up", "priv",
-            DataPixmap (tb_up_arrow_xpm), self.configTree.moveUp)
+            StockImage ("gtk-go-up"), self.configTree.moveUp)
         self.downButton = self.toolbar.append_item (
             "Down", "Move selected item down", "priv",
-            DataPixmap (tb_down_arrow_xpm), self.configTree.moveDown)
+            StockImage ("gtk-go-down"), self.configTree.moveDown)
         self.renameButton = self.toolbar.append_item (
             "Rename", "Rename selected application", "priv",
-            DataPixmap (tb_edit_xpm), self.configTree.renameApp)
+            StockImage ("gtk-properties"), self.configTree.renameApp)
         self.toolbar.append_space()
         self.exitButton = self.toolbar.append_item (
             "Exit", "Exit DRI configuration", "priv",
-            DataPixmap (tb_exit_xpm), self.exitHandler)
+            StockImage ("gtk-quit"), self.exitHandler)
         if len(configList) != 0:
             self.activateConfigButtons (configList[0])
         self.toolbar.show()
