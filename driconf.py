@@ -955,7 +955,8 @@ class ConfigTreeView (gtk.TreeView):
         app = self.model.findFirstWritableApp()
         if app:
             path = self.model.getPathFromNode (app)
-            self.get_selection().select_path(path)
+            self.get_selection().select_path (path)
+            self.scroll_to_cell (path=path, use_align=FALSE)
     def selectionChangedSignal (self, data):
         node = self.getSelection (allowNone=TRUE)
         if not node:
@@ -1038,7 +1039,8 @@ class ConfigTreeView (gtk.TreeView):
         self.model.removeNode (node)
         parent.modified(parent)
         path = self.model.getPathFromNode (parent)
-        self.get_selection().select_path(path)
+        self.get_selection().select_path (path)
+        self.scroll_to_cell (path=path, use_align=FALSE)
     def renameApp (self, widget):
         node = self.getSelection()
         if node.__class__ != dri.AppConfig:
@@ -1152,7 +1154,10 @@ class ConfigTreeView (gtk.TreeView):
                 mainWindow.removeApp (app)
         self.model.removeNode (config)
         self.model.addNode (newConfig, sibling)
-        self.expand_row (self.model.getPathFromNode (newConfig), TRUE)
+        path = self.model.getPathFromNode (newConfig)
+        self.expand_row (path, TRUE)
+        self.get_selection().select_path (path)
+        self.scroll_to_cell (path=path, use_align=FALSE)
 
     # helper function for moving tree nodes around
     def moveItem (self, inc):
@@ -1193,10 +1198,16 @@ class ConfigTreeView (gtk.TreeView):
         if len(device.apps) == 1:
             self.expand_row (self.model.getPathFromNode(device), TRUE)
         device.modified(device)
+        path = self.model.getPathFromNode (app)
+        self.get_selection().select_path (path)
+        self.scroll_to_cell (path=path, use_align=FALSE)
     def newDeviceCallback (self, screen, driver, config):
         device = dri.DeviceConfig (config, screen, driver)
         self.model.addNode (device)
         config.modified(config)
+        path = self.model.getPathFromNode (device)
+        self.get_selection().select_path (path)
+        self.scroll_to_cell (path=path, use_align=FALSE)
 
 class MainWindow (gtk.Window):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
@@ -1465,7 +1476,8 @@ def main():
     # open the main window
     # initSelection must be called before and after mainWindow.show().
     # Before makes sure that the initial window size is correct.
-    # After is needed since the seems to get lost in mainWindow.show().
+    # After is needed since the selection seems to get lost in
+    # mainWindow.show().
     global mainWindow
     mainWindow = MainWindow(configList)
     mainWindow.initSelection()
