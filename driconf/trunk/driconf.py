@@ -1591,7 +1591,7 @@ class MainWindow (gtk.Window):
             u"%s: dri-users@lists.sourceforge.net" % (
             _("A configuration GUI for DRI drivers"),
             _("Translators"), _("Website"), _("Feedback")))
-        dialog.set_title("About DRIconf")
+        dialog.set_title(_("About DRIconf"))
         dialog.connect("response", lambda dialog, response: dialog.destroy())
         dialog.show()
 
