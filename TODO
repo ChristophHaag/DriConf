@@ -6,6 +6,7 @@ X Use different widgets for different option types and valid ranges
 X Handle invalid configuration files read from disk
 o Handle invalid option values in configuration files read from disk
 o Handle xdriinfo and driver problems gracefully
+o Make the user interface more intuitive
 o Reload configuration files
 o Reset individual options to their default value
 o Popup menus in the configuration tree
