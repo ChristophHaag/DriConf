@@ -8,9 +8,9 @@ http://dri.sourceforge.net.
 
 This tool is written in Python. Before installing make sure that a
 Python version and the matching packages xml.parsers.expat and
-python-gtk are installed. Note tht there are now two series of DRIConf
-for gtk-1.2 and gtk-2 respectively. The gtk-1.2 series uses version
-numbers 0.1.xx, the gtk-2 versions are labeled 0.2.xx. The
+python-gtk are installed. Note that there are now two series of
+DRIConf for gtk-1.2 and gtk-2 respectively. The gtk-1.2 series uses
+version numbers 0.1.xx, the gtk-2 versions are labeled 0.2.xx. The
 installation uses Python's distutils package.
 
 By default driconf will be installed into /usr/local/bin and
