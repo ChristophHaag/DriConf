@@ -243,6 +243,7 @@ class MessageDialog (GtkDialog):
                 first = button
         hbox = GtkHBox()
         label = GtkLabel (message)
+        label.set_justify (JUSTIFY_LEFT)
         label.show()
         hbox.pack_start (label, TRUE, TRUE, 20)
         hbox.show()
@@ -353,16 +354,19 @@ class ConfigTree (GtkCTree):
         GtkCTree.__init__ (self, 1, 0)
         self.set_usize (200, 0)
         for config in configList:
-            fileName = str(config.fileName)
-            fileNode = self.insert_node (None, None, [fileName], 0,
-                                         None,None,None,None, FALSE, TRUE)
-            config.node = fileNode
-            self.node_set_row_data (fileNode, ("config", config))
-            for device in config.devices:
-                devNode = self.addDeviceNode (fileNode, device)
-                for app in device.apps:
-                    self.addAppNode (devNode, app)
+            self.addConfig (config)
         self.connect ("select_row", self.selectRowSignal, None)
+
+    def addConfig (self, config):
+        fileName = str(config.fileName)
+        fileNode = self.insert_node (None, None, [fileName], 0,
+                                     None,None,None,None, FALSE, TRUE)
+        config.node = fileNode
+        self.node_set_row_data (fileNode, ("config", config))
+        for device in config.devices:
+            devNode = self.addDeviceNode (fileNode, device)
+            for app in device.apps:
+                self.addAppNode (devNode, app)
 
     def addDeviceNode (self, parent, device):
         if device.screen and device.driver:
@@ -664,6 +668,11 @@ def main():
     global dpy
     dpy = dri.DisplayInfo ()
 
+    # open the main window
+    global mainWindow
+    mainWindow = MainWindow([])
+    mainWindow.show ()
+
     # read configuration files
     fileNameList = ["/etc/drirc", os.environ["HOME"] + "/.drirc"]
     configList = []
@@ -680,14 +689,15 @@ def main():
                 app = dri.AppConfig (device, "all")
                 device.apps.append (app)
                 config.devices.append (device)
-            configList.append (config)
         else:
-            configList.append (dri.DRIConfig (cfile))
-
-    # open the main window
-    global mainWindow
-    mainWindow = MainWindow(configList)
-    mainWindow.show ()
+            try:
+                config = dri.DRIConfig (cfile)
+            except dri.XMLError, problem:
+                MessageDialog ("Error", "Configuration file \""+fileName+\
+                               "\" contains errors: "+str(problem)+"\n"+\
+                               "I will leave the file alone until you fix the problem manually or remove the file.")
+                continue
+        mainWindow.configTree.addConfig (config)
 
     # run
     mainloop()
