@@ -1,9 +1,9 @@
 DRI configuration GUI
 
-This is the first graphical configuration tool for DRI. There probably
-still a lot of work to do and probably many bugs to fix. But I want to
-make it available as soon as possible in order to get more feedback on
-the config-0-0-1-branch in DRI CVS.
+This is the first graphical configuration tool for DRI. There is still
+a lot of work to do and probably many bugs to fix. But I want to make
+it available as soon as possible in order to get more feedback on the
+config-0-0-1-branch in DRI CVS.
 
 In order to use it you need the config-0-0-1-branch from DRI CVS. For
 instructions on downloading and installing CVS branches see the
@@ -12,16 +12,16 @@ documentation on dri.sf.net.
 This tool is written in Python. Before installing make sure that a
 Python version and the matching packages xml.parsers.expat and
 python-gtk are installed. Set the variables PYTHON and PREFIX in
-install.sh according to your system. Then run ./install.sh. If
+Makefile according to your system. Then run make install as root. If
 everything goes well you should see something like:
 
-    Byte compiling dri.py ... done.
-    Byte compiling driconf.py ... done.
-    Byte compiling driconf_tb_icons.py ... done.
-    Installing dri.pyo to /usr/local/lib/python2.1 ... done.
-    Installing driconf.pyo to /usr/local/lib/python2.1 ... done.
-    Installing driconf_tb_icons.pyo to /usr/local/lib/python2.1 ... done.
-    Installing driconf to /usr/local/bin ... done.
+Byte compiling dri.py ... done.
+Byte compiling driconf_xpm.py ... done.
+Byte compiling driconf.py ... done.
+Installing dri.pyc to /usr/local/lib/python2.1/site-packages ... done.
+Installing driconf_xpm.pyc to /usr/local/lib/python2.1/site-packages ... done.
+Installing driconf.pyc to /usr/local/lib/python2.1/site-packages ... done.
+Installing driconf to /usr/local/bin ... done.
 
 After successful installation you can run driconf from the shell.
 
