@@ -47,6 +47,63 @@ class WrappingCheckButton (GtkCheckButton):
         checkHBox.show()
         self.add (checkHBox)
 
+class WrappingOptionMenu (GtkButton):
+    """ Something that looks similar to a GtkOptionMenu ...
+
+    but can wrap the text and has a simpler interface """
+    def __init__ (self, optValList, callback, justify=JUSTIFY_LEFT, wrap=TRUE,
+                  width=0, height=0):
+        GtkButton.__init__ (self)
+        self.callback = callback
+        self.optDict = {}
+        self.valDict = {}
+        for opt,val in optValList:
+            self.optDict[opt] = val
+            self.valDict[val] = opt
+        firstOpt,firstVal = optValList[len(optValList)-1]
+        self.value = firstVal
+        hbox = GtkHBox()
+        arrow = GtkArrow (ARROW_DOWN, SHADOW_OUT)
+        arrow.show()
+        self.label = GtkLabel(firstOpt)
+        self.label.set_justify (justify)
+        self.label.set_line_wrap (wrap)
+        self.label.set_usize (width, height)
+        self.label.show()
+        hbox.pack_start (self.label, TRUE, FALSE, 5)
+        hbox.pack_start (arrow, FALSE, FALSE, 0)
+        hbox.show()
+        self.add (hbox)
+        self.menu = GtkMenu()
+        for opt,val in optValList:
+            item = GtkMenuItem (opt)
+            item.connect("activate", self.menuSelect, opt)
+            item.show()
+            self.menu.append (item)
+        self.connect("event", self.buttonPress)
+
+    def setOpt (self, opt):
+        self.label.set_text (opt)
+        self.value = self.optDict[opt]
+
+    def setValue (self, value):
+        self.label.set_text (self.valDict[value])
+        self.value = value
+
+    def getValue (self):
+        return self.value
+
+    def buttonPress (self, widget, event):
+        if event.type == GDK.BUTTON_PRESS:
+            self.menu.popup(None, None, None, event.button, event.time)
+            return TRUE
+        else:
+            return FALSE
+
+    def menuSelect (self, widget, opt):
+        self.setOpt (opt)
+        self.callback (self)
+
 class OptionLine:
     def __init__ (self, page, i, opt):
         self.page = page
@@ -56,7 +113,7 @@ class OptionLine:
             typeString = typeString+" ["+ \
                          reduce(lambda x,y: x+','+y, map(str,opt.valid))+"]"
         self.check = WrappingCheckButton (
-            opt.getDesc([lang]).text.encode(encoding), width=240)
+            opt.getDesc([lang]).text.encode(encoding), width=200)
         self.check.set_active (page.app.options.has_key (opt.name))
         self.check.connect ("clicked", self.checkOpt)
         tooltipString = typeString + " " + opt.name
@@ -98,10 +155,8 @@ class OptionLine:
         elif opt.type == "enum" or \
              (opt.valid and reduce (lambda x,y: x and y,
                                     map(lambda r: r.start==r.end, opt.valid))):
-            self.widget = GtkCombo ()
-            popdownStrings = []
             desc = opt.getDesc([lang])
-            self.comboEntries = {}
+            optValList = []
             for r in opt.valid:
                 for v in range (r.start, r.end+1):
                     vString = dri.ValueToStr(v, opt.type)
@@ -109,11 +164,9 @@ class OptionLine:
                         string = desc.enums[v].encode(encoding)
                     else:
                         string = vString
-                    self.comboEntries[string] = vString
-                    popdownStrings.append (string)
-            self.widget.set_popdown_strings (popdownStrings)
-            self.widget.entry.set_editable (FALSE)
-            self.widget.list.connect ("select_child", self.activateSignal)
+                    optValList.append ((string, vString))
+            self.widget = WrappingOptionMenu (optValList, self.activateSignal,
+                                              width=180)
         else:
             self.widget = GtkEntry ()
             self.widget.set_text (dri.ValueToStr(value, opt.type))
@@ -134,14 +187,8 @@ class OptionLine:
             self.widget.set_active (value)
         elif self.widget.__class__ == GtkSpinButton:
             self.widget.set_value (value)
-        elif self.widget.__class__ == GtkCombo:
-            valueStr = str(value)
-            textStr = valueStr
-            for text,val in self.comboEntries.items():
-                if val == valueStr:
-                    textStr = text
-                    break
-            self.widget.entry.set_text (textStr)
+        elif self.widget.__class__ == WrappingOptionMenu:
+            return self.widget.setValue(str(value))
         elif self.widget.__class__ == GtkEntry:
             self.widget.set_text (str(value))
         self.check.set_active (active)
@@ -154,8 +201,8 @@ class OptionLine:
                 return "false"
         elif self.widget.__class__ == GtkSpinButton:
             return str(self.widget.get_value_as_int())
-        elif self.widget.__class__ == GtkCombo:
-            return self.comboEntries[self.widget.entry.get_text()]
+        elif self.widget.__class__ == WrappingOptionMenu:
+            return self.widget.getValue()
         elif self.widget.__class__ == GtkEntry:
             return self.widget.get_text()
         else:
