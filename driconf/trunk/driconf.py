@@ -21,12 +21,21 @@
 import os
 import locale
 import math
+import gettext
 import dri
 import pygtk
 pygtk.require ("2.0")
 import gtk
 from gtk import TRUE, FALSE
 import gobject
+
+# Install translations, fall back to current directory if not found in
+# the default location (for testing).
+try:
+    _ = gettext.translation ("driconf").ugettext
+except IOError:
+    # If even this fails, fall back to NullTranslation
+    _ = gettext.translation ("driconf", ".", fallback=TRUE).ugettext
 
 # global variable: main window
 mainWindow = None
@@ -479,9 +488,9 @@ class UnknownSectionPage(gtk.VBox):
         self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING)
         self.view = gtk.TreeView (self.store)
         self.view.set_rules_hint (TRUE)
-        column = gtk.TreeViewColumn ("Option", gtk.CellRendererText(), text=0)
+        column = gtk.TreeViewColumn (_("Option"), gtk.CellRendererText(), text=0)
         self.view.append_column (column)
-        column = gtk.TreeViewColumn ("Value", gtk.CellRendererText(), text=1)
+        column = gtk.TreeViewColumn (_("Value"), gtk.CellRendererText(), text=1)
         self.view.append_column (column)
         self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
         for name,val in self.opts.items():
@@ -523,17 +532,17 @@ class DriverPanel (gtk.Frame):
     """ Panel for driver settings for a specific application. """
     def __init__ (self, driver, app):
         """ Constructor. """
-        gtk.Frame.__init__ (self, "Application: " + app.name)
+        gtk.Frame.__init__ (self, _("Application") + ": " + app.name)
         self.driver = driver
         self.app = app
         tooltips = gtk.Tooltips()
         table = gtk.Table(2, 2)
-        self.execCheck = WrappingCheckButton ("Apply only to this executable")
+        self.execCheck = WrappingCheckButton (_("Apply only to this executable"))
         self.execCheck.set_sensitive (app.device.config.writable)
-        tooltips.set_tip (self.execCheck, "Leave this disabled to configure \
-all applications.\n\
-Beware that some applications or games are just a shell script that starts \
-a real executable with a different name.")
+        tooltips.set_tip (self.execCheck, _(
+            "Leave this disabled to configure all applications.\n"
+            "Beware that some applications or games are just a shell script "
+            "that starts a real executable with a different name."))
         self.execCheck.show()
         table.attach (self.execCheck, 0, 1, 0, 1, 0, 0, 5, 5)
         self.execEntry = gtk.Entry()
@@ -577,7 +586,7 @@ a real executable with a different name.")
                     sectLabel = gtk.Label (desc)
                     labelWidget = sectLabel
             else:
-                sectLabel = gtk.Label ("(no description)")
+                sectLabel = gtk.Label (_("(no description)"))
                 labelWidget = sectLabel
             labelWidget.show()
             notebook.append_page (sectPage, labelWidget)
@@ -586,7 +595,7 @@ a real executable with a different name.")
         unknownPage = UnknownSectionPage (driver, app)
         if len(unknownPage.opts) > 0:
             unknownPage.show()
-            unknownLabel = gtk.Label ("Unknown")
+            unknownLabel = gtk.Label (_("Unknown"))
             unknownLabel.show()
             notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)
@@ -594,7 +603,12 @@ a real executable with a different name.")
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
-                "This application configuration contains options that are not known to the driver. Either you edited your configuration file manually or the driver configuration changed. See the page named \"Unknown\" for details. It is probably safe to remove these options. Otherwise they are left unchanged.")
+                _("This application configuration contains options that are "
+                  "not known to the driver. Either you edited your "
+                  "configuration file manually or the driver configuration "
+                  "changed. See the page named \"Unknown\" for details. It "
+                  "is probably safe to remove these options. Otherwise they "
+                  "are left unchanged."))
             dialog.connect ("response", lambda d,r: d.destroy())
             dialog.show()
         if len(self.sectLabels) > 0:
@@ -667,14 +681,15 @@ class NameDialog (gtk.Dialog):
         self.data = data
         self.connect ("response", self.responseSignal)
         table = gtk.Table(2, 2)
-        commentLabel = gtk.Label ("Enter the name of the application below. \
-This is just a descriptive string. \
-Don't forget to set the executable correctly.")
+        commentLabel = gtk.Label (_(
+            "Enter the name of the application below. This is just a "
+            "descriptive string. Don't forget to set the executable "
+            "correctly."))
         commentLabel.set_line_wrap (TRUE)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
-        label = gtk.Label ("Application Name")
+        label = gtk.Label (_("Application Name"))
         label.show()
         table.attach (label, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
         self.entry = gtk.Entry()
@@ -708,14 +723,15 @@ class DeviceDialog (gtk.Dialog):
         self.data = data
         self.connect ("response", self.responseSignal)
         table = gtk.Table (2, 3)
-        commentLabel = gtk.Label ("Describe the device that you would like to \
-configure. You need to specify an X screen number or a driver name or both. \
-You can pick them from a list or enter them manually.")
+        commentLabel = gtk.Label (_(
+            "Describe the device that you would like to configure. You need "
+            "to specify an X screen number or a driver name or both. You can "
+            "pick them from a list or enter them manually."))
         commentLabel.set_line_wrap (TRUE)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
-        screenLabel = gtk.Label ("Screen Number")
+        screenLabel = gtk.Label (_("Screen Number"))
         screenLabel.show()
         table.attach (screenLabel, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
         self.screenCombo = gtk.Combo()
@@ -726,7 +742,7 @@ You can pick them from a list or enter them manually.")
         self.screenCombo.show()
         table.attach (self.screenCombo, 1, 2, 1, 2,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
-        driverLabel = gtk.Label ("Driver Name")
+        driverLabel = gtk.Label (_("Driver Name"))
         driverLabel.show()
         table.attach (driverLabel, 0, 1, 2, 3, 0, gtk.EXPAND, 10, 5)
         self.driverCombo = gtk.Combo()
@@ -832,13 +848,13 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             if col == 0:
                 return self.deviceIcon
             if node.screen and node.driver:
-                name = "%s @ screen %s" % (node.driver, node.screen)
+                name = _("%s on screen %s") % (node.driver, node.screen)
             elif node.screen:
-                name = "any driver @ screen %s" % node.screen
+                name = _("any driver on screen %s") % node.screen
             elif node.driver:
-                name = "%s @ any screen" % node.driver
+                name = _("%s on any screen") % node.driver
             else:
-                name = "any driver @ any screen"
+                name = _("any driver on any screen")
             return str(name)
         elif node.__class__ == dri.AppConfig:
             if col == 0:
@@ -847,8 +863,6 @@ class ConfigTreeModel (gtk.GenericTreeModel):
                 return '<span foreground="red">' + str(node.name) + '</span>'
             else:
                 return str(node.name)
-        else:
-            return "What's this?"
     def on_iter_next (self, node):
         if node.__class__ == dri.DRIConfig:
             list = self.configList
@@ -1010,10 +1024,7 @@ class ConfigTreeView (gtk.TreeView):
         self.expand_all()
         self.get_selection().set_mode (gtk.SELECTION_BROWSE)
         self.get_selection().connect ("changed", self.selectionChangedSignal)
-        #column = gtk.TreeViewColumn ("ConfigTree", gtk.CellRendererText(),
-        #                             markup=0)
         column = gtk.TreeViewColumn()
-        column.set_title ("ConfigTree")
         renderPixbuf = gtk.CellRendererPixbuf()
         column.pack_start (renderPixbuf, expand=False)
         column.add_attribute (renderPixbuf, "pixbuf", 0)
@@ -1054,7 +1065,7 @@ class ConfigTreeView (gtk.TreeView):
                 dialog = gtk.MessageDialog (
                     mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                     gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                    "Parsing the driver's configuration information: %s" %
+                    _("Parsing the driver's configuration information: %s") %
                     problem)
                 dialog.connect ("response", lambda d,r: d.destroy())
                 dialog.show()
@@ -1063,7 +1074,7 @@ class ConfigTreeView (gtk.TreeView):
                     dialog = gtk.MessageDialog (
                         mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                         gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
-                        "Can't determine the driver for this device.")
+                        _("Can't determine the driver for this device."))
                     dialog.connect ("response", lambda d,r: d.destroy())
                     dialog.show()
         else:
@@ -1100,13 +1111,13 @@ class ConfigTreeView (gtk.TreeView):
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
-                "Really delete application \"%s\"?" % node.name)
+                _("Really delete application \"%s\"?") % node.name)
         elif node.__class__ == dri.DeviceConfig:
             parent = node.config
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
-                "Really delete device and all applications in it?")
+                _("Really delete device and all applications in it?"))
         else:
             # The remove button should be unsensitive.
             assert FALSE
@@ -1128,17 +1139,18 @@ class ConfigTreeView (gtk.TreeView):
         node = self.getSelection()
         if node.__class__ != dri.AppConfig:
             return
-        dialog = NameDialog ("Rename Application", self.renameCallback,
+        dialog = NameDialog (_("Rename Application"), self.renameCallback,
                              node.name, node)
     def newItem (self, widget):
         node = self.getSelection()
         if node.__class__ == dri.AppConfig:
             node = node.device
         if node.__class__ == dri.DeviceConfig:
-            dialog = NameDialog ("New Application", self.newAppCallback, "",
+            dialog = NameDialog (_("New Application"), self.newAppCallback, "",
                                  node)
         elif node.__class__ == dri.DRIConfig:
-            dialog = DeviceDialog ("New Device", self.newDeviceCallback, node)
+            dialog = DeviceDialog (_("New Device"), self.newDeviceCallback,
+                                   node)
     def saveConfig (self, widget):
         node = self.getSelection()
         if node.__class__ == dri.AppConfig:
@@ -1161,7 +1173,7 @@ class ConfigTreeView (gtk.TreeView):
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
-                "The configuration contains invalid entries. Save anyway?")
+                _("The configuration contains invalid entries. Save anyway?"))
             response = dialog.run()
             dialog.destroy()
             if response != gtk.RESPONSE_YES:
@@ -1172,7 +1184,7 @@ class ConfigTreeView (gtk.TreeView):
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                "Can't open \"%s\" for writing." % config.fileName)
+                _("Can't open \"%s\" for writing.") % config.fileName)
             dialog.run()
             dialog.destroy()
             return
@@ -1191,7 +1203,7 @@ class ConfigTreeView (gtk.TreeView):
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
-            "Really reload \"%s\" from disk?" % config.fileName)
+            _("Really reload \"%s\" from disk?") % config.fileName)
         response = dialog.run()
         dialog.destroy()
         if response != gtk.RESPONSE_YES:
@@ -1202,8 +1214,8 @@ class ConfigTreeView (gtk.TreeView):
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                "Couldn't open \"%s\" for reading. The file was not reloaded."%
-                config.fileName)
+                _("Couldn't open \"%s\" for reading. "
+                  "The file was not reloaded.") % config.fileName)
             dialog.run()
             dialog.destroy()
             return
@@ -1214,7 +1226,9 @@ class ConfigTreeView (gtk.TreeView):
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                "Configuration file \"%s\" contains errors:\n%s\nThe file was not reloaded." %
+                _("Configuration file \"%s\" contains errors:\n"
+                  "%s\n"
+                  "The file was not reloaded.") %
                 (config.fileName, str(problem)))
             dialog.run()
             dialog.destroy()
@@ -1312,28 +1326,29 @@ class MainWindow (gtk.Window):
         self.toolbar = gtk.Toolbar ()
         iconSize = self.toolbar.get_icon_size()
         self.saveButton = self.toolbar.insert_stock (
-            "gtk-save", "Save selected configuration file", "priv",
-            self.configTree.saveConfig, None, -1)
+            "gtk-save", _("Save selected configuration file"),
+            "priv", self.configTree.saveConfig, None, -1)
         self.reloadButton = self.toolbar.insert_stock (
-            "gtk-revert-to-saved", "Reload selected configuration file", "priv",
-            self.configTree.reloadConfig, None, -1)
+            "gtk-revert-to-saved", _("Reload selected configuration file"),
+            "priv", self.configTree.reloadConfig, None, -1)
         self.toolbar.append_space()
         self.newButton = self.toolbar.insert_stock (
-            "gtk-new", "Create a new device or application", "priv",
-            self.configTree.newItem, None, -1)
+            "gtk-new", _("Create a new device or application"),
+            "priv", self.configTree.newItem, None, -1)
         self.removeButton = self.toolbar.insert_stock (
-            "gtk-delete", "Remove selected device or application", "priv",
-            self.configTree.removeItem, None, -1)
+            "gtk-delete", _("Remove selected device or application"),
+            "priv", self.configTree.removeItem, None, -1)
         self.upButton = self.toolbar.insert_stock (
-            "gtk-go-up", "Move selected item up", "priv",
-            self.configTree.moveUp, None, -1)
+            "gtk-go-up", _("Move selected item up"),
+            "priv", self.configTree.moveUp, None, -1)
         self.downButton = self.toolbar.insert_stock (
-            "gtk-go-down", "Move selected item down", "priv",
-            self.configTree.moveDown, None, -1)
+            "gtk-go-down", _("Move selected item down"),
+            "priv", self.configTree.moveDown, None, -1)
         # Properties is too general, have to translate the label myself later
         self.renameButton = self.toolbar.append_item (
-            "Rename", "Rename selected application", "priv",
-            StockImage ("gtk-properties", iconSize), self.configTree.renameApp)
+            _("Rename"), _("Rename selected application"),
+            "priv", StockImage ("gtk-properties", iconSize),
+            self.configTree.renameApp)
         self.toolbar.append_space()
         # The gtk-about stock item is available with gtk >= 2.6.
         # It's definitely not available with gtk 2.2. Not sure about 2.4.
@@ -1342,11 +1357,11 @@ class MainWindow (gtk.Window):
         else:
             aboutStock = "gtk-about"
         self.aboutButton = self.toolbar.insert_stock (
-            aboutStock, "About DRIconf", "priv",
+            aboutStock, _("About DRIconf"), "priv",
             self.aboutHandler, None, -1)
         self.toolbar.append_space()
         self.exitButton = self.toolbar.insert_stock (
-            "gtk-quit", "Exit DRIconf", "priv",
+            "gtk-quit", _("Exit DRIconf"), "priv",
             self.exitHandler, None, -1)
         if len(configList) != 0:
             self.activateConfigButtons (configList[0])
@@ -1453,12 +1468,14 @@ class MainWindow (gtk.Window):
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
             gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-            u"DRIconf 0.2.4\n\
-A configuration GUI for DRI drivers\n\
-Copyright \u00a9 2003-2005  Felix K\u00fchling\n\
-\n\
-Website: http://dri.freedesktop.org/wiki/DriConf\n\
-Feedback: dri-users@lists.sourceforge.net")
+            u"DRIconf 0.2.4\n"
+            u"%s\n"
+            u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n"
+            u"\n"
+            u"%s: http://dri.freedesktop.org/wiki/DriConf\n"
+            u"%s: dri-users@lists.sourceforge.net" % (
+            _("A configuration GUI for DRI drivers"),
+            _("Website"), _("Feedback")))
         dialog.set_title("About DRIconf")
         dialog.connect("response", lambda dialog, response: dialog.destroy())
         dialog.show()
@@ -1473,7 +1490,7 @@ Feedback: dri-users@lists.sourceforge.net")
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
                 gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
-                "There are unsaved modifications. Exit anyway?")
+                _("There are unsaved modifications. Exit anyway?"))
             dialog.connect ("response", self.doExit)
             dialog.show()
             return TRUE
@@ -1530,8 +1547,10 @@ def main():
     except dri.XMLError, problem:
         dialog = gtk.MessageDialog (
             None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-            "There are errors in a driver's configuration information:\n%s\nThis should not happen. It probably means that you have to update driconf." %
-            str(problem))
+            _("There are errors in a driver's configuration information:\n"
+              "%s\n"
+              "This should not happen. It probably means that you have to "
+              "update driconf.") % str(problem))
         dialog.run()
         dialog.destroy()
         return
@@ -1571,7 +1590,10 @@ def main():
             except dri.XMLError, problem:
                 dialog = gtk.MessageDialog (
                     None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
-                    "Configuration file \"%s\" contains errors:\n%s\nI will leave the file alone until you fix the problem manually or remove the file." %
+                    _("Configuration file \"%s\" contains errors:\n"
+                      "%s\n"
+                      "I will leave the file alone until you fix the problem "
+                      "manually or remove the file.") %
                     (fileName, str(problem)))
                 dialog.run()
                 dialog.destroy()
@@ -1598,7 +1620,7 @@ def main():
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
-            "Created a new DRI configuration file \"%s\" for you."
+            _("Created a new DRI configuration file \"%s\" for you.")
             % newFiles[0])
         dialog.run()
         dialog.destroy()
@@ -1606,8 +1628,8 @@ def main():
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
-            "Created new configuration files %s for you." %
-            reduce(lambda a, b: str(a) + " and " + str(b),
+            _("Created new DRI configuration files %s for you.") %
+            reduce(lambda a, b: str(a) + ", " + str(b),
                    map (lambda a: "\"%s\"" % str(a), newFiles)))
         dialog.run()
         dialog.destroy()
