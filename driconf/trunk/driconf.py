@@ -682,9 +682,9 @@ class NameDialog (gtk.Dialog):
         self.connect ("response", self.responseSignal)
         table = gtk.Table(2, 2)
         commentLabel = gtk.Label (_(
-            "Enter the name of the application below. This is just a "
-            "descriptive string. Don't forget to set the executable "
-            "correctly."))
+            "Enter the name of the application below. This serves just a "
+            "descriptivion for you. Don't forget to set the executable "
+            "afterwards."))
         commentLabel.set_line_wrap (TRUE)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
@@ -724,9 +724,7 @@ class DeviceDialog (gtk.Dialog):
         self.connect ("response", self.responseSignal)
         table = gtk.Table (2, 3)
         commentLabel = gtk.Label (_(
-            "Describe the device that you would like to configure. You need "
-            "to specify an X screen number or a driver name or both. You can "
-            "pick them from a list or enter them manually."))
+            "Describe the device that you would like to configure."))
         commentLabel.set_line_wrap (TRUE)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
@@ -1550,7 +1548,7 @@ def main():
             _("There are errors in a driver's configuration information:\n"
               "%s\n"
               "This should not happen. It probably means that you have to "
-              "update driconf.") % str(problem))
+              "update DRIconf.") % str(problem))
         dialog.run()
         dialog.destroy()
         return
