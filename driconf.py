@@ -1379,6 +1379,8 @@ class ConfigTreeView (gtk.TreeView):
         iter = self.model.get_iter (path)
         self.model.rows_reordered (path, iter, newOrder)
         parent.modified(parent)
+        path = self.model.getPathFromNode (node)
+        self.scroll_to_cell (path=path, use_align=FALSE)
 
     # callbacks from dialogs
     def renameCallback (self, name, app):
