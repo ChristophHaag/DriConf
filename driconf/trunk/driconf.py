@@ -1368,8 +1368,12 @@ def main():
             configList.append (config)
 
     # open the main window
+    # initSelection must be called before and after mainWindow.show().
+    # Before makes sure that the initial window size is correct.
+    # After is needed since the seems to get lost in mainWindow.show().
     global mainWindow
     mainWindow = MainWindow(configList)
+    mainWindow.initSelection()
     mainWindow.show ()
     mainWindow.initSelection()
 
