@@ -784,10 +784,19 @@ class ConfigTreeModel (gtk.GenericTreeModel):
                                               gtk.ICON_SIZE_MENU, None)
         self.appIcon = widget.render_icon ("gtk-execute",
                                            gtk.ICON_SIZE_MENU, None)
-        deviceIcon = gtk.gdk.pixbuf_new_from_file (findInShared ("device.png"))
-        size = max(self.configIcon.get_width(), self.configIcon.get_height())
-        self.deviceIcon = deviceIcon.scale_simple (size, size,
+        self.unspecIcon = widget.render_icon ("gtk-dialog-question",
+                                              gtk.ICON_SIZE_MENU, None)
+        screenIcon = gtk.gdk.pixbuf_new_from_file (findInShared ("screen.png"))
+        driverIcon = gtk.gdk.pixbuf_new_from_file (findInShared ("card.png"))
+        screenDriverIcon = gtk.gdk.pixbuf_new_from_file (
+            findInShared ("screencard.png"))
+        size = max (self.configIcon.get_width(), self.configIcon.get_height())
+        self.screenIcon = screenIcon.scale_simple (size, size,
                                                    gtk.gdk.INTERP_BILINEAR)
+        self.driverIcon = driverIcon.scale_simple (size, size,
+                                                   gtk.gdk.INTERP_BILINEAR)
+        self.screenDriverIcon = screenDriverIcon.scale_simple (
+            size, size, gtk.gdk.INTERP_BILINEAR)
 
     # implementation of the GenericTreeModel interface
     def on_get_flags (self):
@@ -841,23 +850,30 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         if node.__class__ == dri.DRIConfig:
             if col == 0:
                 return self.configIcon
-            return str(node.fileName)
-        elif node.__class__ == dri.DeviceConfig:
-            if col == 0:
-                return self.deviceIcon
-            if node.screen and node.driver:
-                name = _("%s on screen %s") % (node.driver, node.screen)
-            elif node.screen:
-                name = _("any driver on screen %s") % node.screen
-            elif node.driver:
-                name = _("%s on any screen") % node.driver
             else:
-                name = _("any driver on any screen")
-            return str(name)
+                return str(node.fileName)
+        elif node.__class__ == dri.DeviceConfig:
+            if node.screen and node.driver:
+                name = _("%s on screen %s") % (node.driver.capitalize(),
+                                               node.screen)
+                icon = self.screenDriverIcon
+            elif node.screen:
+                name = _("Screen %s") % node.screen
+                icon = self.screenIcon
+            elif node.driver:
+                name = "%s" % node.driver.capitalize()
+                icon = self.driverIcon
+            else:
+                name = _("Unspecified device")
+                icon = self.unspecIcon
+            if col == 0:
+                return icon
+            else:
+                return str(name)
         elif node.__class__ == dri.AppConfig:
             if col == 0:
                 return self.appIcon
-            if not node.isValid:
+            elif not node.isValid:
                 return '<span foreground="red">' + str(node.name) + '</span>'
             else:
                 return str(node.name)
