@@ -192,10 +192,8 @@ class OptionLine:
         if not valid:
             type = "invalid"
         if type == "bool":
-            self.toggleLabel = gtk.Label()
-            self.toggleLabel.show()
             self.widget = gtk.ToggleButton ()
-            self.widget.add (self.toggleLabel)
+            self.widget.set_use_stock (TRUE)
             # need to set_active here, so that the toggled signal isn't
             # triggered in updateWidget and the config marked as modified.
             self.widget.set_active (value)
@@ -235,9 +233,9 @@ class OptionLine:
         active = self.check.get_active()
         if self.widget.__class__ == gtk.ToggleButton:
             if value:
-                self.toggleLabel.set_text ("Yes")
+                self.widget.set_label ("gtk-yes")
             else:
-                self.toggleLabel.set_text ("No")
+                self.widget.set_label ("gtk-no")
             self.widget.set_active (value)
         elif self.widget.__class__ == gtk.SpinButton:
             self.widget.set_value (value)
@@ -292,9 +290,9 @@ class OptionLine:
         if self.widget.__class__ == gtk.ToggleButton:
             value = self.widget.get_active()
             if value:
-                self.toggleLabel.set_text ("Yes")
+                self.widget.set_label ("gtk-yes")
             else:
-                self.toggleLabel.set_text ("No")
+                self.widget.set_label ("gtk-no")
         self.page.optionModified (self)
 
     def resetOpt (self, widget):
