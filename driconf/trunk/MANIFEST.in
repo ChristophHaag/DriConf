@@ -1,2 +1,5 @@
 include CHANGELOG COPYING TODO
 include driconf setup.cfg
+include card.png screen.png screencard.png drilogo.jpg
+include Makefile
+recursive-include de *.mo
