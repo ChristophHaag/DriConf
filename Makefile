@@ -31,7 +31,7 @@
 # - documentation of the gettext python package
 
 # The set of supported languages. Add languages as needed.
-POS=de.po
+POS=de.po es.po
 
 # Automatically generated list of mo files.
 MOS=$(POS:%.po=%/LC_MESSAGES/driconf.mo)
@@ -43,7 +43,7 @@ mo:
 	@for mo in $(MOS); do \
 		lang=$${mo%%/*}; \
 		echo "Updating $$mo from $$lang.po."; \
-		mkdir -p $(dir $$mo); \
+		mkdir -p $${mo%/*}; \
 		msgfmt -o $$mo $$lang.po; \
 	done
 
@@ -53,7 +53,7 @@ po: $(POS)
 
 # Extract message catalog from driconf.py.
 driconf.pot: driconf.py
-	pygettext -d driconf driconf.py
+	xgettext -L python -o driconf.pot driconf.py
 
 # Create or update a .po file for a specific language.
 %.po: driconf.pot
