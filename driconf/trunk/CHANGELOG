@@ -1,3 +1,12 @@
+driconf-0.0.9: Fri Oct  3 14:21:23 CEST 2003
+- Save button is only sensitive on modified configs.
+- No more annoying message box after saving successfully.
+- Ask before losing changes on exit.
+- Load configuration files before opening the main window.
+- Show a message box if the driver's config info has errors.
+- Make all dialogs transient windows for the main window, improves placement.
+- Fixed: workaround for a segfault in libgtk when deleting application entries.
+
 driconf-0.0.8: Sun Sep 28 12:31:48 CEST 2003
 
 - Added a special section page for options that appear in a configuration file
