@@ -515,38 +515,16 @@ class DriverPanel (gtk.Frame):
         """ Change the application name. """
         self.set_label ("Application: " + self.app.name)
 
-class BasicDialog (gtk.Dialog):
-    """ Base class for NameDialog and DeviceDialog. """
-    def __init__ (self, title, callback):
-        gtk.Dialog.__init__ (self)
-        self.set_transient_for (mainWindow)
-        self.set_title (title)
-        self.callback = callback
-        ok = gtk.Button ("OK")
-        ok.set_flags (gtk.CAN_DEFAULT)
-        ok.connect ("clicked", self.okSignal)
-        ok.show()
-        self.action_area.pack_start (ok, TRUE, FALSE, 10)
-        cancel = gtk.Button ("Cancel")
-        cancel.set_flags (gtk.CAN_DEFAULT)
-        cancel.connect ("clicked", self.cancelSignal)
-        cancel.show()
-        self.action_area.pack_start (cancel, TRUE, FALSE, 10)
-        ok.grab_default()
-        self.set_modal (TRUE)
-
-    def okSignal (self, widget):
-        self.callback()
-        self.destroy()
-
-    def cancelSignal (self, widget):
-        self.destroy()
-
-class NameDialog (BasicDialog):
+class NameDialog (gtk.Dialog):
     """ Dialog for setting the name of an application. """
     def __init__ (self, title, callback, name, data):
-        BasicDialog.__init__ (self, title, callback)
+        gtk.Dialog.__init__ (self, title, mainWindow,
+                             gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
+                             (gtk.STOCK_OK, gtk.RESPONSE_OK,
+                              gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+        self.callback = callback
         self.data = data
+        self.connect ("response", self.responseSignal)
         hbox = gtk.HBox()
         label = gtk.Label ("Name:")
         label.show()
@@ -554,7 +532,7 @@ class NameDialog (BasicDialog):
         self.entry = gtk.Entry()
         self.entry.set_text (name)
         self.entry.select_region (0, len(name))
-        self.entry.connect ("activate", self.okSignal)
+        self.entry.connect ("activate", self.activateSignal)
         self.entry.show()
         hbox.pack_start (self.entry, TRUE, TRUE, 10)
         hbox.show()
@@ -562,15 +540,24 @@ class NameDialog (BasicDialog):
         self.show()
         self.entry.grab_focus()
 
-    def okSignal (self, widget):
-        self.callback (self.entry.get_text(), self.data)
+    def activateSignal (self, widget):
+        self.response (gtk.RESPONSE_OK)
+
+    def responseSignal (self, dialog, response):
+        if response == gtk.RESPONSE_OK:
+            self.callback (self.entry.get_text(), self.data)
         self.destroy()
 
-class DeviceDialog (BasicDialog):
+class DeviceDialog (gtk.Dialog):
     """ Dialog for choosing driver and screen of a device. """
     def __init__ (self, title, callback, data):
-        BasicDialog.__init__ (self, title, callback)
+        gtk.Dialog.__init__ (self, title, mainWindow,
+                             gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
+                             (gtk.STOCK_OK, gtk.RESPONSE_OK,
+                              gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+        self.callback = callback
         self.data = data
+        self.connect ("response", self.responseSignal)
         table = gtk.Table (2, 2)
         screenLabel = gtk.Label ("Screen:")
         screenLabel.show()
@@ -608,9 +595,10 @@ class DeviceDialog (BasicDialog):
                 driver = screen.driver
                 self.driverCombo.entry.set_text (str(driver.name))
 
-    def okSignal (self, widget):
-        self.callback (self.screenCombo.entry.get_text(),
-                       self.driverCombo.entry.get_text(), self.data)
+    def responseSignal (self, dialog, response):
+        if response == gtk.RESPONSE_OK:
+            self.callback (self.screenCombo.entry.get_text(),
+                           self.driverCombo.entry.get_text(), self.data)
         self.destroy()
 
 class ConfigTree (gtk.CTree):
