@@ -25,10 +25,11 @@ from gtk import *
 from driconf_xpm import *
 
 class DataPixmap (GtkPixmap):
-    def __init__ (self, window, data):
-        window.realize()
-        style = window.get_style()
-        pixmap, mask = create_pixmap_from_xpm_d(window.get_window(),
+    window = None
+    def __init__ (self, data):
+        DataPixmap.window.realize()
+        style = DataPixmap.window.get_style()
+        pixmap, mask = create_pixmap_from_xpm_d(DataPixmap.window.get_window(),
                                                 style.bg[STATE_NORMAL],
                                                 data)
         GtkPixmap.__init__ (self, pixmap, mask)
@@ -112,14 +113,28 @@ class OptionLine:
         if opt.valid:
             typeString = typeString+" ["+ \
                          reduce(lambda x,y: x+','+y, map(str,opt.valid))+"]"
+        # a check button with an option description
         self.check = WrappingCheckButton (
             opt.getDesc([lang]).text.encode(encoding), width=200)
         self.check.set_active (page.app.options.has_key (opt.name))
+        self.check.set_sensitive (page.app.device.config.writable)
         self.check.connect ("clicked", self.checkOpt)
         tooltipString = str(opt)
         page.tooltips.set_tip (self.check, tooltipString.encode(encoding))
         self.check.show()
         page.table.attach (self.check, 0, 1, i, i+1, EXPAND|FILL, 0, 5, 5)
+        # a button to reset the option to its default value
+        sensitive = self.check.get_active() and page.app.device.config.writable
+        self.resetButton = GtkButton ()
+        pixmap = DataPixmap (tb_undo_xpm)
+        pixmap.show()
+        self.resetButton.add (pixmap)
+        self.resetButton.set_relief (RELIEF_NONE)
+        self.resetButton.set_sensitive (sensitive)
+        self.resetButton.connect ("clicked", self.resetOpt)
+        self.resetButton.show()
+        page.table.attach (self.resetButton, 2, 3, i, i+1, 0, 0, 5, 5)
+        # the widget for editing the option value
         if page.app.options.has_key (opt.name):
             try: 
                 value = dri.StrToValue (page.app.options[opt.name], opt.type)
@@ -130,16 +145,8 @@ class OptionLine:
         if value == None:
             value = opt.default
         self.initWidget (opt, value)
-        self.widget.set_sensitive (self.check.get_active())
+        self.widget.set_sensitive (sensitive)
         page.table.attach (self.widget, 1, 2, i, i+1, FILL, 0, 5, 5)
-        self.resetButton = GtkButton ()
-        pixmap = DataPixmap (mainWindow, tb_undo_xpm)
-        pixmap.show()
-        self.resetButton.add (pixmap)
-        self.resetButton.set_relief (RELIEF_NONE)
-        self.resetButton.connect ("clicked", self.resetOpt)
-        self.resetButton.show()
-        page.table.attach (self.resetButton, 2, 3, i, i+1, 0, 0, 5, 5)
 
     def initWidget (self, opt, value):
         if opt.type == "bool":
@@ -212,9 +219,11 @@ class OptionLine:
     def checkOpt (self, widget):
         if self.check.get_active():
             self.widget.set_sensitive (TRUE)
+            self.resetButton.set_sensitive (TRUE)
             self.page.checkOpt (self.opt, self.getValue())
         else:
             self.widget.set_sensitive (FALSE)
+            self.resetButton.set_sensitive (FALSE)
             self.page.checkOpt (self.opt, None)
 
     def activateSignal (self, widget, dummy=None):
@@ -224,7 +233,6 @@ class OptionLine:
                 self.toggleLabel.set_text ("True")
             else:
                 self.toggleLabel.set_text ("False")
-        self.check.set_active (TRUE)
         self.checkOpt (widget)
 
     def resetOpt (self, widget):
@@ -346,6 +354,7 @@ class MessageDialog (GtkDialog):
         hbox = GtkHBox()
         label = GtkLabel (message)
         label.set_justify (JUSTIFY_LEFT)
+        label.set_line_wrap (TRUE)
         label.show()
         hbox.pack_start (label, TRUE, TRUE, 20)
         hbox.show()
@@ -452,10 +461,11 @@ class DeviceDialog (BasicDialog):
         self.destroy()
 
 class ConfigTree (GtkCTree):
-    def __init__ (self, configList):
+    def __init__ (self, configList, mainWindow):
         GtkCTree.__init__ (self, 1, 0)
         self.set_usize (200, 0)
         self.set_selection_mode (SELECTION_BROWSE)
+        self.mainWindow = mainWindow
         for config in configList:
             self.addConfig (config)
         self.connect ("select_row", self.selectRowSignal, None)
@@ -518,16 +528,16 @@ class ConfigTree (GtkCTree):
         else:
             driver = None
             app = None
-        if mainWindow.commitDriverPanel():
-            mainWindow.switchDriverPanel (driver, app)
+        if self.mainWindow.commitDriverPanel():
+            self.mainWindow.switchDriverPanel (driver, app)
             if type == "config":
-                mainWindow.activateConfigButtons()
+                self.mainWindow.activateConfigButtons(obj.writable)
             elif type == "device":
-                mainWindow.activateDeviceButtons()
+                self.mainWindow.activateDeviceButtons(obj.config.writable)
             elif type == "app":
-                mainWindow.activateAppButtons()
+                self.mainWindow.activateAppButtons(obj.device.config.writable)
         else:
-            self.select (mainWindow.curDriverPanel.app.node)
+            self.select (self.mainWindow.curDriverPanel.app.node)
 
     def moveItem (self, inc):
         if len(self.selection) == 0:
@@ -603,10 +613,10 @@ class ConfigTree (GtkCTree):
         siblings.remove (obj)
         self.remove_node (node)
         if type == "app":
-            mainWindow.removeApp (obj)
+            self.mainWindow.removeApp (obj)
         elif type == "device":
             for app in obj.apps:
-                mainWindow.removeApp (app)
+                self.mainWindow.removeApp (app)
 
     def renameApp (self, widget):
         if len(self.selection) == 0:
@@ -624,7 +634,7 @@ class ConfigTree (GtkCTree):
     def renameCallback (self, name, app):
         app.name = name
         self.node_set_text (app.node, 0, name)
-        mainWindow.renameApp (app)
+        self.mainWindow.renameApp (app)
 
     def newItem (self, widget):
         if len(self.selection) == 0:
@@ -662,16 +672,19 @@ class ConfigTree (GtkCTree):
             return
         node = self.selection[0]
         type, config = self.node_get_row_data (node)
-        if type != "config":
-            MessageDialog ("Notice", "Select a configuration file.")
-            return
+        if type == "app":
+            config = config.device
+            type = "device"
+        if type == "device":
+            config = config.config
+            type = "config"
         try:
             file = open (config.fileName, "w")
         except IOError:
             MessageDialog ("Error",
                            "Can't open \""+config.fileName+"\" for writing.")
             return
-        valid = mainWindow.commitDriverPanel()
+        valid = self.mainWindow.commitDriverPanel()
         file.write (str(config))
         file.close()
         if valid:
@@ -689,41 +702,41 @@ class MainWindow (GtkWindow):
         self.connect ("delete_event", mainquit)
         self.vbox = GtkVBox()
         self.paned = GtkHPaned()
-        self.configTree = ConfigTree (configList)
+        self.configTree = ConfigTree (configList, self)
         self.configTree.show()
         self.paned.add1(self.configTree)
         self.paned.show()
+        DataPixmap.window = self
         self.toolbar = GtkToolbar (ORIENTATION_HORIZONTAL, TOOLBAR_BOTH)
         self.toolbar.set_button_relief (RELIEF_NONE)
         self.saveButton = self.toolbar.append_item (
             "Save", "Save selected configuration file", "priv",
-            DataPixmap (self, tb_save_xpm), self.configTree.saveConfig)
+            DataPixmap (tb_save_xpm), self.configTree.saveConfig)
         self.newButton = self.toolbar.append_item (
             "New", "Create a new device or application", "priv",
-            DataPixmap (self, tb_new_xpm), self.configTree.newItem)
+            DataPixmap (tb_new_xpm), self.configTree.newItem)
         self.removeButton = self.toolbar.append_item (
             "Remove", "Remove selected device or application", "priv",
-            DataPixmap (self, tb_trash_xpm), self.configTree.removeItem)
+            DataPixmap (tb_trash_xpm), self.configTree.removeItem)
         self.upButton = self.toolbar.append_item (
             "Up", "Move selected item up", "priv",
-            DataPixmap (self, tb_up_arrow_xpm), self.configTree.moveUp)
+            DataPixmap (tb_up_arrow_xpm), self.configTree.moveUp)
         self.downButton = self.toolbar.append_item (
             "Down", "Move selected item down", "priv",
-            DataPixmap (self, tb_down_arrow_xpm), self.configTree.moveDown)
+            DataPixmap (tb_down_arrow_xpm), self.configTree.moveDown)
         self.renameButton = self.toolbar.append_item (
             "Rename", "Rename selected application", "priv",
-            DataPixmap (self, tb_edit_xpm), self.configTree.renameApp)
+            DataPixmap (tb_edit_xpm), self.configTree.renameApp)
         self.exitButton = self.toolbar.append_item (
             "Exit", "Exit DRI configuration", "priv",
-            DataPixmap (self, tb_exit_xpm), mainquit)
-        self.activateConfigButtons()
+            DataPixmap (tb_exit_xpm), mainquit)
         self.toolbar.show()
         self.vbox.pack_start (self.toolbar, FALSE, TRUE, 0)
         self.vbox.pack_start (self.paned, TRUE, TRUE, 0)
         self.vbox.show()
         self.add (self.vbox)
         self.curDriverPanel = None
-        self.logo = DataPixmap (self, drilogo_xpm)
+        self.logo = DataPixmap (drilogo_xpm)
         self.logo.show()
         self.paned.add2 (self.logo)
 
@@ -761,29 +774,43 @@ class MainWindow (GtkWindow):
         if self.curDriverPanel != None and self.curDriverPanel.app == app:
             self.curDriverPanel.renameApp()
 
-    def activateConfigButtons (self):
-        self.saveButton  .set_sensitive (TRUE)
-        self.newButton   .set_sensitive (TRUE)
+    def activateConfigButtons (self, writable):
+        self.saveButton  .set_sensitive (writable)
+        self.newButton   .set_sensitive (writable)
         self.removeButton.set_sensitive (FALSE)
         self.upButton    .set_sensitive (FALSE)
         self.downButton  .set_sensitive (FALSE)
         self.renameButton.set_sensitive (FALSE)
 
-    def activateDeviceButtons (self):
-        self.saveButton  .set_sensitive (FALSE)
-        self.newButton   .set_sensitive (TRUE)
-        self.removeButton.set_sensitive (TRUE)
-        self.upButton    .set_sensitive (TRUE)
-        self.downButton  .set_sensitive (TRUE)
+    def activateDeviceButtons (self, writable):
+        self.saveButton  .set_sensitive (writable)
+        self.newButton   .set_sensitive (writable)
+        self.removeButton.set_sensitive (writable)
+        self.upButton    .set_sensitive (writable)
+        self.downButton  .set_sensitive (writable)
         self.renameButton.set_sensitive (FALSE)
 
-    def activateAppButtons (self):
-        self.saveButton  .set_sensitive (FALSE)
+    def activateAppButtons (self, writable):
+        self.saveButton  .set_sensitive (writable)
         self.newButton   .set_sensitive (FALSE)
-        self.removeButton.set_sensitive (TRUE)
-        self.upButton    .set_sensitive (TRUE)
-        self.downButton  .set_sensitive (TRUE)
-        self.renameButton.set_sensitive (TRUE)
+        self.removeButton.set_sensitive (writable)
+        self.upButton    .set_sensitive (writable)
+        self.downButton  .set_sensitive (writable)
+        self.renameButton.set_sensitive (writable)
+
+def fileIsWritable(filename):
+    """ Find out if a file is writable.
+
+    Returns 1 for existing writable files, 0 otherwise. """
+    try:
+        fd = os.open (filename, os.O_WRONLY)
+    except OSError:
+        return 0
+    if fd == -1:
+        return 0
+    else:
+        os.close (fd)
+        return 1
 
 def main():
     # initialize locale
@@ -809,18 +836,20 @@ def main():
         return
 
     # open the main window
-    global mainWindow
     mainWindow = MainWindow([])
     mainWindow.show ()
 
     # read configuration files
     fileNameList = ["/etc/drirc", os.environ["HOME"] + "/.drirc"]
-    configList = []
+    first = 1
+    newFiles = []
     for fileName in fileNameList:
         try:
             cfile = open (fileName, "r")
         except IOError:
+            # Make a default configuration file.
             config = dri.DRIConfig (None, fileName)
+            config.writable = 1
             for screen in dpy.screens:
                 if screen == None:
                     continue
@@ -829,7 +858,17 @@ def main():
                 app = dri.AppConfig (device, "all")
                 device.apps.append (app)
                 config.devices.append (device)
+            # Try to write the new file. If it fails, don't add this config.
+            try:
+                file = open (config.fileName, "w")
+            except IOError:
+                config = None
+            else:
+                file.write (str(config))
+                file.close()
+                newFiles.append (fileName)
         else:
+            # Try to parse the configuration file.
             try:
                 config = dri.DRIConfig (cfile)
             except dri.XMLError, problem:
@@ -837,7 +876,22 @@ def main():
                                "\" contains errors: "+str(problem)+"\n"+\
                                "I will leave the file alone until you fix the problem manually or remove the file.")
                 continue
-        mainWindow.configTree.addConfig (config)
+            else:
+                # Check if the file is writable in the end.
+                config.writable = fileIsWritable (fileName)
+        if config:
+            mainWindow.configTree.addConfig (config)
+            if first:
+                mainWindow.activateConfigButtons (config.writable)
+                first = 0
+
+    if len(newFiles) == 1:
+        MessageDialog ("Notice", "Created a new DRI configuration file " +
+                       newFiles[0] + " for you.")
+    elif len(newFiles) > 1:
+        MessageDialog ("Notice", "Created new configuration files " +
+                       reduce(lambda a, b: str(a) + " and " + str(b), newFiles)
+                       + " for you.")
 
     # run
     mainloop()
