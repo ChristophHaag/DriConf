@@ -521,9 +521,13 @@ class DriverPanel (gtk.Frame):
         gtk.Frame.__init__ (self, "Application: " + app.name)
         self.driver = driver
         self.app = app
+        tooltips = gtk.Tooltips()
         table = gtk.Table(2, 2)
         self.execCheck = WrappingCheckButton ("Executable")
         self.execCheck.set_sensitive (app.device.config.writable)
+        tooltips.set_tip (self.execCheck, "Name of the executable. \
+Beware that some applications or games are just a shell script that starts \
+a real executable with a different name.")
         self.execCheck.show()
         table.attach (self.execCheck, 0, 1, 0, 1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
         self.execEntry = gtk.Entry()
@@ -545,11 +549,24 @@ class DriverPanel (gtk.Frame):
             sectPage.show()
             desc = sect.getDesc([lang])
             if desc:
-                sectLabel = gtk.Label (desc)
+                if len(desc) > 30:
+                    # Truncate long section descriptions and add a
+                    # tooltip with the full description.
+                    # Eek: need an event box since tooltips don't work
+                    # on labels.
+                    labelWidget = gtk.EventBox()
+                    tooltips.set_tip (labelWidget, desc)
+                    sectLabel = gtk.Label (desc[0:26] + "...")
+                    sectLabel.show()
+                    labelWidget.add (sectLabel)
+                else:
+                    sectLabel = gtk.Label (desc)
+                    labelWidget = sectLabel
             else:
                 sectLabel = gtk.Label ("(no description)")
-            sectLabel.show()
-            notebook.append_page (sectPage, sectLabel)
+                labelWidget = sectLabel
+            labelWidget.show()
+            notebook.append_page (sectPage, labelWidget)
             self.sectPages.append (sectPage)
             self.sectLabels.append (sectLabel)
         unknownPage = UnknownSectionPage (driver, app)
