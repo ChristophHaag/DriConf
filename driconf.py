@@ -825,6 +825,11 @@ class DeviceDialog (gtk.Dialog):
         self.driverCombo.show()
         table.attach (self.driverCombo, 1, 2, 2, 3,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+        if data and data.__class__ == dri.DeviceConfig:
+            if data.screen:
+                self.screenCombo.entry.set_text (data.screen)
+            if data.driver:
+                self.driverCombo.entry.set_text (data.driver)
         table.show()
         self.vbox.pack_start (table, TRUE, TRUE, 5)
         self.show()
@@ -1229,12 +1234,14 @@ class ConfigTreeView (gtk.TreeView):
         path = self.model.getPathFromNode (parent)
         self.get_selection().select_path (path)
         self.scroll_to_cell (path=path, use_align=FALSE)
-    def renameApp (self, widget):
+    def properties (self, widget):
         node = self.getSelection()
-        if node.__class__ != dri.AppConfig:
-            return
-        dialog = NameDialog (_("Rename Application"), self.renameCallback,
-                             node.name, node)
+        if node.__class__ == dri.AppConfig:
+            dialog = NameDialog (_("Rename Application"),
+                                 self.renameCallback, node.name, node)
+        else:
+            dialog = DeviceDialog (_("Device Properties"),
+                                   self.propertiesCallback, node)
     def newItem (self, widget):
         node = self.getSelection()
         if node.__class__ == dri.AppConfig:
@@ -1383,6 +1390,13 @@ class ConfigTreeView (gtk.TreeView):
         self.model.row_changed (path, iter)
         mainWindow.renameApp (app)
         app.modified(app)
+    def propertiesCallback (self, screen, driver, device):
+        device.screen = screen
+        device.driver = driver
+        path = self.model.getPathFromNode (device)
+        iter = self.model.get_iter (path)
+        self.model.row_changed (path, iter)
+        device.modified(device)
     def newAppCallback (self, name, device):
         app = dri.AppConfig (device, name)
         self.model.addNode (app)
@@ -1438,11 +1452,9 @@ class MainWindow (gtk.Window):
         self.downButton = self.toolbar.insert_stock (
             "gtk-go-down", _("Move selected item down"),
             "priv", self.configTree.moveDown, None, -1)
-        # Properties is too general, have to translate the label myself later
-        self.renameButton = self.toolbar.append_item (
-            _("Rename"), _("Rename selected application"),
-            "priv", StockImage ("gtk-properties", iconSize),
-            self.configTree.renameApp)
+        self.propertiesButton = self.toolbar.insert_stock (
+            "gtk-properties", _("Properties of selected device or application"),
+            "priv", self.configTree.properties, None, -1)
         self.toolbar.append_space()
         # The gtk-about stock item is available with gtk >= 2.6.
         # It's definitely not available with gtk 2.2. Not sure about 2.4.
@@ -1519,46 +1531,46 @@ class MainWindow (gtk.Window):
             self.curDriverPanel.renameApp()
 
     def deactivateButtons (self):
-        self.saveButton  .set_sensitive (FALSE)
-        self.reloadButton.set_sensitive (FALSE)
-        self.newButton   .set_sensitive (FALSE)
-        self.removeButton.set_sensitive (FALSE)
-        self.upButton    .set_sensitive (FALSE)
-        self.downButton  .set_sensitive (FALSE)
-        self.renameButton.set_sensitive (FALSE)
+        self.saveButton      .set_sensitive (FALSE)
+        self.reloadButton    .set_sensitive (FALSE)
+        self.newButton       .set_sensitive (FALSE)
+        self.removeButton    .set_sensitive (FALSE)
+        self.upButton        .set_sensitive (FALSE)
+        self.downButton      .set_sensitive (FALSE)
+        self.propertiesButton.set_sensitive (FALSE)
 
     def activateConfigButtons (self, config):
         writable = config.writable
         modified = config.isModified
-        self.saveButton  .set_sensitive (writable and modified)
-        self.reloadButton.set_sensitive (TRUE)
-        self.newButton   .set_sensitive (writable)
-        self.removeButton.set_sensitive (FALSE)
-        self.upButton    .set_sensitive (FALSE)
-        self.downButton  .set_sensitive (FALSE)
-        self.renameButton.set_sensitive (FALSE)
+        self.saveButton      .set_sensitive (writable and modified)
+        self.reloadButton    .set_sensitive (TRUE)
+        self.newButton       .set_sensitive (writable)
+        self.removeButton    .set_sensitive (FALSE)
+        self.upButton        .set_sensitive (FALSE)
+        self.downButton      .set_sensitive (FALSE)
+        self.propertiesButton.set_sensitive (FALSE)
 
     def activateDeviceButtons (self, device):
         writable = device.config.writable
         modified = device.config.isModified
-        self.saveButton  .set_sensitive (writable and modified)
-        self.reloadButton.set_sensitive (TRUE)
-        self.newButton   .set_sensitive (writable)
-        self.removeButton.set_sensitive (writable)
-        self.upButton    .set_sensitive (writable)
-        self.downButton  .set_sensitive (writable)
-        self.renameButton.set_sensitive (FALSE)
+        self.saveButton      .set_sensitive (writable and modified)
+        self.reloadButton    .set_sensitive (TRUE)
+        self.newButton       .set_sensitive (writable)
+        self.removeButton    .set_sensitive (writable)
+        self.upButton        .set_sensitive (writable)
+        self.downButton      .set_sensitive (writable)
+        self.propertiesButton.set_sensitive (writable)
 
     def activateAppButtons (self, app):
         writable = app.device.config.writable
         modified = app.device.config.isModified
-        self.saveButton  .set_sensitive (writable and modified)
-        self.reloadButton.set_sensitive (TRUE)
-        self.newButton   .set_sensitive (writable)
-        self.removeButton.set_sensitive (writable)
-        self.upButton    .set_sensitive (writable)
-        self.downButton  .set_sensitive (writable)
-        self.renameButton.set_sensitive (writable)
+        self.saveButton      .set_sensitive (writable and modified)
+        self.reloadButton    .set_sensitive (TRUE)
+        self.newButton       .set_sensitive (writable)
+        self.removeButton    .set_sensitive (writable)
+        self.upButton        .set_sensitive (writable)
+        self.downButton      .set_sensitive (writable)
+        self.propertiesButton.set_sensitive (writable)
 
     def aboutHandler (self, widget):
         dialog = gtk.MessageDialog (
