@@ -343,7 +343,7 @@ class SectionPage (gtk.ScrolledWindow):
 
     def optionModified (self, optLine):
         """ Callback that is invoked by changed option lines. """
-        self.app.device.config.modifiedCallback()
+        self.app.modified(self.app)
 
     def validate (self):
         """ Validate the widget settings.
@@ -362,12 +362,12 @@ class SectionPage (gtk.ScrolledWindow):
             value = optLine.getValue()
             if value == None and self.app.options.has_key(name):
                 del self.app.options[name]
-                self.app.device.config.modifiedCallback()
+                self.app.modified(self.app)
             elif value != None:
                 if not self.app.options.has_key(name) or \
                    (self.app.options.has_key(name) and \
                     value != self.app.options[name]):
-                    self.app.device.config.modifiedCallback()
+                    self.app.modified(self.app)
                 self.app.options[name] = value
 
 class UnknownSectionPage(gtk.VBox):
@@ -431,7 +431,7 @@ class UnknownSectionPage(gtk.VBox):
                 name = self.store.get_value(iter, 0)
                 del self.app.options[name]
                 self.store.remove (iter)
-                self.app.device.config.modifiedCallback()
+                self.app.modified(self.app)
             iter = next_iter
 
 class DriverPanel (gtk.Frame):
@@ -490,7 +490,7 @@ class DriverPanel (gtk.Frame):
         self.add (table)
 
     def execChanged (self, widget):
-        self.app.device.config.modifiedCallback()
+        self.app.modified(self.app)
 
     def validate (self):
         """ Validate the configuration.
@@ -519,10 +519,10 @@ class DriverPanel (gtk.Frame):
         if executable == "":
             if self.app.executable != None:
                 self.app.executable = None
-                self.app.device.config.modifiedCallback()
+                self.app.modified(self.app)
         elif executable != self.app.executable:
             self.app.executable = executable
-            self.app.device.config.modifiedCallback()
+            self.app.modified(self.app)
         for sectPage in self.sectPages:
             sectPage.commit()
 
@@ -616,133 +616,252 @@ class DeviceDialog (gtk.Dialog):
                            self.driverCombo.entry.get_text(), self.data)
         self.destroy()
 
-class ConfigTree (gtk.CTree):
-    """ Configuration tree.
-
-    Hierarchy levels: Config (file), Device, Application """
-    class SelectionError (Exception):
-        """ Something's wrong with the selection. """
-        pass
-    
+class ConfigTreeModel (gtk.GenericTreeModel):
+    # constructur
     def __init__ (self, configList):
-        gtk.CTree.__init__ (self, 1, 0)
-        self.set_size_request (200, -1)
-        self.set_column_auto_resize (0, TRUE)
-        self.set_selection_mode (gtk.SELECTION_BROWSE)
-        self.defaultFg = self.get_style().fg[gtk.STATE_NORMAL]
+        gtk.GenericTreeModel.__init__ (self)
         self.configList = []
         for config in configList:
-            self.addConfig (config)
-        self.connect ("select_row", self.selectRowSignal, None)
+            self.addNode (config)
 
+    # implementation of the GenericTreeModel interface
+    def on_get_flags (self):
+        return gtk.TREE_MODEL_ITERS_PERSIST
+    def on_get_n_columns (self):
+        return 1
+    def on_get_column_type (self, col):
+        return gobject.TYPE_STRING
+    def on_get_path (self, node):
+        if node.__class__ == dri.DRIConfig:
+            return (self.configList.index(node),)
+        elif node.__class__ == dri.DeviceConfig:
+            config = node.config
+            return (self.configList.index(config),
+                    config.devices.index(node))
+        elif node.__class__ == dri.AppConfig:
+            device = node.device
+            config = device.config
+            return (self.configList.index(config),
+                    config.devices.index(device),
+                    device.apps.index(node))
+        else:
+            assert 0
+    def on_get_iter (self, path):
+        if len(path) > 3:
+            return None
+        configIndex = path[0] # config
+        if configIndex < len(self.configList):
+            config = self.configList[configIndex]
+        else:
+            return None
+        if len(path) == 1:
+            return config
+        deviceIndex = path[1] # device
+        if deviceIndex < len(config.devices):
+            device = config.devices[deviceIndex]
+        else:
+            return None
+        if len(path) == 2:
+            return device
+        appIndex = path[2] # application
+        if appIndex < len(device.apps):
+            app = device.apps[appIndex]
+        else:
+            return None
+        return app
+    def on_get_value (self, node, col):
+        if node.__class__ == dri.DRIConfig:
+            return str(node.fileName)
+        elif node.__class__ == dri.DeviceConfig:
+            if node.screen and node.driver:
+                name = "Screen %s Driver %s" % (node.screen, node.driver)
+            elif node.screen:
+                name = "Screen %s" % node.screen
+            elif node.driver:
+                name = "Driver %s" % node.driver
+            else:
+                name = "general"
+            return str(name)
+        elif node.__class__ == dri.AppConfig:
+            return str(node.name)
+        else:
+            return "What's this?"
+    def on_iter_next (self, node):
+        if node.__class__ == dri.DRIConfig:
+            list = self.configList
+        elif node.__class__ == dri.DeviceConfig:
+            list = node.config.devices
+        elif node.__class__ == dri.AppConfig:
+            list = node.device.apps
+        else:
+            return None
+        index = list.index(node)
+        if index+1 < len(list):
+            return list[index+1]
+        else:
+            return None
+    def on_iter_children (self, node):
+        return self.on_iter_nth_child (node, 0)
+    def on_iter_has_child (self, node):
+        return (self.on_iter_n_children (node) > 0)
+    def on_iter_n_children (self, node):
+        if not node:
+            return len(self.configList)
+        elif node.__class__ == dri.DRIConfig:
+            return len(node.devices)
+        elif node.__class__ == dri.DeviceConfig:
+            return len(node.apps)
+        else:
+            return 0
+    def on_iter_nth_child (self, node, index):
+        if not node:
+            list = self.configList
+        elif node.__class__ == dri.DRIConfig:
+            list = node.devices
+        elif node.__class__ == dri.DeviceConfig:
+            list = node.apps
+        else:
+            return None
+        if len(list) > index:
+            return list[index]
+        else:
+            return None
+    def on_iter_parent (self, node):
+        if node.__class__ == dri.DeviceConfig:
+            return node.config
+        elif node.__class__ == dri.AppConfig:
+            return node.device
+        else:
+            return None
+
+    # helpers for converting between nodes, paths and TreeIterators
+    def getPathFromNode (self, node):
+        return self.on_get_path (node)
+    def getNodeFromPath (self, path):
+        return self.on_get_iter (path)
+    def getIterFromNode (self, node):
+        return self.get_iter (self.getPathFromNode(node))
+
+    # config list
     def getConfigList (self):
         return self.configList
 
-    def addConfig (self, config, sibling=None):
+    # callback for registring modifications
+    def nodeModified (self, node, b=TRUE):
+        if node.__class__ == dri.DRIConfig:
+            config = node
+        elif node.__class__ == dri.DeviceConfig:
+            config = node.config
+        elif node.__class__ == dri.AppConfig:
+            config = node.device.config
+        if config.isModified != b:
+            config.isModified = b
+            if node.__class__ == dri.DRIConfig:
+                mainWindow.activateConfigButtons(node)
+            elif node.__class__ == dri.DeviceConfig:
+                mainWindow.activateDeviceButtons(node)
+            elif node.__class__ == dri.AppConfig:
+                mainWindow.activateAppButtons(node)
+
+    # higher level model manipulations
+    def addNode (self, node, sibling = None):
+        """ Add a new node and inform the TreeView. """
+        self.initNode (node)
+        if node.__class__ == dri.DRIConfig:
+            list = self.configList
+        elif node.__class__ == dri.DeviceConfig:
+            list = node.config.devices
+        elif node.__class__ == dri.AppConfig:
+            list = node.device.apps
         if sibling != None:
-            index = self.configList.index (sibling)
-            self.configList.insert (index, config)
-            siblingNode = sibling.node
+            index = list.index (sibling)
+            list.insert (index, node)
         else:
-            self.configList.append (config)
-            siblingNode = None
-        fileName = str(config.fileName)
-        fileNode = self.insert_node (None, siblingNode, [fileName], 0,
-                                     None,None,None,None, FALSE, TRUE)
-        config.modified = FALSE
-        config.modifiedCallback = self.configModified
-        config.node = fileNode
-        self.node_set_row_data (fileNode, ("config", config))
-        for device in config.devices:
-            devNode = self.addDeviceNode (fileNode, device)
-            for app in device.apps:
-                self.addAppNode (devNode, app)
+            list.append (node)
+        self.registerNode (node)
+    def initNode (self, node):
+        node.modified = self.nodeModified
+        if node.__class__ == dri.DRIConfig:
+            node.isModified = FALSE
+            for device in node.devices:
+                device.modified = self.nodeModified
+                for app in device.apps:
+                    app.modified = self.nodeModified
+        elif node.__class__ == dri.DeviceConfig:
+            for app in node.apps:
+                app.modified = self.nodeModified
+    def registerNode (self, node):
+        path = self.on_get_path (node)
+        iter = self.get_iter (path)
+        self.row_inserted (path, iter)
+        if node.__class__ == dri.DRIConfig:
+            for device in node.devices:
+                self.registerNode (device)
+        elif node.__class__ == dri.DeviceConfig:
+            for app in node.apps:
+                self.registerNode (app)
+    def removeNode (self, node):
+        if node.__class__ == dri.DRIConfig:
+            list = self.configList
+            while len(node.devices) > 0:
+                self.removeNode (node.devices[0])
+        elif node.__class__ == dri.DeviceConfig:
+            list = node.config.devices
+            while len(node.apps) > 0:
+                self.removeNode (node.apps[0])
+        elif node.__class__ == dri.AppConfig:
+            list = node.device.apps
+        path = self.on_get_path (node)
+        list.remove (node)
+        self.row_deleted (path)
 
-    def addDeviceNode (self, parent, device):
-        if device.screen and device.driver:
-            name = "Screen " + device.screen + " Driver " + device.driver
-        elif device.screen:
-            name = "Screen " + device.screen
-        elif device.driver:
-            name = "Driver " + device.driver
-        else:
-            name = "general"
-        name = str(name)
-        devNode = self.insert_node (parent, None, [name], 0,
-                                    None,None,None,None, FALSE, TRUE)
-        device.node = devNode
-        self.node_set_row_data (devNode, ("device", device))
-        return devNode
-
-    def addAppNode (self, parent, app):
-        name = str(app.name)
-        appNode = self.insert_node (parent, None, [name])
-        app.node = appNode
-        self.node_set_row_data (appNode, ("app", app))
-        self.validateAppNode(app)
-        return appNode
-
-    def validateAppNode (self, app):
-        try:
-            driver = app.device.getDriver(dpy)
-        except dri.XMLError:
-            driver = None
-        if driver:
-            if driver.validate (app.options):
-                style = self.get_style().copy()
-                style.fg[gtk.STATE_NORMAL] = self.defaultFg
-                self.node_set_row_style(app.node, style)
-            else:
-                style = self.get_style().copy()
-                style.fg[gtk.STATE_NORMAL] = gtk.gdk.Color (65535, 0, 0)
-                self.node_set_row_style(app.node, style)
-
-    def selectFirstWritableApp (self):
+    # find the first writable application
+    def findFirstWritableApp (self):
         foundApp = None
         for config in self.configList:
             if len(config.devices) > 0 and len(config.devices[0].apps) > 0:
                 foundApp = config.devices[0].apps[0]
                 if config.writable:
                     break
-        self.select (foundApp.node)
         return foundApp
 
-    def getSelection (self):
-        if len(self.selection) == 0:
-            raise SelectionError
-        if len(self.selection) > 1:
-            print "multi selection!"
-            raise SelectionError
-        return self.selection[0]
+class ConfigTreeView (gtk.TreeView):
+    def __init__ (self, configList):
+        self.model = ConfigTreeModel (configList)
+        gtk.TreeView.__init__ (self, self.model)
+        self.set_size_request (200, -1)
+        self.set_headers_visible (FALSE)
+        self.expand_all()
+        self.get_selection().set_mode (gtk.SELECTION_BROWSE)
+        self.get_selection().connect ("changed", self.selectionChangedSignal)
+        column = gtk.TreeViewColumn ("ConfigTree", gtk.CellRendererText(),
+                                     text=0)
+        self.append_column (column)
 
-    def configModified (self, b=TRUE):
-        try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, obj = self.node_get_row_data (node)
-        if type == "config":
-            config = obj
-        elif type == "device":
-            config = obj.config
-        elif type == "app":
-            config = obj.device.config
-        if config.modified != b:
-            config.modified = b
-            if type == "config":
-                mainWindow.activateConfigButtons(obj)
-            elif type == "device":
-                mainWindow.activateDeviceButtons(obj)
-            elif type == "app":
-                mainWindow.activateAppButtons(obj)
+    def getConfigList (self):
+        return self.model.getConfigList()
 
-    def selectRowSignal (self, widget, row, column, event, data):
-        type, obj = self.get_row_data (row)
-        self.selectTypeObj (type, obj)
-
-    def selectTypeObj (self, type, obj):
-        if type == "app":
-            app = obj
+    # selection handling
+    def getSelection (self, allowNone=FALSE):
+        model, iter = self.get_selection().get_selected()
+        assert iter or allowNone
+        if iter:
+            path = self.model.get_path (iter)
+            return self.model.getNodeFromPath (path)
+        else:
+            return None
+    def selectFirstWritableApp (self):
+        app = self.model.findFirstWritableApp()
+        if app:
+            path = self.model.getPathFromNode (app)
+            self.get_selection().select_path(path)
+    def selectionChangedSignal (self, data):
+        node = self.getSelection (allowNone=TRUE)
+        if not node:
+            driver = None
+            app = None
+        elif node.__class__ == dri.AppConfig:
+            app = node
             try:
                 driver = app.device.getDriver (dpy)
             except dri.XMLError, problem:
@@ -767,145 +886,89 @@ class ConfigTree (gtk.CTree):
             app = None
         mainWindow.commitDriverPanel()
         mainWindow.switchDriverPanel (driver, app)
-        if type == "config":
-            mainWindow.activateConfigButtons(obj)
-        elif type == "device":
-            mainWindow.activateDeviceButtons(obj)
-        elif type == "app":
-            mainWindow.activateAppButtons(obj)
+        if not node:
+            mainWindow.deactivateButtons()
+        if node.__class__ == dri.DRIConfig:
+            mainWindow.activateConfigButtons(node)
+        elif node.__class__ == dri.DeviceConfig:
+            mainWindow.activateDeviceButtons(node)
+        elif node.__class__ == dri.AppConfig:
+            mainWindow.activateAppButtons(node)
 
-    def moveItem (self, inc):
+    # highlight invalid nodes
+    def validateAppNode (self, app):
         try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, obj = self.node_get_row_data (node)
-        if type == "app":
-            parent = obj.device
-            config = parent.config
-            siblings = parent.apps
-        elif type == "device":
-            parent = obj.config
-            config = parent
-            siblings = parent.devices
+            driver = app.device.getDriver(dpy)
+        except dri.XMLError:
+            driver = None
+        if driver and driver.validate (app.options):
+            #style = self.get_style().copy()
+            #style.fg[gtk.STATE_NORMAL] = self.defaultFg
+            #self.node_set_row_style(app.node, style)
+            pass
         else:
-            return
-        index = siblings.index (obj)
-        newIndex = index+inc
-        if newIndex < 0 or newIndex >= len(siblings):
-            return
-        siblings.remove (obj)
-        siblings.insert (newIndex, obj)
-        if newIndex == len(siblings)-1:
-            siblingNode = None
-        else:
-            siblingNode = siblings[newIndex+1].node
-        self.move (obj.node, parent.node, siblingNode)
-        config.modifiedCallback()
+            #style = self.get_style().copy()
+            #style.fg[gtk.STATE_NORMAL] = gtk.gdk.Color (65535, 0, 0)
+            #self.node_set_row_style(app.node, style)
+            pass
 
+    # UI actions on the config tree
     def moveUp (self, widget):
         self.moveItem (-1)
-
     def moveDown (self, widget):
         self.moveItem (1)
-
     def removeItem (self, widget):
-        try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, obj = self.node_get_row_data (node)
-        if type == "app":
+        node = self.getSelection()
+        if node.__class__ == dri.AppConfig:
+            parent = node.device
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
-                "Really delete application \"%s\"?" % obj.name)
-        elif type == "device":
+                "Really delete application \"%s\"?" % node.name)
+        elif node.__class__ == dri.DeviceConfig:
+            parent = node.config
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
                 "Really delete device and all applications in it?")
         else:
             # The remove button should be unsensitive.
-            raise Exception ("This should never happen.")
+            assert FALSE
         response = dialog.run()
         dialog.destroy ()
         if response != gtk.RESPONSE_YES:
             return
-        if type == "app":
-            parent = obj.device
-            config = parent.config
-            siblings = parent.apps
-        elif type == "device":
-            parent = obj.config
-            config = parent
-            siblings = parent.devices
-        siblings.remove (obj)
-        if type == "app":
-            mainWindow.removeApp (obj)
-        elif type == "device":
-            for app in obj.apps:
+        self.model.removeNode (node)
+        if node.__class__ == dri.AppConfig:
+            mainWindow.removeApp (node)
+        elif node.__class__ == dri.DeviceConfig:
+            for app in node.apps:
                 mainWindow.removeApp (app)
-        self.remove_node (node)
-        config.modifiedCallback()
-
+        parent.modified(parent)
+        path = self.model.getPathFromNode (parent)
+        self.get_selection().select_path(path)
     def renameApp (self, widget):
-        try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, app = self.node_get_row_data (node)
-        if type != "app":
+        node = self.getSelection()
+        if node.__class__ != dri.AppConfig:
             return
         dialog = NameDialog ("Rename Application", self.renameCallback,
-                             app.name, app)
-
-    def renameCallback (self, name, app):
-        app.name = name
-        self.node_set_text (app.node, 0, name)
-        mainWindow.renameApp (app)
-        app.device.config.modifiedCallback()
-
+                             node.name, node)
     def newItem (self, widget):
-        try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, obj = self.node_get_row_data (node)
-        if type == "app":
-            obj = obj.device
-            type = "device"
-        if type == "device":
+        node = self.getSelection()
+        if node.__class__ == dri.AppConfig:
+            node = node.device
+        if node.__class__ == dri.DeviceConfig:
             dialog = NameDialog ("New Application", self.newAppCallback, "",
-                                 obj)
-        elif type == "config":
-            dialog = DeviceDialog ("New Device", self.newDeviceCallback, obj)
-
-    def newAppCallback (self, name, device):
-        app = dri.AppConfig (device, name)
-        device.apps.append (app)
-        self.addAppNode (device.node, app)
-        app.device.config.modifiedCallback()
-
-    def newDeviceCallback (self, screen, driver, config):
-        device = dri.DeviceConfig (config, screen, driver)
-        config.devices.append (device)
-        self.addDeviceNode (config.node, device)
-        device.config.modifiedCallback()
-
+                                 node)
+        elif node.__class__ == dri.DRIConfig:
+            dialog = DeviceDialog ("New Device", self.newDeviceCallback, node)
     def saveConfig (self, widget):
-        try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, config = self.node_get_row_data (node)
-        if type == "app":
-            config = config.device
-            type = "device"
-        if type == "device":
-            config = config.config
-            type = "config"
-        valid = 1
+        node = self.getSelection()
+        if node.__class__ == dri.AppConfig:
+            config = node.device.config
+        elif node.__class__ == dri.DeviceConfig:
+            config = node.config
+        valid = TRUE
         for device in config.devices:
             try:
                 driver = device.getDriver (dpy)
@@ -937,20 +1000,15 @@ class ConfigTree (gtk.CTree):
         mainWindow.commitDriverPanel()
         file.write (str(config))
         file.close()
-        config.modifiedCallback(FALSE)
-
+        config.modified(config, FALSE)
     def reloadConfig (self, widget):
-        try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, obj = self.node_get_row_data (node)
-        if type == "app":
-            config = obj.device.config
-        elif type == "device":
-            config = obj.config
+        node = self.getSelection()
+        if node.__class__ == dri.AppConfig:
+            config = node.device.config
+        elif node.__class__ == dri.DeviceConfig:
+            config = node.config
         else:
-            config = obj
+            config = node
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
@@ -987,19 +1045,64 @@ class ConfigTree (gtk.CTree):
         # Check if the file is writable in the end.
         newConfig.writable = fileIsWritable (config.fileName)
         # find the position of config
-        index = self.configList.index (config)
-        if index == len(self.configList)-1:
+        configList = self.getConfigList()
+        index = configList.index (config)
+        if index == len(configList)-1:
             sibling = None
         else:
-            sibling = self.configList[index+1]
-        self.configList.remove (config)
-        if type == "app":
-            mainWindow.removeApp (obj)
-        elif type == "device":
-            for app in obj.apps:
+            sibling = configList[index+1]
+        self.model.removeNode (config)
+        if node.__class__ == dri.AppConfig:
+            mainWindow.removeApp (node)
+        elif node.__class__ == dri.DeviceConfig:
+            for app in node.apps:
                 mainWindow.removeApp (app)
-        self.remove_node (config.node)
-        self.addConfig (newConfig, sibling)
+        self.model.addNode (newConfig, sibling)
+        self.expand_row (self.model.getPathFromNode (newConfig), TRUE)
+
+    # helper function for moving tree nodes around
+    def moveItem (self, inc):
+        node = self.getSelection()
+        if node.__class__ == dri.AppConfig:
+            parent = node.device
+            siblings = parent.apps
+        elif node.__class__ == dri.DeviceConfig:
+            parent = node.config
+            siblings = parent.devices
+        else:
+            assert FALSE
+        index = siblings.index (node)
+        newIndex = index+inc
+        if newIndex < 0 or newIndex >= len(siblings):
+            return
+        siblings.remove (node)
+        siblings.insert (newIndex, node)
+        newOrder = range(len(siblings))
+        newOrder[index] = newIndex
+        newOrder[newIndex] = index
+        path = self.model.getPathFromNode (parent)
+        iter = self.model.get_iter (path)
+        self.model.rows_reordered (path, iter, newOrder)
+        parent.modified(parent)
+
+    # callbacks from dialogs
+    def renameCallback (self, name, app):
+        app.name = name
+        path = self.model.getPathFromNode (app)
+        iter = self.model.get_iter (path)
+        self.model.row_changed (path, iter)
+        mainWindow.renameApp (app)
+        app.modified(app)
+    def newAppCallback (self, name, device):
+        app = dri.AppConfig (device, name)
+        self.model.addNode (app)
+        if len(device.apps) == 1:
+            self.expand_row (self.model.getPathFromNode(device), TRUE)
+        device.modified(device)
+    def newDeviceCallback (self, screen, driver, config):
+        device = dri.DeviceConfig (config, screen, driver)
+        self.model.addNode (device)
+        config.modified(config)
 
 class MainWindow (gtk.Window):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
@@ -1010,7 +1113,7 @@ class MainWindow (gtk.Window):
         self.connect ("delete_event", self.exitHandler)
         self.vbox = gtk.VBox()
         self.paned = gtk.HPaned()
-        self.configTree = ConfigTree (configList)
+        self.configTree = ConfigTreeView (configList)
         self.configTree.show()
         scrolledWindow = gtk.ScrolledWindow ()
         scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -1064,10 +1167,7 @@ class MainWindow (gtk.Window):
         self.paned.add2 (self.logo)
 
     def initSelection (self):
-        app = self.configTree.selectFirstWritableApp()
-        # initSelection is called before the mainloop runs, so there is no
-        # selection signal. We have to "emit" it manually.
-        self.configTree.selectTypeObj ("app", app)
+        self.configTree.selectFirstWritableApp()
 
     def commitDriverPanel (self):
         if self.curDriverPanel != None:
@@ -1102,10 +1202,20 @@ class MainWindow (gtk.Window):
         if self.curDriverPanel != None and self.curDriverPanel.app == app:
             self.curDriverPanel.renameApp()
 
+    def deactivateButtons (self):
+        self.saveButton  .set_sensitive (FALSE)
+        self.reloadButton.set_sensitive (FALSE)
+        self.newButton   .set_sensitive (FALSE)
+        self.removeButton.set_sensitive (FALSE)
+        self.upButton    .set_sensitive (FALSE)
+        self.downButton  .set_sensitive (FALSE)
+        self.renameButton.set_sensitive (FALSE)
+
     def activateConfigButtons (self, config):
         writable = config.writable
-        modified = config.modified
+        modified = config.isModified
         self.saveButton  .set_sensitive (writable and modified)
+        self.reloadButton.set_sensitive (TRUE)
         self.newButton   .set_sensitive (writable)
         self.removeButton.set_sensitive (FALSE)
         self.upButton    .set_sensitive (FALSE)
@@ -1114,8 +1224,9 @@ class MainWindow (gtk.Window):
 
     def activateDeviceButtons (self, device):
         writable = device.config.writable
-        modified = device.config.modified
+        modified = device.config.isModified
         self.saveButton  .set_sensitive (writable and modified)
+        self.reloadButton.set_sensitive (TRUE)
         self.newButton   .set_sensitive (writable)
         self.removeButton.set_sensitive (writable)
         self.upButton    .set_sensitive (writable)
@@ -1124,8 +1235,9 @@ class MainWindow (gtk.Window):
 
     def activateAppButtons (self, app):
         writable = app.device.config.writable
-        modified = app.device.config.modified
+        modified = app.device.config.isModified
         self.saveButton  .set_sensitive (writable and modified)
+        self.reloadButton.set_sensitive (TRUE)
         self.newButton   .set_sensitive (writable)
         self.removeButton.set_sensitive (writable)
         self.upButton    .set_sensitive (writable)
@@ -1135,7 +1247,7 @@ class MainWindow (gtk.Window):
     def exitHandler (self, widget, event=None):
         modified = FALSE
         for config in self.configTree.getConfigList():
-            if config.modified:
+            if config.isModified:
                 modified = TRUE
                 break
         if modified:
@@ -1253,8 +1365,8 @@ def main():
     # open the main window
     global mainWindow
     mainWindow = MainWindow(configList)
-    mainWindow.initSelection()
     mainWindow.show ()
+    mainWindow.initSelection()
 
     if len(newFiles) == 1:
         dialog = gtk.MessageDialog (
