@@ -292,6 +292,7 @@ class DriverPanel (GtkFrame):
         self.execEntry = GtkEntry()
         if app.executable != None:
             self.execEntry.set_text (app.executable)
+        self.execEntry.set_sensitive (app.device.config.writable)
         self.execEntry.show()
         table.attach (self.execEntry, 1, 2, 0, 1, EXPAND|FILL, 0, 5, 5)
         notebook = GtkNotebook()
