@@ -15,7 +15,7 @@ python-gtk are installed. The installation uses Python's distutils
 package.
 
 By default driconf will be installed into /usr/local/bin and
-/usr/local/lib/python?.?/site-packages. You can change this using the
+/usr/local/lib/pythonX.Y/site-packages. You can change this using the
 prefix option in setup.cfg. For installing run the following command
 as root:
 
