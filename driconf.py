@@ -27,21 +27,26 @@ pygtk.require ("2.0")
 import gtk
 from gtk import TRUE, FALSE
 import gobject
-from driconf_xpm import *
 
 # global variable: main window
 mainWindow = None
 
-class DataPixmap (gtk.Image):
-    """ A pixmap made from data. """
-    window = None
-    def __init__ (self, data):
-        """ Constructor. """
-        gtk.Image.__init__ (self)
-        pixmap, mask = gtk.gdk.pixmap_colormap_create_from_xpm_d(None,
-                                                self.window.get_colormap(),
-                                                                 None, data)
-        self.set_from_pixmap (pixmap, mask)
+# Helper function:
+# Find a file that should have been installed in .../shared/driconf
+# Prefixes of __file__ are tried. And the current directory as a fallback.
+def findInShared (name):
+    # try all <prefix>/share/driconf/name for all prefixes of __file__
+    head,tail = os.path.split (__file__)
+    while head and tail:
+        f = os.path.join (head, "share/driconf", name)
+        if os.path.isfile (f):
+            return f
+        head,tail = os.path.split (head)
+    # try name in the current directory
+    if os.path.isfile (name):
+        return name
+    # nothing found
+    return None
 
 class StockImage (gtk.Image):
     """ A stock image. """
@@ -760,13 +765,26 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         for config in configList:
             self.addNode (config)
 
+    def renderIcons (self, widget):
+        self.configIcon = widget.render_icon ("gtk-properties",
+                                              gtk.ICON_SIZE_MENU, None)
+        self.appIcon = widget.render_icon ("gtk-execute",
+                                           gtk.ICON_SIZE_MENU, None)
+        deviceIcon = gtk.gdk.pixbuf_new_from_file (findInShared ("device.png"))
+        size = max(self.configIcon.get_width(), self.configIcon.get_height())
+        self.deviceIcon = deviceIcon.scale_simple (size, size,
+                                                   gtk.gdk.INTERP_BILINEAR)
+
     # implementation of the GenericTreeModel interface
     def on_get_flags (self):
         return gtk.TREE_MODEL_ITERS_PERSIST
     def on_get_n_columns (self):
-        return 1
+        return 2
     def on_get_column_type (self, col):
-        return gobject.TYPE_STRING
+        if col == 0:
+            return gobject.TYPE_OBJECT
+        else:
+            return gobject.TYPE_STRING
     def on_get_path (self, node):
         if node.__class__ == dri.DRIConfig:
             return (self.configList.index(node),)
@@ -807,8 +825,12 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         return app
     def on_get_value (self, node, col):
         if node.__class__ == dri.DRIConfig:
+            if col == 0:
+                return self.configIcon
             return str(node.fileName)
         elif node.__class__ == dri.DeviceConfig:
+            if col == 0:
+                return self.deviceIcon
             if node.screen and node.driver:
                 name = "%s @ screen %s" % (node.driver, node.screen)
             elif node.screen:
@@ -819,6 +841,8 @@ class ConfigTreeModel (gtk.GenericTreeModel):
                 name = "any driver @ any screen"
             return str(name)
         elif node.__class__ == dri.AppConfig:
+            if col == 0:
+                return self.appIcon
             if not node.isValid:
                 return '<span foreground="red">' + str(node.name) + '</span>'
             else:
@@ -980,13 +1004,22 @@ class ConfigTreeView (gtk.TreeView):
     def __init__ (self, configList):
         self.model = ConfigTreeModel (configList)
         gtk.TreeView.__init__ (self, self.model)
+        self.model.renderIcons (self)
         self.set_size_request (200, -1)
         self.set_headers_visible (FALSE)
         self.expand_all()
         self.get_selection().set_mode (gtk.SELECTION_BROWSE)
         self.get_selection().connect ("changed", self.selectionChangedSignal)
-        column = gtk.TreeViewColumn ("ConfigTree", gtk.CellRendererText(),
-                                     markup=0)
+        #column = gtk.TreeViewColumn ("ConfigTree", gtk.CellRendererText(),
+        #                             markup=0)
+        column = gtk.TreeViewColumn()
+        column.set_title ("ConfigTree")
+        renderPixbuf = gtk.CellRendererPixbuf()
+        column.pack_start (renderPixbuf, expand=False)
+        column.add_attribute (renderPixbuf, "pixbuf", 0)
+        renderText = gtk.CellRendererText()
+        column.pack_start (renderText, expand=True)
+        column.add_attribute (renderText, "text", 1)
         self.append_column (column)
 
     def getConfigList (self):
@@ -1276,7 +1309,6 @@ class MainWindow (gtk.Window):
         scrolledWindow.show()
         self.paned.add1(scrolledWindow)
         self.paned.show()
-        DataPixmap.window = self
         self.toolbar = gtk.Toolbar ()
         iconSize = self.toolbar.get_icon_size()
         self.saveButton = self.toolbar.insert_stock (
@@ -1325,7 +1357,9 @@ class MainWindow (gtk.Window):
         self.add (self.vbox)
         self.curDriverPanel = None
         self.logo = gtk.EventBox ()
-        self.logo.add (DataPixmap (drilogo_xpm))
+        image = gtk.Image()
+        image.set_from_file (findInShared("drilogo.jpg"))
+        self.logo.add (image)
         self.logo.modify_bg (gtk.STATE_NORMAL,
                              gtk.gdk.Color (65535, 65535, 65535))
         self.logo.show_all()
