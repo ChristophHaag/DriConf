@@ -1253,8 +1253,14 @@ class MainWindow (gtk.Window):
             "Rename", "Rename selected application", "priv",
             StockImage ("gtk-properties", iconSize), self.configTree.renameApp)
         self.toolbar.append_space()
+        # The gtk-about stock item is available with gtk >= 2.6.
+        # It's definitely not available with gtk 2.2. Not sure about 2.4.
+        if gtk.gtk_version[0] == 2 and gtk.gtk_version[1] < 6:
+            aboutStock = "gtk-dialog-info"
+        else:
+            aboutStock = "gtk-about"
         self.aboutButton = self.toolbar.insert_stock (
-            "gtk-about", "About DRIconf", "priv",
+            aboutStock, "About DRIconf", "priv",
             self.aboutHandler, None, -1)
         self.toolbar.append_space()
         self.exitButton = self.toolbar.insert_stock (
