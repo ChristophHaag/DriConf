@@ -122,6 +122,22 @@ class Range:
         else:
             return str(self.start) + ":" + str(self.end)
 
+class OptDesc:
+    """ An option description in one language with enum values. """
+    def __init__ (self, lang, text):
+        self.lang = lang
+        self.text = text
+        self.enums = {}
+
+    def __str__ (self):
+        result = '<description lang="' + self.lang + '" text="' + self.text + \
+                 '">\n'
+        for value in sort(self.enums.keys()):
+            result = result + '<enum value="' + str(value) + '" text="' + \
+                     self.enums[value] + '" />\n'
+        result = result + '</description>'
+        return result
+
 class OptInfo:
     """ All advertised information about an option. """
     def __init__ (self, name, type, default, valid = None):
@@ -225,11 +241,24 @@ class DriverInfo:
             if not attr.has_key ("lang") or not attr.has_key ("text"):
                 raise XMLError ("description attribute missing")
             if self.curOption != None:
-                self.curOption.desc[attr["lang"]] = attr["text"]
+                self.curOptDesc = OptDesc(attr["lang"], attr["text"])
+                self.curOption.desc[attr["lang"]] = self.curOptDesc
             elif self.curOptSection != None:
                 self.curOptSection.desc[attr["lang"]] = attr["text"]
             else:
                 raise XMLError ("description outside an option or section")
+        elif name == "enum":
+            if not attr.has_key ("value") or not attr.has_key ("text"):
+                raise XMLError ("enum attribute missing")
+            if self.curOptDesc != None:
+                value = attr["value"]
+                if not self.curOption.validate (value):
+                    raise XMLError ("enum value is out of valid range")
+                else:
+                    value = StrToValue (value, self.curOption.type)
+                self.curOptDesc.enums[value] = attr["text"]
+            else:
+                raise XMLError ("enum outside an option description")
 
     def endElement (self, name):
         """ Handle end_element events from XML parser. """
@@ -237,6 +266,8 @@ class DriverInfo:
             self.curOptSection = None
         elif name == "option":
             self.curOption = None
+        elif name == "description":
+            self.curOptDesc = None
 
     def __init__ (self, name):
         """ Obtain and parse config info for this driver.
@@ -250,6 +281,7 @@ class DriverInfo:
         self.optSections = []
         self.curOptSection = None
         self.curOption = None
+        self.curOptDesc = None
         p = xml.parsers.expat.ParserCreate()
 
         p.StartElementHandler = self.startElement
