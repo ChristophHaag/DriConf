@@ -705,9 +705,7 @@ class DeviceDialog (gtk.Dialog):
         table = gtk.Table (2, 3)
         commentLabel = gtk.Label ("Describe the device that you would like to \
 configure. You need to specify an X screen number or a driver name or both. \
-You can pick them from a list or enter them manually. In order to configure a \
-driver, DRIconf needs to be able to determine the driver name and find the \
-driver.")
+You can pick them from a list or enter them manually.")
         commentLabel.set_line_wrap (TRUE)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
@@ -812,13 +810,13 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             return str(node.fileName)
         elif node.__class__ == dri.DeviceConfig:
             if node.screen and node.driver:
-                name = "Screen %s Driver %s" % (node.screen, node.driver)
+                name = "%s @ screen %s" % (node.driver, node.screen)
             elif node.screen:
-                name = "Screen %s" % node.screen
+                name = "any driver @ screen %s" % node.screen
             elif node.driver:
-                name = "Driver %s" % node.driver
+                name = "%s @ any screen" % node.driver
             else:
-                name = "general"
+                name = "any driver @ any screen"
             return str(name)
         elif node.__class__ == dri.AppConfig:
             if not node.isValid:
@@ -1425,7 +1423,6 @@ class MainWindow (gtk.Window):
 A configuration GUI for DRI drivers\n\
 Copyright \u00a9 2003-2005  Felix K\u00fchling\n\
 \n\
-License: GNU General Public License version 2\n\
 Website: http://dri.freedesktop.org/wiki/DriConf\n\
 Feedback: dri-users@lists.sourceforge.net")
         dialog.set_title("About DRIconf")
