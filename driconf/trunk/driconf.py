@@ -22,7 +22,7 @@ import os
 import locale
 import dri
 from gtk import *
-from driconf_tb_icons import *
+from driconf_xpm import *
 
 class DataPixmap (GtkPixmap):
     def __init__ (self, window, data):
@@ -58,16 +58,57 @@ class OptionLine:
             value = None
         if value == None:
             value = opt.default
-        self.widget = GtkEntry ()
-        self.widget.set_text (dri.ValueToStr(value, opt.type))
-        self.widget.show()
-        page.table.attach (self.widget, 1, 2, i, i+1, 0, 0, 5, 5)
-        self.invalidStyle = self.widget.get_style().copy()
-        self.invalidStyle.fg[STATE_NORMAL] = \
-                self.widget.get_colormap().alloc(65535, 0, 0)
+        self.initWidget (opt, value)
+        page.table.attach (self.widget, 1, 2, i, i+1, FILL, 0, 5, 5)
+
+    def initWidget (self, opt, value):
+        if opt.type == "bool":
+            self.toggleLabel = GtkLabel()
+            if value:
+                self.toggleLabel.set_text ("True")
+            else:
+                self.toggleLabel.set_text ("False")
+            self.toggleLabel.show()
+            self.widget = GtkToggleButton ()
+            self.widget.add (self.toggleLabel)
+            self.widget.set_active (value)
+            self.widget.connect ("toggled", self.activateSignal)
+            self.widget.show()
+        elif opt.type == "int" and opt.valid and len(opt.valid) == 1:
+            adjustment = GtkAdjustment (value, opt.valid[0].start,
+                                        opt.valid[0].end, 1, 10)
+            self.widget = GtkSpinButton (adjustment, digits=0)
+            adjustment.connect ("value_changed", self.activateSignal)
+            self.widget.show()
+        elif opt.valid and reduce (lambda x,y: x and y,
+                                   map(lambda r: r.start==r.end, opt.valid)):
+            self.widget = GtkCombo ()
+            self.widget.set_popdown_strings (map(lambda r: str(r.start),
+                                                 opt.valid))
+            self.widget.entry.set_text (dri.ValueToStr(value, opt.type))
+            self.widget.entry.set_editable (FALSE)
+            self.widget.list.connect ("select_child", self.activateSignal)
+            self.widget.show()
+        else:
+            self.widget = GtkEntry ()
+            self.widget.set_text (dri.ValueToStr(value, opt.type))
+            self.widget.connect ("activate", self.activateSignal)
+            self.widget.show()
+            self.invalidStyle = self.widget.get_style().copy()
+            self.invalidStyle.fg[STATE_NORMAL] = \
+                    self.widget.get_colormap().alloc(65535, 0, 0)
 
     def getValue (self):
-        if self.widget.__class__ == GtkEntry:
+        if self.widget.__class__ == GtkToggleButton:
+            if self.widget.get_active():
+                return "true"
+            else:
+                return "false"
+        elif self.widget.__class__ == GtkSpinButton:
+            return str(self.widget.get_value_as_int())
+        elif self.widget.__class__ == GtkCombo:
+            return self.widget.entry.get_text()
+        elif self.widget.__class__ == GtkEntry:
             return self.widget.get_text()
         else:
             return None
@@ -77,6 +118,16 @@ class OptionLine:
             self.page.checkOpt (self.opt, self.getValue())
         else:
             self.page.checkOpt (self.opt, None)
+
+    def activateSignal (self, widget, dummy=None):
+        if self.widget.__class__ == GtkToggleButton:
+            value = self.widget.get_active()
+            if value:
+                self.toggleLabel.set_text ("True")
+            else:
+                self.toggleLabel.set_text ("False")
+        self.check.set_active (TRUE)
+        self.checkOpt (widget)
 
     def validate (self):
         if not self.check.get_active():
@@ -341,24 +392,24 @@ class ConfigTree (GtkCTree):
         if type == "app":
             app = obj
             device = app.device
+            driver = None
+            if device.driver:
+                driver = dri.GetDriver (device.driver)
+            elif device.screen:
+                try:
+                    screenNum = int(device.screen)
+                except ValueError:
+                    pass
+                else:
+                    screen = dpy.getScreen(screenNum)
+                    if screen != None:
+                        driver = screen.driver
+            if driver == None:
+                MessageDialog ("Notice",
+                               "Can't determine the driver for this device.")
         else:
-            return
-        driver = None
-        if device.driver:
-            driver = dri.GetDriver (device.driver)
-        elif device.screen:
-            try:
-                screenNum = int(device.screen)
-            except ValueError:
-                pass
-            else:
-                screen = dpy.getScreen(screenNum)
-                if screen != None:
-                    driver = screen.driver
-        if driver == None:
-            MessageDialog ("Notice",
-                           "Can't determine the driver for this device.")
-            return
+            driver = None
+            app = None
         if mainWindow.commitDriverPanel():
             mainWindow.switchDriverPanel (driver, app)
         else:
@@ -557,6 +608,9 @@ class MainWindow (GtkWindow):
         self.vbox.show()
         self.add (self.vbox)
         self.curDriverPanel = None
+        self.logo = DataPixmap (self, drilogo_xpm)
+        self.logo.show()
+        self.paned.add2 (self.logo)
 
     def commitDriverPanel (self):
         if self.curDriverPanel != None:
@@ -564,20 +618,29 @@ class MainWindow (GtkWindow):
         else:
             return 1
 
-    def switchDriverPanel (self, driver, app):
+    def switchDriverPanel (self, driver=None, app=None):
         if self.curDriverPanel != None:
             if self.curDriverPanel.driver == driver and \
                self.curDriverPanel.app == app:
                 return
             self.paned.remove (self.curDriverPanel)
-        self.curDriverPanel = DriverPanel (driver, app)
-        self.curDriverPanel.show ()
-        self.paned.add2 (self.curDriverPanel)
+        elif driver != None:
+            self.paned.remove (self.logo)
+        if driver != None:
+            self.curDriverPanel = DriverPanel (driver, app)
+            self.curDriverPanel.show ()
+            self.paned.add2 (self.curDriverPanel)
+        elif self.curDriverPanel != None:
+            self.curDriverPanel = None
+            self.logo.show()
+            self.paned.add2 (self.logo)
 
     def removeApp (self, app):
         if self.curDriverPanel != None and self.curDriverPanel.app == app:
             self.paned.remove (self.curDriverPanel)
             self.curDriverPanel = None
+            self.logo.show()
+            self.paned.add2 (self.logo)
 
     def renameApp (self, app):
         if self.curDriverPanel != None and self.curDriverPanel.app == app:
