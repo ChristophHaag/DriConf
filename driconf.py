@@ -241,7 +241,7 @@ class OptionLine:
                 self.widget.set_text (value)
             else:
                 self.widget.set_text (dri.ValueToStr(value, type))
-            self.widget.connect ("activate", self.activateSignal)
+            self.widget.connect ("changed", self.activateSignal)
         self.updateWidget (value, valid)
         self.widget.show()
 
@@ -296,6 +296,7 @@ class OptionLine:
         else:
             self.widget.set_sensitive (FALSE)
             self.resetButton.set_sensitive (FALSE)
+        self.page.optionModified (self)
 
     def activateSignal (self, widget, dummy=None):
         """ Handler for 'widget was activated by the user'. """
@@ -305,6 +306,7 @@ class OptionLine:
                 self.toggleLabel.set_text ("True")
             else:
                 self.toggleLabel.set_text ("False")
+        self.page.optionModified (self)
 
     def resetOpt (self, widget):
         """ Reset to default value. """
@@ -347,6 +349,10 @@ class SectionPage (GtkScrolledWindow):
         self.table.show()
         self.add_with_viewport (self.table)
 
+    def optionModified (self, optLine):
+        """ Callback that is invoked by changed option lines. """
+        self.app.device.config.modifiedCallback()
+
     def validate (self):
         """ Validate the widget settings.
 
@@ -364,7 +370,12 @@ class SectionPage (GtkScrolledWindow):
             value = optLine.getValue()
             if value == None and self.app.options.has_key(name):
                 del self.app.options[name]
+                self.app.device.config.modifiedCallback()
             elif value != None:
+                if not self.app.options.has_key(name) or \
+                   (self.app.options.has_key(name) and \
+                    value != self.app.options[name]):
+                    self.app.device.config.modifiedCallback()
                 self.app.options[name] = value
 
 class UnknownSectionPage(GtkScrolledWindow):
@@ -416,6 +427,7 @@ class UnknownSectionPage(GtkScrolledWindow):
             name = self.list.get_text (row, 0)
             del self.app.options[name]
             self.list.remove (row)
+            self.app.device.config.modifiedCallback()
 
 class DriverPanel (GtkFrame):
     """ Panel for driver settings for a specific application. """
@@ -432,6 +444,7 @@ class DriverPanel (GtkFrame):
         if app.executable != None:
             self.execEntry.set_text (app.executable)
         self.execEntry.set_sensitive (app.device.config.writable)
+        self.execEntry.connect ("changed", self.execChanged)
         self.execEntry.show()
         table.attach (self.execEntry, 1, 2, 0, 1, EXPAND|FILL, 0, 5, 5)
         notebook = GtkNotebook()
@@ -461,6 +474,9 @@ class DriverPanel (GtkFrame):
         table.show()
         self.add (table)
 
+    def execChanged (self, widget):
+        self.app.device.config.modifiedCallback()
+
     def validate (self):
         """ Validate the configuration.
 
@@ -484,9 +500,12 @@ class DriverPanel (GtkFrame):
         """ Commit changes to the configuration. """
         executable = self.execEntry.get_text()
         if executable == "":
-            self.app.executable = None
-        else:
+            if self.app.executable != None:
+                self.app.executable = None
+                self.app.device.config.modifiedCallback()
+        elif executable != self.app.executable:
             self.app.executable = executable
+            self.app.device.config.modifiedCallback()
         for sectPage in self.sectPages:
             sectPage.commit()
 
@@ -593,6 +612,10 @@ class ConfigTree (GtkCTree):
     """ Configuration tree.
 
     Hierarchy levels: Config (file), Device, Application """
+    class SelectionError (Exception):
+        """ Something's wrong with the selection. """
+        pass
+    
     def __init__ (self, configList, mainWindow):
         GtkCTree.__init__ (self, 1, 0)
         self.set_usize (200, 0)
@@ -607,6 +630,8 @@ class ConfigTree (GtkCTree):
         fileName = str(config.fileName)
         fileNode = self.insert_node (None, None, [fileName], 0,
                                      None,None,None,None, FALSE, TRUE)
+        config.modified = FALSE
+        config.modifiedCallback = self.configModified
         config.node = fileNode
         self.node_set_row_data (fileNode, ("config", config))
         for device in config.devices:
@@ -653,6 +678,35 @@ class ConfigTree (GtkCTree):
                 style.fg[STATE_NORMAL] = self.get_colormap().alloc(65535, 0, 0)
                 self.node_set_row_style(app.node, style)
 
+    def getSelection (self):
+        if len(self.selection) == 0:
+            raise SelectionError
+        if len(self.selection) > 1:
+            print "multi selection!"
+            raise SelectionError
+        return self.selection[0]
+
+    def configModified (self, b=TRUE):
+        try:
+            node = self.getSelection()
+        except SelectionError:
+            return
+        type, obj = self.node_get_row_data (node)
+        if type == "config":
+            config = obj
+        elif type == "device":
+            config = obj.config
+        elif type == "app":
+            config = obj.device.config
+        if config.modified != b:
+            config.modified = b
+            if type == "config":
+                self.mainWindow.activateConfigButtons(obj)
+            elif type == "device":
+                self.mainWindow.activateDeviceButtons(obj)
+            elif type == "app":
+                self.mainWindow.activateAppButtons(obj)
+
     def selectRowSignal (self, widget, row, column, event, data):
         type, obj = self.get_row_data (row)
         if type == "app":
@@ -675,25 +729,25 @@ class ConfigTree (GtkCTree):
         self.mainWindow.commitDriverPanel()
         self.mainWindow.switchDriverPanel (driver, app)
         if type == "config":
-            self.mainWindow.activateConfigButtons(obj.writable)
+            self.mainWindow.activateConfigButtons(obj)
         elif type == "device":
-            self.mainWindow.activateDeviceButtons(obj.config.writable)
+            self.mainWindow.activateDeviceButtons(obj)
         elif type == "app":
-            self.mainWindow.activateAppButtons(obj.device.config.writable)
+            self.mainWindow.activateAppButtons(obj)
 
     def moveItem (self, inc):
-        if len(self.selection) == 0:
+        try:
+            node = self.getSelection()
+        except SelectionError:
             return
-        if len(self.selection) > 1:
-            print "multi selection!"
-            return
-        node = self.selection[0]
         type, obj = self.node_get_row_data (node)
         if type == "app":
             parent = obj.device
+            config = parent.config
             siblings = parent.apps
         elif type == "device":
             parent = obj.config
+            config = parent
             siblings = parent.devices
         else:
             return
@@ -708,6 +762,7 @@ class ConfigTree (GtkCTree):
         else:
             siblingNode = siblings[newIndex+1].node
         self.move (obj.node, parent.node, siblingNode)
+        config.modifiedCallback()
 
     def moveUp (self, widget):
         self.moveItem (-1)
@@ -716,12 +771,10 @@ class ConfigTree (GtkCTree):
         self.moveItem (1)
 
     def removeItem (self, widget):
-        if len(self.selection) == 0:
+        try:
+            node = self.getSelection()
+        except SelectionError:
             return
-        if len(self.selection) > 1:
-            print "multi selection!"
-            return
-        node = self.selection[0]
         type, obj = self.node_get_row_data (node)
         if type == "app":
             MessageDialog ("Question",
@@ -737,18 +790,18 @@ class ConfigTree (GtkCTree):
     def doRemoveItem (self, buttonName):
         if buttonName != "Yes":
             return
-        if len(self.selection) == 0:
+        try:
+            node = self.getSelection()
+        except SelectionError:
             return
-        if len(self.selection) > 1:
-            print "multi selection!"
-            return
-        node = self.selection[0]
         type, obj = self.node_get_row_data (node)
         if type == "app":
             parent = obj.device
+            config = parent.config
             siblings = parent.apps
         elif type == "device":
             parent = obj.config
+            config = parent
             siblings = parent.devices
         else:
             return
@@ -759,15 +812,14 @@ class ConfigTree (GtkCTree):
             for app in obj.apps:
                 self.mainWindow.removeApp (app)
         self.remove_node (node)
+        config.modifiedCallback()
 
     def renameApp (self, widget):
-        if len(self.selection) == 0:
+        try:
+            node = self.getSelection()
+        except SelectionError:
             return
-        if len(self.selection) > 1:
-            print "multi selection!"
-            return
-        node = self.selection[0]
-        type, app = self.node_get_row_data (node)
+        type, obj = self.node_get_row_data (node)
         if type != "app":
             return
         dialog = NameDialog ("Rename Application", self.renameCallback,
@@ -777,15 +829,13 @@ class ConfigTree (GtkCTree):
         app.name = name
         self.node_set_text (app.node, 0, name)
         self.mainWindow.renameApp (app)
+        app.device.config.modifiedCallback()
 
     def newItem (self, widget):
-        if len(self.selection) == 0:
-            MessageDialog ("Notice", "Select a configuration file or device.")
+        try:
+            node = self.getSelection()
+        except SelectionError:
             return
-        if len(self.selection) > 1:
-            print "multi selection!"
-            return
-        node = self.selection[0]
         type, obj = self.node_get_row_data (node)
         if type == "device":
             dialog = NameDialog ("New Application", self.newAppCallback, "",
@@ -799,11 +849,13 @@ class ConfigTree (GtkCTree):
         app = dri.AppConfig (device, name)
         device.apps.append (app)
         self.addAppNode (device.node, app)
+        app.device.config.modifiedCallback()
 
     def newDeviceCallback (self, screen, driver, config):
         device = dri.DeviceConfig (config, screen, driver)
         config.devices.append (device)
         self.addDeviceNode (config.node, device)
+        device.config.modifiedCallback()
 
     def saveConfig (self, widget):
         self.doSaveConfig()
@@ -811,13 +863,10 @@ class ConfigTree (GtkCTree):
     def doSaveConfig (self, reallySave="dunno"):
         if reallySave == "No":
             return
-        if len(self.selection) == 0:
-            MessageDialog ("Notice", "Select a configuration file or device.")
+        try:
+            node = self.getSelection()
+        except SelectionError:
             return
-        if len(self.selection) > 1:
-            print "multi selection!"
-            return
-        node = self.selection[0]
         type, config = self.node_get_row_data (node)
         if type == "app":
             config = config.device
@@ -850,8 +899,7 @@ class ConfigTree (GtkCTree):
         self.mainWindow.commitDriverPanel()
         file.write (str(config))
         file.close()
-        MessageDialog ("Success",
-                       "\""+config.fileName+"\" saved successfully.")
+        config.modifiedCallback(FALSE)
 
 class MainWindow (GtkWindow):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
@@ -933,24 +981,30 @@ class MainWindow (GtkWindow):
         if self.curDriverPanel != None and self.curDriverPanel.app == app:
             self.curDriverPanel.renameApp()
 
-    def activateConfigButtons (self, writable):
-        self.saveButton  .set_sensitive (writable)
+    def activateConfigButtons (self, config):
+        writable = config.writable
+        modified = config.modified
+        self.saveButton  .set_sensitive (writable and modified)
         self.newButton   .set_sensitive (writable)
         self.removeButton.set_sensitive (FALSE)
         self.upButton    .set_sensitive (FALSE)
         self.downButton  .set_sensitive (FALSE)
         self.renameButton.set_sensitive (FALSE)
 
-    def activateDeviceButtons (self, writable):
-        self.saveButton  .set_sensitive (writable)
+    def activateDeviceButtons (self, device):
+        writable = device.config.writable
+        modified = device.config.modified
+        self.saveButton  .set_sensitive (writable and modified)
         self.newButton   .set_sensitive (writable)
         self.removeButton.set_sensitive (writable)
         self.upButton    .set_sensitive (writable)
         self.downButton  .set_sensitive (writable)
         self.renameButton.set_sensitive (FALSE)
 
-    def activateAppButtons (self, writable):
-        self.saveButton  .set_sensitive (writable)
+    def activateAppButtons (self, app):
+        writable = app.device.config.writable
+        modified = app.device.config.modified
+        self.saveButton  .set_sensitive (writable and modified)
         self.newButton   .set_sensitive (FALSE)
         self.removeButton.set_sensitive (writable)
         self.upButton    .set_sensitive (writable)
@@ -1041,7 +1095,7 @@ def main():
         if config:
             mainWindow.configTree.addConfig (config)
             if first:
-                mainWindow.activateConfigButtons (config.writable)
+                mainWindow.activateConfigButtons (config)
                 first = 0
 
     if len(newFiles) == 1:
