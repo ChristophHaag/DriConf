@@ -214,6 +214,9 @@ class OptionLine:
             self.toggleLabel.show()
             self.widget = GtkToggleButton ()
             self.widget.add (self.toggleLabel)
+            # need to set_active here, so that the toggled signal isn't
+            # triggered in updateWidget and the config marked as modified.
+            self.widget.set_active (value)
             self.widget.connect ("toggled", self.activateSignal)
         elif type == "int" and opt.valid and len(opt.valid) == 1:
             adjustment = GtkAdjustment (value, opt.valid[0].start,
