@@ -554,9 +554,17 @@ a real executable with a different name.")
                     # tooltip with the full description.
                     # Eek: need an event box since tooltips don't work
                     # on labels.
+                    try:
+                        space = desc[20:].index(' ') + 20
+                        if space < 30:
+                            shortDesc = desc[:space]
+                        else:
+                            shortDesc = desc[:30]
+                    except ValueError:
+                        shortDesc = desc[:30]
                     labelWidget = gtk.EventBox()
                     tooltips.set_tip (labelWidget, desc)
-                    sectLabel = gtk.Label (desc[0:26] + "...")
+                    sectLabel = gtk.Label (shortDesc + " ...")
                     sectLabel.show()
                     labelWidget.add (sectLabel)
                 else:
