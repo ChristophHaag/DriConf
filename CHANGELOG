@@ -1,4 +1,15 @@
+driconf-0.0.10: Sat Oct 11 23:37:19 CEST 2003
+
+- Added a "reload" button to reload a configuration from disk.
+- Added spaces to the toolbar.
+- Fixed: rename applications caused an exception (Michel Dänzer).
+- Fixed: Select gtk version 1.2 on systems that support version selection
+         (Michel Dänzer).
+- Fixed: use getlocale(LC_MESSAGES) to select the language of option
+         descriptions (Michel Dänzer)
+
 driconf-0.0.9: Fri Oct  3 14:21:23 CEST 2003
+
 - Save button is only sensitive on modified configs.
 - No more annoying message box after saving successfully.
 - Ask before losing changes on exit.
