@@ -1214,7 +1214,7 @@ class MainWindow (gtk.Window):
     def __init__ (self, configList):
         gtk.Window.__init__ (self)
         self.set_title ("DRI Configuration")
-        self.connect ("destroy", gtk.main_quit)
+        self.connect ("destroy", lambda dummy: gtk.main_quit())
         self.connect ("delete_event", self.exitHandler)
         self.vbox = gtk.VBox()
         self.paned = gtk.HPaned()
@@ -1370,8 +1370,10 @@ class MainWindow (gtk.Window):
             dialog.show()
             return TRUE
         elif event == None:
+            # called from toolbar button: main_quit!
             gtk.main_quit()
         else:
+            # called from delete_event: indicate it's ok to destroy
             return FALSE
 
     def doExit (self, dialog, response):
