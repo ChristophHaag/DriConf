@@ -1,4 +1,4 @@
-driconf-0.2.1:
+driconf-0.2.1: Sat Nov 15 10:04:37 CET 2003
 
 - Select the first writable application configuration on startup with the nice
   side effect that the window doesn't grow later.
