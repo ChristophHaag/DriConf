@@ -174,8 +174,12 @@ class OptionLine:
             typeString = typeString+" ["+ \
                          reduce(lambda x,y: x+','+y, map(str,opt.valid))+"]"
         # a check button with an option description
-        self.check = WrappingCheckButton (
-            opt.getDesc([lang]).text.encode(encoding), width=200)
+        desc = opt.getDesc([lang])
+        if desc != None:
+            desc = desc.text
+        else:
+            desc = u"(no description available)"
+        self.check = WrappingCheckButton (desc.encode(encoding), width=200)
         self.check.set_active (page.app.options.has_key (opt.name))
         self.check.set_sensitive (page.app.device.config.writable)
         self.check.connect ("clicked", self.checkOpt)
@@ -242,7 +246,7 @@ class OptionLine:
             for r in opt.valid:
                 for v in range (r.start, r.end+1):
                     vString = dri.ValueToStr(v, type)
-                    if type == "enum" and desc.enums.has_key(v):
+                    if type == "enum" and desc and desc.enums.has_key(v):
                         string = desc.enums[v].encode(encoding)
                     else:
                         string = vString
@@ -275,11 +279,15 @@ class OptionLine:
         elif self.widget.__class__ == GtkEntry:
             if self.opt.type == "bool" and valid:
                 if value:
-                    self.widget.set_text ("true")
+                    newText = "true"
                 else:
-                    self.widget.set_text ("false")
+                    newText = "false"
             else:
-                self.widget.set_text (str(value))
+                newText = str(value)
+            # only set new text if it changed, otherwise the changed signal
+            # is triggered without a real value change
+            if newText != self.widget.get_text():
+                self.widget.set_text (newText)
         self.check.set_active (active)
 
     def getValue (self):
@@ -468,7 +476,11 @@ class DriverPanel (GtkFrame):
         for sect in driver.optSections:
             sectPage = SectionPage (sect, app)
             sectPage.show()
-            sectLabel = GtkLabel (sect.getDesc([lang]).encode(encoding))
+            desc = sect.getDesc([lang])
+            if desc:
+                sectLabel = GtkLabel (desc.encode(encoding))
+            else:
+                sectLabel = GtkLabel ("(no description)")
             sectLabel.show()
             notebook.append_page (sectPage, sectLabel)
             self.sectPages.append (sectPage)
