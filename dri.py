@@ -89,7 +89,8 @@ def GetDesc (desc, preferredLangs):
     """ Helper: get a description with a list of language preferences.
 
     If the specified languages are not available then try english.
-    If that doesn't work either, return any description. """
+    If that doesn't work either, return any description.
+    If there are no descriptions at all, return None. """
     for lang in preferredLangs:
         if desc.has_key (lang):
             return desc[lang]
@@ -97,7 +98,7 @@ def GetDesc (desc, preferredLangs):
         return desc["en"]
     if len(desc.values()) > 0:
         return desc.values()[0]
-    return ""
+    return None
 
 class Range:
     """ An interval """
