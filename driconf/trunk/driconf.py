@@ -242,9 +242,6 @@ class OptionLine:
             else:
                 self.widget.set_text (dri.ValueToStr(value, type))
             self.widget.connect ("activate", self.activateSignal)
-            self.invalidStyle = self.widget.get_style().copy()
-            self.invalidStyle.fg[STATE_NORMAL] = \
-                    self.widget.get_colormap().alloc(65535, 0, 0)
         self.updateWidget (value, valid)
         self.widget.show()
 
@@ -325,7 +322,9 @@ class OptionLine:
         valid = self.opt.validate (value)
         if not valid:
             if self.widget.__class__ == GtkEntry:
-                self.widget.set_style (self.invalidStyle)
+                style = self.widget.get_style().copy()
+                style.fg[STATE_NORMAL] = self.widget.get_colormap().alloc(65535, 0, 0)
+                self.widget.set_style (style)
         else:
             if self.widget.__class__ == GtkEntry:
                 self.widget.set_rc_style()
@@ -456,10 +455,6 @@ class DriverPanel (GtkFrame):
             self.sectLabels.append (sectLabel)
             MessageDialog ("Notice",
                            "This application configuration contains options that are not known to the driver. Either you edited your configuration file manually or the driver configuration changed. See the page named \"Unknown\" for details. It is probably safe to remove these options. Otherwise they are left unchanged.", modal=FALSE)
-        if len(self.sectLabels) > 0:
-            self.invalidStyle = self.sectLabels[0].get_style().copy()
-            self.invalidStyle.fg[STATE_NORMAL] = \
-                    self.sectLabels[0].get_colormap().alloc(65535, 0, 0)
         self.validate()
         notebook.show()
         table.attach (notebook, 0, 2, 1, 2, FILL, EXPAND|FILL, 5, 5)
@@ -476,7 +471,9 @@ class DriverPanel (GtkFrame):
         for sectPage in self.sectPages:
             valid = sectPage.validate()
             if not valid:
-                self.sectLabels[index].set_style(self.invalidStyle)
+                style = self.sectLabels[index].get_style().copy()
+                style.fg[STATE_NORMAL] = self.sectLabels[index].get_colormap().alloc(65535, 0, 0)
+                self.sectLabels[index].set_style(style)
             else:
                 self.sectLabels[index].set_rc_style()
             allValid = allValid and valid
@@ -601,6 +598,7 @@ class ConfigTree (GtkCTree):
         self.set_usize (200, 0)
         self.set_selection_mode (SELECTION_BROWSE)
         self.mainWindow = mainWindow
+        self.defaultFg = self.get_style().fg[STATE_NORMAL]
         for config in configList:
             self.addConfig (config)
         self.connect ("select_row", self.selectRowSignal, None)
@@ -647,9 +645,13 @@ class ConfigTree (GtkCTree):
             driver = None
         if driver:
             if driver.validate (app.options):
-                pass
+                style = self.get_style().copy()
+                style.fg[STATE_NORMAL] = self.defaultFg
+                self.node_set_row_style(app.node, style)
             else:
-                pass
+                style = self.get_style().copy()
+                style.fg[STATE_NORMAL] = self.get_colormap().alloc(65535, 0, 0)
+                self.node_set_row_style(app.node, style)
 
     def selectRowSignal (self, widget, row, column, event, data):
         type, obj = self.get_row_data (row)
@@ -828,7 +830,7 @@ class ConfigTree (GtkCTree):
             for device in config.devices:
                 try:
                     driver = device.getDriver (dpy)
-                except dri.XMLError, problem:
+                except dri.XMLError:
                     driver = None
                 if driver == None:
                     continue
@@ -901,6 +903,7 @@ class MainWindow (GtkWindow):
     def commitDriverPanel (self):
         if self.curDriverPanel != None:
             self.curDriverPanel.commit()
+            self.configTree.validateAppNode (self.curDriverPanel.app)
 
     def switchDriverPanel (self, driver=None, app=None):
         if self.curDriverPanel != None:
