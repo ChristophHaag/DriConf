@@ -618,7 +618,12 @@ class ConfigTree (GtkCTree):
             device = app.device
             driver = None
             if device.driver:
-                driver = dri.GetDriver (device.driver)
+                try:
+                    driver = dri.GetDriver (device.driver)
+                except dri.XMLError, problem:
+                    MessageDialog ("Error",
+                                   "Parsing the driver's configuration information: " + problem,
+                                   modal=FALSE)
             elif device.screen:
                 try:
                     screenNum = int(device.screen)
