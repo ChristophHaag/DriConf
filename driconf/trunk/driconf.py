@@ -648,6 +648,7 @@ class ConfigTree (GtkCTree):
     def __init__ (self, configList):
         GtkCTree.__init__ (self, 1, 0)
         self.set_usize (200, 0)
+        self.set_column_auto_resize (0, TRUE)
         self.set_selection_mode (SELECTION_BROWSE)
         self.defaultFg = self.get_style().fg[STATE_NORMAL]
         self.configList = []
@@ -1004,7 +1005,11 @@ class MainWindow (GtkWindow):
         self.paned = GtkHPaned()
         self.configTree = ConfigTree (configList)
         self.configTree.show()
-        self.paned.add1(self.configTree)
+        scrolledWindow = GtkScrolledWindow ()
+        scrolledWindow.set_policy (POLICY_AUTOMATIC, POLICY_AUTOMATIC)
+        scrolledWindow.add (self.configTree)
+        scrolledWindow.show()
+        self.paned.add1(scrolledWindow)
         self.paned.show()
         DataPixmap.window = self
         self.toolbar = GtkToolbar (ORIENTATION_HORIZONTAL, TOOLBAR_BOTH)
