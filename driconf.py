@@ -25,6 +25,7 @@ import pygtk
 pygtk.require ("2.0")
 import gtk
 from gtk import TRUE, FALSE
+import gobject
 from driconf_xpm import *
 
 # global variable: main window
@@ -390,14 +391,19 @@ class UnknownSectionPage(gtk.VBox):
         if len(self.opts) == 0:
             return
         # list all remaining options here
-        self.list = gtk.CList(2, ["Option", "Value"])
-        self.list.set_selection_mode (gtk.SELECTION_MULTIPLE)
+        self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.view = gtk.TreeView (self.store)
+        self.view.set_rules_hint (TRUE)
+        column = gtk.TreeViewColumn ("Option", gtk.CellRendererText(), text=0)
+        self.view.append_column (column)
+        column = gtk.TreeViewColumn ("Value", gtk.CellRendererText(), text=1)
+        self.view.append_column (column)
+        self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
         for name,val in self.opts.items():
-            self.list.append ([str(name),str(val)])
-        self.list.set_column_justification (1, gtk.JUSTIFY_RIGHT)
-        self.list.columns_autosize()
-        self.list.show()
-        scrolledWindow.add (self.list)
+            iter = self.store.append ()
+            self.store.set (iter, 0, str(name), 1, str(val))
+        self.view.show()
+        scrolledWindow.add (self.view)
         scrolledWindow.show()
         self.pack_start (scrolledWindow, TRUE, TRUE, 0)
         self.removeButton = gtk.Button (stock="gtk-delete")
@@ -415,15 +421,18 @@ class UnknownSectionPage(gtk.VBox):
 
     def removeSelection (self, widget):
         """ Remove the selected items from the list and app config. """
-        # must delete from back to front. make a copy of selection and sort it
-        selection = self.list.selection[:]
-        selection.sort()
-        selection.reverse()
-        for row in selection:
-            name = self.list.get_text (row, 0)
-            del self.app.options[name]
-            self.list.remove (row)
-            self.app.device.config.modifiedCallback()
+        # Damn it! gtk.TreeSelection.get_selected_rows doesn't exist.
+        # So we iterate over the whole list store and delete all selected
+        # items.
+        iter = self.store.get_iter_first()
+        while iter:
+            next_iter = self.store.iter_next (iter)
+            if self.view.get_selection().iter_is_selected(iter):
+                name = self.store.get_value(iter, 0)
+                del self.app.options[name]
+                self.store.remove (iter)
+                self.app.device.config.modifiedCallback()
+            iter = next_iter
 
 class DriverPanel (gtk.Frame):
     """ Panel for driver settings for a specific application. """
