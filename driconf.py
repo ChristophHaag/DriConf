@@ -130,6 +130,7 @@ class OptionLine:
         if value == None:
             value = opt.default
         self.initWidget (opt, value)
+        self.widget.set_sensitive (self.check.get_active())
         page.table.attach (self.widget, 1, 2, i, i+1, FILL, 0, 5, 5)
         self.resetButton = GtkButton ()
         pixmap = DataPixmap (mainWindow, tb_undo_xpm)
@@ -210,8 +211,10 @@ class OptionLine:
 
     def checkOpt (self, widget):
         if self.check.get_active():
+            self.widget.set_sensitive (TRUE)
             self.page.checkOpt (self.opt, self.getValue())
         else:
+            self.widget.set_sensitive (FALSE)
             self.page.checkOpt (self.opt, None)
 
     def activateSignal (self, widget, dummy=None):
@@ -226,7 +229,6 @@ class OptionLine:
 
     def resetOpt (self, widget):
         self.updateWidget (self.opt.default)
-        self.check.set_active (FALSE)
 
     def validate (self):
         if not self.check.get_active():
