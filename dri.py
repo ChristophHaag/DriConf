@@ -54,7 +54,7 @@ def XDriInfo (argStr, dpy = None):
         elif status == 127:
             raise DRIError ("XDriInfo not found.")
         else:
-            raise DRIError ("XDriInfo failed: " + driError)
+            raise DRIError ("XDriInfo returned with non-zero exit code.")
     return driInfo
 
 def StrToValue (str, type):
