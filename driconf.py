@@ -354,6 +354,9 @@ class OptionLine:
         else:
             self.widget.set_sensitive (FALSE)
             self.resetButton.set_sensitive (FALSE)
+        if not self.isValid:
+            self.highlightInvalid()
+            self.page.doValidate()
         self.page.optionModified (self)
 
     def activateSignal (self, widget, dummy=None):
@@ -389,7 +392,7 @@ class OptionLine:
             self.page.doValidate()
 
     def highlightInvalid (self):
-        if not self.isValid:
+        if not self.isValid and self.check.get_active():
             if self.widget.__class__ == gtk.Entry:
                 self.widget.modify_text (gtk.STATE_NORMAL,
                                          gtk.gdk.Color (65535, 0, 0))
@@ -407,7 +410,7 @@ class OptionLine:
                                          self.default_insensitive_text)
 
     def validate (self):
-        return self.isValid
+        return self.isValid or not self.check.get_active()
 
 class SectionPage (gtk.ScrolledWindow):
     """ One page in the DriverPanel with one OptionLine per option. """
