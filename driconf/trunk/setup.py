@@ -24,7 +24,6 @@ for prefix in [None, "/usr/local"]:
         pyLibPath = get_python_lib()
     else:
         pyLibPath = get_python_lib(prefix=prefix)
-    print pyLibPath
     if not isdir (pyLibPath):
         continue
     for f in ["driconf_xpm.py", "driconf_xpm.pyc", "driconf_xpm.pyo"]:
