@@ -18,9 +18,8 @@
 
 # Contact: http://fxk.de.vu/
 
-import os
-import string
 import popen2
+import string
 import xml.parsers.expat
 
 class Error (Exception):
