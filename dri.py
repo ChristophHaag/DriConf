@@ -62,7 +62,7 @@ def StrToValue (str, type):
 
     Raises an XMLError if str is not of the correct type. """
     try:
-        if type == "int":
+        if type == "int" or type == "enum":
             return int (str);
         elif type == "float":
             return float (str);
@@ -78,7 +78,7 @@ def StrToValue (str, type):
 
 def ValueToStr (value, type):
     """ Helper: convert value of given type to string. """
-    if type == "int" or type == "float":
+    if type == "int" or type == "enum" or type == "float":
         return str(value)
     elif value:
         return "true"
@@ -105,7 +105,7 @@ class Range:
         """ Parse str as a range.
 
         Raises an XMLError if str is not a legal range. """
-        assert type == "int" or type == "float"
+        assert type == "int" or type == "enum" or type == "float"
         list = string.split (str, ":")
         if len (list) == 0 or len (list) > 2:
             raise XMLError ("Invalid range '" + str + "'")
@@ -134,7 +134,8 @@ class OptInfo:
           - valid is specified but illegal """
         self.name = name
 
-        if type != "int" and type != "float" and type != "bool":
+        if type != "int" and type != "enum" and type != "float" \
+               and type != "bool":
             raise XMLError ("invalid type '" + type + "'")
         self.type = type
         self.valid = None
@@ -418,8 +419,8 @@ class DRIConfig:
             self.fileName = fileName
 
     def __str__ (self):
-        result = '<dri>\n'
+        result = '<driconf>\n'
         for d in self.devices:
             result = result + str(d) + '\n'
-        result = result + '</dri>'
+        result = result + '</driconf>'
         return result
