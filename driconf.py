@@ -1047,8 +1047,11 @@ class MainWindow (gtk.Window):
         self.vbox.show()
         self.add (self.vbox)
         self.curDriverPanel = None
-        self.logo = DataPixmap (drilogo_xpm)
-        self.logo.show()
+        self.logo = gtk.EventBox ()
+        self.logo.add (DataPixmap (drilogo_xpm))
+        self.logo.modify_bg (gtk.STATE_NORMAL,
+                             gtk.gdk.Color (65535, 65535, 65535))
+        self.logo.show_all()
         self.paned.add2 (self.logo)
 
     def initSelection (self):
