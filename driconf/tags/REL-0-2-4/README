@@ -1,0 +1,121 @@
+DRIconf: DRI configuration GUI
+
+Introduction
+------------
+
+DRI is the direct rendering infrastructure in XFree86 and X.org, which
+provides 3D hardware acceleration. Most 3D drivers have a number of
+options for tuning the performance and visual quality. DRIconf is a
+graphical tool to change these parameters.
+
+In order to use it you need at least X.org 6.8 or XFree86 4.4. 3D
+drivers in earlier X releases did not support configuration.
+
+Installation
+------------
+
+This tool is written in Python. Before installing make sure that a
+Python version and the matching packages xml.parsers.expat and
+python-gtk are installed. Note that there are now two series of
+DRIConf for gtk-1.2 and gtk-2 respectively. The gtk-1.2 series uses
+version numbers 0.1.xx, the gtk-2 versions are labeled 0.2.xx. The
+installation uses Python's distutils package.
+
+By default driconf will be installed into /usr/local/bin and
+/usr/local/lib/pythonX.Y/site-packages. You can change this using the
+prefix option in setup.cfg. For installing run the following command
+as root:
+
+python setup.py install
+
+If everything goes well you should see something like this:
+
+running install
+running build
+running build_py
+creating build
+creating build/lib
+copying dri.py -> build/lib
+copying driconf.py -> build/lib
+copying driconf_xpm.py -> build/lib
+running build_scripts
+creating build/scripts
+copying and adjusting driconf -> build/scripts
+running install_lib
+copying build/lib/driconf.py -> /usr/local/lib/python2.1/site-packages
+copying build/lib/dri.py -> /usr/local/lib/python2.1/site-packages
+copying build/lib/driconf_xpm.py -> /usr/local/lib/python2.1/site-packages
+byte-compiling /usr/local/lib/python2.1/site-packages/driconf.py to driconf.pyc
+byte-compiling /usr/local/lib/python2.1/site-packages/dri.py to dri.pyc
+byte-compiling /usr/local/lib/python2.1/site-packages/driconf_xpm.py to driconf_xpm.pyc
+running install_scripts
+copying build/scripts/driconf -> /usr/local/bin
+changing mode of /usr/local/bin/driconf to 100755
+
+After successful installation you can run driconf from the shell. I
+hope you find the user interface intuitive and instructive. Feedback
+is welcome on dri-users@lists.sourceforge.net. If you need help
+getting started read on below.
+
+Happy tuning ...
+
+    Felix Kuehling
+
+
+
+Getting Started
+---------------
+
+When you start DRIconf for the first time, it will automatically
+create a configuration file for you. It is represented by a small tree
+on the left hand side of the window. The tree has one node for each 3D
+graphics device you may have, usually only one though. Below that node
+there is an application node named "all". This node should be
+selected now.
+
+The right pane of the window shows the available options of the 3D
+driver. Options are organized in several tabs of a notebook. Left of
+each option there is a check box. Activating it will allow you to
+change the value of that option. Only options whose check box is
+active will be written to the configuration file. With the button on
+the right of each option you can always restore the respective default
+value for reference.
+
+When you're done changing options, click on the "Save" button in the
+button bar at the top of the DRIconf window.
+
+Application-Specific Configuration
+----------------------------------
+
+The settings you changed above will affect all 3D applications and
+games. What if you would like to use different settings for two of
+your favorite games? No problem, you can create different settings
+for as many applications as you like.
+
+Select a device node in the configuration tree on the left hand
+side. Then click on the "New" button at the top of the window. This
+opens a small dialog that asks for the name of the application. This
+is really only a descriptive string. After confirming with "OK" you
+will have a new application node with the name you just entered.
+
+The right pane of the window now shows the driver options with their
+settings for the new application. Note the entry above the tabs
+containing the actual options. If you activate it you can enter the
+name of the application's executable file. This will make the settings
+below apply only to this particular application. If you leave the
+entry disabled, the settings will apply to all applications.
+
+Beware that some applications and games end up running a different
+executable than what you type in the shell. For example q3demo is only
+a shell script that starts an executable called q3demo.x86 on my
+system. In this example you need to enter "q3demo.x86", otherwise the
+settings would not apply.
+
+Advanced Features
+-----------------
+
+Some advanced features include adding more devices and changing the
+order of devices and applications. The order matters only in rare
+cases, when multiple application nodes apply to the same
+application. If they set the same options, then only the last setting
+takes effect.
