@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name="driconf",
-      version="0.0.11",
+      version="0.2.0",
       description="DRI Configuration GUI",
       author="Felix Kuehling",
       author_email="fxkuehl@gmx.de",
@@ -11,13 +11,15 @@ setup(name="driconf",
 
 errors = 0
 try:
+    import pygtk
+    pygtk.require ("2.0")
     import gtk
-except ImportError:
-    print "Warning: importing gtk doesn't work."
+except:
+    print "Warning: importing gtk version 2.0 doesn't work."
     errors = 1
 try:
     import xml.parsers.expat
-except ImportError:
+except:
     print "Warning: importing xml.parsers.expat doesn't work."
     errors = 1
 
