@@ -280,7 +280,8 @@ class DriverPanel (GtkFrame):
         self.set_label ("Application: " + self.app.name)
 
 class MessageDialog (GtkDialog):
-    def __init__ (self, title, message, buttons = ["OK"], callback = None):
+    def __init__ (self, title, message, buttons = ["OK"], callback = None,
+                  modal = TRUE):
         GtkDialog.__init__ (self)
         self.callback = callback
         self.set_title (title)
@@ -301,7 +302,7 @@ class MessageDialog (GtkDialog):
         hbox.show()
         self.vbox.pack_start (hbox, TRUE, TRUE, 10)
         first.grab_default()
-        self.set_modal (TRUE)
+        self.set_modal (modal)
         self.show()
 
     def clickedSignal (self, widget, name):
@@ -463,7 +464,8 @@ class ConfigTree (GtkCTree):
                         driver = screen.driver
             if driver == None:
                 MessageDialog ("Notice",
-                               "Can't determine the driver for this device.")
+                               "Can't determine the driver for this device.",
+                               modal=FALSE)
         else:
             driver = None
             app = None
