@@ -541,7 +541,11 @@ class DriverPanel (gtk.Frame):
     """ Panel for driver settings for a specific application. """
     def __init__ (self, driver, app):
         """ Constructor. """
-        gtk.Frame.__init__ (self, _("Application") + ": " + app.name)
+        gtk.Frame.__init__ (self)
+        frameLabel = gtk.Label()
+        frameLabel.set_markup ("<b>"+_("Application")+": "+app.name+"</b>")
+        frameLabel.show()
+        self.set_label_widget (frameLabel)
         self.driver = driver
         self.app = app
         tooltips = gtk.Tooltips()
