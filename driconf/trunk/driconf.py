@@ -578,7 +578,7 @@ class UnknownSectionPage(gtk.VBox):
         else:
             msg = _("The driver for this device could not be determined or "
                     "does not support configuration. You can still change "
-                    "the settings but I cannot verify whether they are "
+                    "the settings but it cannot be verified whether they are "
                     "supported and valid.")
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
