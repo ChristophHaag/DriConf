@@ -886,7 +886,7 @@ class ConfigTree (GtkCTree):
             dialog = DeviceDialog ("New Device", self.newDeviceCallback, obj)
 
     def newAppCallback (self, name, device):
-        app = dri.AppConfig (device, name, executable=name)
+        app = dri.AppConfig (device, name)
         device.apps.append (app)
         self.addAppNode (device.node, app)
         app.device.config.modifiedCallback()
