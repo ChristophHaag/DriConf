@@ -158,7 +158,7 @@ class SlideSpinner (gtk.VBox):
         if integer:
             step = 1
             page = (diff+4) / 5
-            self.digits = 1
+            self.digits = 0
         else:
             self.digits = -int(math.floor(math.log10(diff) + 0.5)) + 3
             step = math.pow(10, -self.digits + 1)
