@@ -1011,9 +1011,11 @@ class ConfigTreeModel (gtk.GenericTreeModel):
     def findFirstWritableApp (self):
         foundApp = None
         for config in self.configList:
-            if len(config.devices) > 0 and len(config.devices[0].apps) > 0:
-                foundApp = config.devices[0].apps[0]
-                if config.writable:
+            if not config.writable:
+                continue
+            for device in config.devices:
+                if len(device.apps) > 0:
+                    foundApp = device.apps[0]
                     break
         return foundApp
 
