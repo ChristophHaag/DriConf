@@ -1074,6 +1074,14 @@ def main():
         MessageDialog ("Error", str(problem), callback = lambda n: mainquit())
         mainloop()
         return
+    except dri.XMLError, problem:
+        MessageDialog ("Error",
+                       "There are errors in a driver's configuration information:\n"+
+                       str(problem)+
+                       "\nThis should not happen. It probably means that you have to update driconf.",
+                       callback = lambda n: mainquit())
+        mainloop()
+        return
 
     # read or create configuration files
     fileNameList = ["/etc/drirc", os.environ["HOME"] + "/.drirc"]
@@ -1108,9 +1116,9 @@ def main():
             try:
                 config = dri.DRIConfig (cfile)
             except dri.XMLError, problem:
-                MessageDialog ("Error", "Configuration file \""+fileName+\
-                               "\" contains errors: "+str(problem)+"\n"+\
-                               "I will leave the file alone until you fix the problem manually or remove the file.")
+                MessageDialog ("Error", "Configuration file \""+fileName+
+                               "\" contains errors:\n"+str(problem)+
+                               "\nI will leave the file alone until you fix the problem manually or remove the file.")
                 continue
             else:
                 # Check if the file is writable in the end.
