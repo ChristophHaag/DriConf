@@ -683,11 +683,7 @@ class ConfigTreeModel (gtk.GenericTreeModel):
                 name = "general"
             return str(name)
         elif node.__class__ == dri.AppConfig:
-            try:
-                driver = node.device.getDriver(dpy)
-            except dri.XMLError:
-                driver = None
-            if driver and not driver.validate (node.options):
+            if not node.isValid:
                 return '<span foreground="red">' + str(node.name) + '</span>'
             else:
                 return str(node.name)
@@ -791,12 +787,12 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         if node.__class__ == dri.DRIConfig:
             node.isModified = FALSE
             for device in node.devices:
-                device.modified = self.nodeModified
-                for app in device.apps:
-                    app.modified = self.nodeModified
+                self.initNode (device)
         elif node.__class__ == dri.DeviceConfig:
             for app in node.apps:
-                app.modified = self.nodeModified
+                self.initNode (app)
+        elif node.__class__ == dri.AppConfig:
+            self.validateAppNode (node)
     def registerNode (self, node):
         path = self.on_get_path (node)
         iter = self.get_iter (path)
@@ -831,6 +827,17 @@ class ConfigTreeModel (gtk.GenericTreeModel):
                 if config.writable:
                     break
         return foundApp
+
+    # validate an application node
+    def validateAppNode (self, app):
+        try:
+            driver = app.device.getDriver(dpy)
+        except dri.XMLError:
+            driver = None
+        if driver and not driver.validate (app.options):
+            app.isValid = FALSE
+        else:
+            app.isValid = TRUE
 
 class ConfigTreeView (gtk.TreeView):
     def __init__ (self, configList):
@@ -904,8 +911,8 @@ class ConfigTreeView (gtk.TreeView):
 
     # highlight invalid nodes
     def validateAppNode (self, app):
-        # The validation is done in ConfigTreeModel.get_value. Just emit a
-        # row_changed event so that get_value is called once more.
+        self.model.validateAppNode (app)
+        # Emit a row_changed event so that the view gets updated properly.
         path = self.model.getPathFromNode (app)
         iter = self.model.get_iter (path)
         self.model.row_changed (path, iter)
