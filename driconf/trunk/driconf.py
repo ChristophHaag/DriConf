@@ -750,7 +750,12 @@ def main():
 
     # read configuration information from the drivers
     global dpy
-    dpy = dri.DisplayInfo ()
+    try:
+        dpy = dri.DisplayInfo ()
+    except dri.DRIError, problem:
+        MessageDialog ("Error", str(problem), callback = lambda n: mainquit())
+        mainloop()
+        return
 
     # open the main window
     global mainWindow
