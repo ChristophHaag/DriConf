@@ -525,7 +525,9 @@ class DriverPanel (gtk.Frame):
         table = gtk.Table(2, 2)
         self.execCheck = WrappingCheckButton ("Executable")
         self.execCheck.set_sensitive (app.device.config.writable)
-        tooltips.set_tip (self.execCheck, "Name of the executable. \
+        tooltips.set_tip (self.execCheck, "Name of the executable to which \
+these settings shall apply. If you leave it disabled, then these settings \
+will apply to all applications.\n\
 Beware that some applications or games are just a shell script that starts \
 a real executable with a different name.")
         self.execCheck.show()
