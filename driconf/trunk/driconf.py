@@ -469,6 +469,15 @@ class UnknownSectionPage(gtk.VBox):
     def __init__ (self, driver, app):
         """ Constructor. """
         gtk.VBox.__init__ (self)
+        label = gtk.Label (
+            _("Some settings in this application configuration are "
+              "unknown to the driver. Maybe the driver version changed and "
+              "does not support these options any more. It is probably "
+              "safe to delete these settings."))
+        label.set_size_request (500, -1)
+        label.set_line_wrap (TRUE)
+        label.show()
+        self.pack_start (label, FALSE, FALSE, 0)
         scrolledWindow = gtk.ScrolledWindow ()
         scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.app = app
@@ -559,6 +568,14 @@ class DriverPanel (gtk.Frame):
         notebook = gtk.Notebook()
         self.sectPages = []
         self.sectLabels = []
+        unknownPage = UnknownSectionPage (driver, app)
+        if len(unknownPage.opts) > 0:
+            unknownPage.show()
+            unknownLabel = gtk.Label (_("Unknown"))
+            unknownLabel.show()
+            notebook.append_page (unknownPage, unknownLabel)
+            self.sectPages.append (unknownPage)
+            self.sectLabels.append (unknownLabel)
         for sect in driver.optSections:
             sectPage = SectionPage (sect, app)
             sectPage.show()
@@ -592,25 +609,6 @@ class DriverPanel (gtk.Frame):
             notebook.append_page (sectPage, labelWidget)
             self.sectPages.append (sectPage)
             self.sectLabels.append (sectLabel)
-        unknownPage = UnknownSectionPage (driver, app)
-        if len(unknownPage.opts) > 0:
-            unknownPage.show()
-            unknownLabel = gtk.Label (_("Unknown"))
-            unknownLabel.show()
-            notebook.append_page (unknownPage, unknownLabel)
-            self.sectPages.append (unknownPage)
-            self.sectLabels.append (unknownLabel)
-            dialog = gtk.MessageDialog (
-                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
-                _("This application configuration contains options that are "
-                  "not known to the driver. Either you edited your "
-                  "configuration file manually or the driver configuration "
-                  "changed. See the page named \"Unknown\" for details. It "
-                  "is probably safe to remove these options. Otherwise they "
-                  "are left unchanged."))
-            dialog.connect ("response", lambda d,r: d.destroy())
-            dialog.show()
         if len(self.sectLabels) > 0:
             style = self.sectLabels[0].get_style()
             self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
