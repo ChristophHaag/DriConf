@@ -523,15 +523,14 @@ class DriverPanel (gtk.Frame):
         self.app = app
         tooltips = gtk.Tooltips()
         table = gtk.Table(2, 2)
-        self.execCheck = WrappingCheckButton ("Executable")
+        self.execCheck = WrappingCheckButton ("Apply only to this executable")
         self.execCheck.set_sensitive (app.device.config.writable)
-        tooltips.set_tip (self.execCheck, "Name of the executable to which \
-these settings shall apply. If you leave it disabled, then these settings \
-will apply to all applications.\n\
+        tooltips.set_tip (self.execCheck, "Leave this disabled to configure \
+all applications.\n\
 Beware that some applications or games are just a shell script that starts \
 a real executable with a different name.")
         self.execCheck.show()
-        table.attach (self.execCheck, 0, 1, 0, 1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
+        table.attach (self.execCheck, 0, 1, 0, 1, 0, 0, 5, 5)
         self.execEntry = gtk.Entry()
         if app.executable != None:
             self.execCheck.set_active (TRUE)
