@@ -1,3 +1,10 @@
+driconf-0.1.1: Sat Nov 15 10:08:13 CET 2003
+
+- Select the first writable application configuration on startup with the nice
+  side effect that the window doesn't grow later.
+- White background behind the logo.
+- Completely rewired checking for invalid user input in Entry widgets.
+
 driconf-0.1.0: Tue Oct 28 15:15:34 CET 2003
 
 - Made the configuration tree scrollable.
