@@ -950,13 +950,11 @@ class ConfigTree (GtkCTree):
             node = self.getSelection()
         except SelectionError:
             return
-        type, config = self.node_get_row_data (node)
+        type, obj = self.node_get_row_data (node)
         if type == "app":
-            config = config.device
-            type = "device"
-        if type == "device":
-            config = config.config
-            type = "config"
+            config = obj.device.config
+        elif type == "device":
+            config = obj.config
         if reallyReload == "dunno":
             MessageDialog ("Question",
                            "Really reload " + config.fileName + " from disk?",
@@ -986,6 +984,11 @@ class ConfigTree (GtkCTree):
         else:
             sibling = self.configList[index+1]
         self.configList.remove (config)
+        if type == "app":
+            mainWindow.removeApp (obj)
+        elif type == "device":
+            for app in obj.apps:
+                mainWindow.removeApp (app)
         self.remove_node (config.node)
         self.addConfig (newConfig, sibling)
 
