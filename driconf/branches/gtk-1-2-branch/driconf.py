@@ -402,12 +402,13 @@ class SectionPage (GtkScrolledWindow):
                     self.app.device.config.modifiedCallback()
                 self.app.options[name] = value
 
-class UnknownSectionPage(GtkScrolledWindow):
+class UnknownSectionPage(GtkVBox):
     """ Special section page for options unknown to the driver. """
     def __init__ (self, driver, app):
         """ Constructor. """
-        GtkScrolledWindow.__init__ (self)
-        self.set_policy (POLICY_AUTOMATIC, POLICY_AUTOMATIC)
+        GtkVBox.__init__ (self)
+        scrolledWindow = GtkScrolledWindow ()
+        scrolledWindow.set_policy (POLICY_AUTOMATIC, POLICY_AUTOMATIC)
         self.app = app
         # copy options (dict function does not exist in Python 2.1 :( )
         self.opts = {}
@@ -423,19 +424,19 @@ class UnknownSectionPage(GtkScrolledWindow):
             return
         # list all remaining options here
         self.list = GtkCList(2, ["Option", "Value"])
+        self.list.set_selection_mode (SELECTION_EXTENDED)
         for name,val in self.opts.items():
             self.list.append ([str(name),str(val)])
         self.list.set_column_justification (1, JUSTIFY_RIGHT)
         self.list.columns_autosize()
         self.list.show()
-        self.vbox = GtkVBox()
-        self.vbox.pack_start (self.list, TRUE, TRUE, 0)
+        scrolledWindow.add (self.list)
+        scrolledWindow.show()
+        self.pack_start (scrolledWindow, TRUE, TRUE, 0)
         self.removeButton = GtkButton ("Remove")
         self.removeButton.show()
         self.removeButton.connect ("clicked", self.removeSelection)
-        self.vbox.pack_start (self.removeButton, FALSE, FALSE, 0)
-        self.vbox.show()
-        self.add_with_viewport (self.vbox)
+        self.pack_start (self.removeButton, FALSE, FALSE, 0)
 
     def validate (self):
         """ These options can't be validated. """
@@ -447,7 +448,11 @@ class UnknownSectionPage(GtkScrolledWindow):
 
     def removeSelection (self, widget):
         """ Remove the selected items from the list and app config. """
-        for row in self.list.selection:
+        # must delete from back to front. make a copy of selection and sort it
+        selection = self.list.selection[:]
+        selection.sort()
+        selection.reverse()
+        for row in selection:
             name = self.list.get_text (row, 0)
             del self.app.options[name]
             self.list.remove (row)
@@ -977,8 +982,9 @@ class ConfigTree (GtkCTree):
             MessageDialog ("Error", "Configuration file \""+config.fileName+
                            "\" contains errors:\n"+str(problem)+
                            "\nThe file was not reloaded.")
-            close (cfile)
+            cfile.close()
             return
+        cfile.close()
         # Check if the file is writable in the end.
         newConfig.writable = fileIsWritable (config.fileName)
         # find the position of config
@@ -1219,8 +1225,10 @@ def main():
                 MessageDialog ("Error", "Configuration file \""+fileName+
                                "\" contains errors:\n"+str(problem)+
                                "\nI will leave the file alone until you fix the problem manually or remove the file.")
+                cfile.close()
                 continue
             else:
+                cfile.close()
                 # Check if the file is writable in the end.
                 config.writable = fileIsWritable (fileName)
         if config:
