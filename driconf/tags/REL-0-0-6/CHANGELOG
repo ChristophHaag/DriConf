@@ -1,0 +1,50 @@
+driconf-0.0.6: Thu Aug 21 03:40:37 CEST 2003
+
+- Added a custom GtkOptionMenu-like widget for enums that wraps lines
+- Display options' XML elements as tooltip
+- Make widgets of disabled options unsensitive
+- Fixed: workaround for a strange problem with a modal dialog opened in the
+  select_row callback of a ctree with selection mode SELECTION_BROWSE. It
+  locked up the entire X session in a way that no more input was accepted!
+- Fixed: popen2.Popen3 didn't seem to work from inside gtk callbacks.
+
+driconf-0.0.5: Sat Aug 16 15:41:12 CEST 2003
+
+- Adjust toolbar button sensitivity to selected config tree item
+- Reset individual options to their default value
+- Display translated description as option label, name and type as tooltip
+- Use popen2.Popen3 so that xdriinfo's stderr can be captured to produce
+  more helpful error messages
+- Fixed: show an error message dialog if xdriinfo fails on program startup
+
+driconf-0.0.4: Mon Jul 28 23:20:16 CEST 2003
+
+- Support for enum options
+- Fixed: top level element must be <driconf> not <dri>
+
+driconf-0.0.3: Mon Jul 21 00:37:56 CEST 2003
+
+- Appropriate widgets for specific option types and valid ranges
+- Changed options get activated automatically
+- Added a DRI logo
+- Installation using Python's distutils
+- Handles invalid configuration files gracefully
+
+driconf-0.0.2: Sun Jul 13 23:35:00 CEST 2003
+
+- For non-existent files create one device per screen each with one empty
+  application config
+- Fixed: Select a default language (en) and encoding (iso-8859-1) if not
+         defined by the locale (e.g. "C")
+
+driconf-0.0.1: Sun Jul 13 19:29:12 CEST 2003
+
+- Added CHANGELOG
+- Added TODO
+- Fixed: Forgot to commit changed entries before saving
+- Fixed: Install to $PREFIX/lib/$PYTHON/site-packages. It seems .pyo files
+      	 are ignored. Install .pyc files instead.
+
+driconf-0.0.0: Sun Jul 13 17:00:00 CEST 2003
+
+First release

@@ -1,0 +1,51 @@
+DRI configuration GUI
+
+This is the first graphical configuration tool for DRI. There is still
+a lot of work to do and probably many bugs to fix. But I want to make
+it available as soon as possible in order to get more feedback on the
+config-0-0-1-branch in DRI CVS.
+
+In order to use it you need the config-0-0-1-branch from DRI CVS. For
+instructions on downloading and installing CVS branches see the
+documentation on dri.sf.net.
+
+This tool is written in Python. Before installing make sure that a
+Python version and the matching packages xml.parsers.expat and
+python-gtk are installed. The installation uses Python's distutils
+package.
+
+By default driconf will be installed into /usr/local/bin and
+/usr/local/lib/pythonX.Y/site-packages. You can change this using the
+prefix option in setup.cfg. For installing run the following command
+as root:
+
+python setup.py install
+
+If everything goes well you should see something like this:
+
+running install
+running build
+running build_py
+creating build
+creating build/lib
+copying dri.py -> build/lib
+copying driconf.py -> build/lib
+copying driconf_xpm.py -> build/lib
+running build_scripts
+creating build/scripts
+copying and adjusting driconf -> build/scripts
+running install_lib
+copying build/lib/driconf.py -> /usr/local/lib/python2.1/site-packages
+copying build/lib/dri.py -> /usr/local/lib/python2.1/site-packages
+copying build/lib/driconf_xpm.py -> /usr/local/lib/python2.1/site-packages
+byte-compiling /usr/local/lib/python2.1/site-packages/driconf.py to driconf.pyc
+byte-compiling /usr/local/lib/python2.1/site-packages/dri.py to dri.pyc
+byte-compiling /usr/local/lib/python2.1/site-packages/driconf_xpm.py to driconf_xpm.pyc
+running install_scripts
+copying build/scripts/driconf -> /usr/local/bin
+changing mode of /usr/local/bin/driconf to 100755
+
+After successful installation you can run driconf from the shell.
+
+Enjoy ...
+  Felix Kuehling
