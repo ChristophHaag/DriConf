@@ -413,7 +413,6 @@ class SectionPage (gtk.ScrolledWindow):
         """ Constructor. """
         gtk.ScrolledWindow.__init__ (self)
         self.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.set_size_request (500, 200)
         self.optSection = optSection
         self.app = app
         self.tooltips = gtk.Tooltips()
@@ -467,7 +466,6 @@ class UnknownSectionPage(gtk.VBox):
     def __init__ (self, driver, app):
         """ Constructor. """
         gtk.VBox.__init__ (self)
-        self.set_size_request (500, 200)
         scrolledWindow = gtk.ScrolledWindow ()
         scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.app = app
@@ -1725,6 +1723,7 @@ def main():
     # mainWindow.show().
     global mainWindow
     mainWindow = MainWindow(configList)
+    mainWindow.set_default_size (720, 540)
     mainWindow.initSelection()
     mainWindow.show ()
     mainWindow.initSelection()
