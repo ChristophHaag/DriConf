@@ -19,13 +19,6 @@
 # Contact: http://fxk.de.vu/
 
 from os import environ
-#from tb_save import tb_save_xpm
-#from tb_new import tb_new_xpm
-#from tb_edit import tb_edit_xpm
-#from tb_trash import tb_trash_xpm
-#from tb_up_arrow import tb_up_arrow_xpm
-#from tb_down_arrow import tb_down_arrow_xpm
-#from tb_exit import tb_exit_xpm
 from driconf_tb_icons import *
 import locale
 import dri
@@ -513,10 +506,15 @@ class ConfigTree (GtkCTree):
             MessageDialog ("Error",
                            "Can't open \""+config.fileName+"\" for writing.")
             return
+        valid = mainWindow.commitDriverPanel()
         file.write (str(config))
         file.close()
-        MessageDialog ("Success",
-                       "\""+config.fileName+"\" saved successfully.")
+        if valid:
+            MessageDialog ("Success",
+                           "\""+config.fileName+"\" saved successfully.")
+        else:
+            MessageDialog ("Warning",
+                           "\""+config.fileName+"\" saved with invalid entries.")
 
 class MainWindow (GtkWindow):
     def __init__ (self, configList):
