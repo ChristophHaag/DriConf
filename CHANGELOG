@@ -1,3 +1,8 @@
+driconf-0.2.2: Mon Jan  5 03:51:35 CET 2004
+
+- Fixed a problem with floating point options that specify a list of valid
+  values, like the new def_max_anisotropy.
+
 driconf-0.2.1: Sat Nov 15 10:04:37 CET 2003
 
 - Select the first writable application configuration on startup with the nice
