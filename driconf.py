@@ -688,6 +688,16 @@ class ConfigTree (gtk.CTree):
                 style.fg[gtk.STATE_NORMAL] = gtk.gdk.Color (65535, 0, 0)
                 self.node_set_row_style(app.node, style)
 
+    def selectFirstWritableApp (self):
+        foundApp = None
+        for config in self.configList:
+            if len(config.devices) > 0 and len(config.devices[0].apps) > 0:
+                foundApp = config.devices[0].apps[0]
+                if config.writable:
+                    break
+        self.select (foundApp.node)
+        return foundApp
+
     def getSelection (self):
         if len(self.selection) == 0:
             raise SelectionError
@@ -719,6 +729,9 @@ class ConfigTree (gtk.CTree):
 
     def selectRowSignal (self, widget, row, column, event, data):
         type, obj = self.get_row_data (row)
+        self.selectTypeObj (type, obj)
+
+    def selectTypeObj (self, type, obj):
         if type == "app":
             app = obj
             try:
@@ -1038,6 +1051,12 @@ class MainWindow (gtk.Window):
         self.logo.show()
         self.paned.add2 (self.logo)
 
+    def initSelection (self):
+        app = self.configTree.selectFirstWritableApp()
+        # initSelection is called before the mainloop runs, so there is no
+        # selection signal. We have to "emit" it manually.
+        self.configTree.selectTypeObj ("app", app)
+
     def commitDriverPanel (self):
         if self.curDriverPanel != None:
             self.curDriverPanel.commit()
@@ -1222,6 +1241,7 @@ def main():
     # open the main window
     global mainWindow
     mainWindow = MainWindow(configList)
+    mainWindow.initSelection()
     mainWindow.show ()
 
     if len(newFiles) == 1:
