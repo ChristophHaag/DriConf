@@ -849,7 +849,7 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             if col == 0:
                 return self.configIcon
             else:
-                return str(node.fileName)
+                return "<b>" + str(node.fileName) + "</b>"
         elif node.__class__ == dri.DeviceConfig:
             if node.screen and node.driver:
                 name = _("%s on screen %s") % (node.driver.capitalize(),
@@ -1039,11 +1039,12 @@ class ConfigTreeView (gtk.TreeView):
         self.get_selection().set_mode (gtk.SELECTION_BROWSE)
         self.get_selection().connect ("changed", self.selectionChangedSignal)
         column = gtk.TreeViewColumn()
+        column.set_spacing (2)
         renderPixbuf = gtk.CellRendererPixbuf()
-        column.pack_start (renderPixbuf, expand=False)
+        column.pack_start (renderPixbuf, expand=FALSE)
         column.add_attribute (renderPixbuf, "pixbuf", 0)
         renderText = gtk.CellRendererText()
-        column.pack_start (renderText, expand=True)
+        column.pack_start (renderText, expand=TRUE)
         column.add_attribute (renderText, "markup", 1)
         self.append_column (column)
 
