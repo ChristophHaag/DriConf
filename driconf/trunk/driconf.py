@@ -183,45 +183,52 @@ class OptionLine:
         self.resetButton.connect ("clicked", self.resetOpt)
         self.resetButton.show()
         page.table.attach (self.resetButton, 2, 3, i, i+1, 0, 0, 5, 5)
-        # the widget for editing the option value
+
+        # get the option value, if it's invalid leave it as a string
         if page.app.options.has_key (opt.name):
-            try: 
+            valid = opt.validate (page.app.options[opt.name])
+            try:
                 value = dri.StrToValue (page.app.options[opt.name], opt.type)
             except dri.XMLError:
-                value = None
+                valid = 0
+            if not valid:
+                value = page.app.options[opt.name]
         else:
-            value = None
-        if value == None:
             value = opt.default
-        self.initWidget (opt, value)
+            valid = 1
+        # the widget for editing the option value
+        self.initWidget (opt, value, valid)
         self.widget.set_sensitive (sensitive)
         page.table.attach (self.widget, 1, 2, i, i+1, FILL, 0, 5, 5)
 
-    def initWidget (self, opt, value):
+    def initWidget (self, opt, value, valid=1):
         """ Initialize the option widget.
 
         The widget type is selected automatically based in the option type
         and the set/range of valid values. """
-        if opt.type == "bool":
+        type = opt.type
+        if not valid:
+            type = "invalid"
+        if type == "bool":
             self.toggleLabel = GtkLabel()
             self.toggleLabel.show()
             self.widget = GtkToggleButton ()
             self.widget.add (self.toggleLabel)
             self.widget.connect ("toggled", self.activateSignal)
-        elif opt.type == "int" and opt.valid and len(opt.valid) == 1:
+        elif type == "int" and opt.valid and len(opt.valid) == 1:
             adjustment = GtkAdjustment (value, opt.valid[0].start,
                                         opt.valid[0].end, 1, 10)
             self.widget = GtkSpinButton (adjustment, digits=0)
             adjustment.connect ("value_changed", self.activateSignal)
-        elif opt.type == "enum" or \
-             (opt.valid and reduce (lambda x,y: x and y,
-                                    map(lambda r: r.start==r.end, opt.valid))):
+        elif type == "enum" or \
+             (type != "invalid" and opt.valid and
+              reduce (lambda x,y: x and y, map(dri.Range.empty, opt.valid))):
             desc = opt.getDesc([lang])
             optValList = []
             for r in opt.valid:
                 for v in range (r.start, r.end+1):
-                    vString = dri.ValueToStr(v, opt.type)
-                    if desc.enums.has_key(v):
+                    vString = dri.ValueToStr(v, type)
+                    if type == "enum" and desc.enums.has_key(v):
                         string = desc.enums[v].encode(encoding)
                     else:
                         string = vString
@@ -230,15 +237,18 @@ class OptionLine:
                                               width=180)
         else:
             self.widget = GtkEntry ()
-            self.widget.set_text (dri.ValueToStr(value, opt.type))
+            if type == "invalid":
+                self.widget.set_text (value)
+            else:
+                self.widget.set_text (dri.ValueToStr(value, type))
             self.widget.connect ("activate", self.activateSignal)
             self.invalidStyle = self.widget.get_style().copy()
             self.invalidStyle.fg[STATE_NORMAL] = \
                     self.widget.get_colormap().alloc(65535, 0, 0)
-        self.updateWidget (value)
+        self.updateWidget (value, valid)
         self.widget.show()
 
-    def updateWidget (self, value):
+    def updateWidget (self, value, valid=1):
         """ Update the option widget to a new value. """
         active = self.check.get_active()
         if self.widget.__class__ == GtkToggleButton:
@@ -252,7 +262,13 @@ class OptionLine:
         elif self.widget.__class__ == WrappingOptionMenu:
             return self.widget.setValue(str(value))
         elif self.widget.__class__ == GtkEntry:
-            self.widget.set_text (str(value))
+            if self.opt.type == "bool" and valid:
+                if value:
+                    self.widget.set_text ("true")
+                else:
+                    self.widget.set_text ("false")
+            else:
+                self.widget.set_text (str(value))
         self.check.set_active (active)
 
     def getValue (self):
@@ -337,17 +353,21 @@ class SectionPage (GtkScrolledWindow):
         elif value == None and self.app.options.has_key (opt.name):
             del self.app.options[opt.name]
 
-    def commit (self):
-        """ Commit the widget settings.
+    def validate (self):
+        """ Validate the widget settings.
 
         The return value indicates if there are invalid option values. """
         allValid = 1
         for optLine in self.optLines:
             valid = optLine.validate()
-            if valid and self.app.options.has_key (optLine.opt.name):
-                self.app.options[optLine.opt.name] = optLine.getValue()
             allValid = allValid and valid
         return allValid
+
+    def commit (self):
+        """ Commit the widget settings. """
+        for optLine in self.optLines:
+            if self.app.options.has_key (optLine.opt.name):
+                self.app.options[optLine.opt.name] = optLine.getValue()
 
 class UnknownSectionPage(GtkScrolledWindow):
     """ Special section page for options unknown to the driver. """
@@ -384,9 +404,13 @@ class UnknownSectionPage(GtkScrolledWindow):
         self.vbox.show()
         self.add_with_viewport (self.vbox)
 
-    def commit (self):
-        """ These options are never changed or validated. """
+    def validate (self):
+        """ These options can't be validated. """
         return 1
+
+    def commit (self):
+        """ These options are never changed. """
+        pass
 
     def removeSelection (self, widget):
         """ Remove the selected items from the list and app config. """
@@ -437,26 +461,21 @@ class DriverPanel (GtkFrame):
             self.invalidStyle = self.sectLabels[0].get_style().copy()
             self.invalidStyle.fg[STATE_NORMAL] = \
                     self.sectLabels[0].get_colormap().alloc(65535, 0, 0)
-
+        self.validate()
         notebook.show()
         table.attach (notebook, 0, 2, 1, 2, FILL, EXPAND|FILL, 5, 5)
         table.show()
         self.add (table)
 
-    def commit (self):
-        """ Commit changes to the configuration.
+    def validate (self):
+        """ Validate the configuration.
 
         Labels of invalid section pages are highlighted. Returns whether
         there were invalid option values. """
-        executable = self.execEntry.get_text()
-        if executable == "":
-            self.app.executable = None
-        else:
-            self.app.executable = executable
         index = 0
         allValid = 1
         for sectPage in self.sectPages:
-            valid = sectPage.commit()
+            valid = sectPage.validate()
             if not valid:
                 self.sectLabels[index].set_style(self.invalidStyle)
             else:
@@ -464,6 +483,16 @@ class DriverPanel (GtkFrame):
             allValid = allValid and valid
             index = index+1
         return allValid
+
+    def commit (self):
+        """ Commit changes to the configuration. """
+        executable = self.execEntry.get_text()
+        if executable == "":
+            self.app.executable = None
+        else:
+            self.app.executable = executable
+        for sectPage in self.sectPages:
+            sectPage.commit()
 
     def renameApp (self):
         """ Change the application name. """
@@ -640,16 +669,14 @@ class ConfigTree (GtkCTree):
         else:
             driver = None
             app = None
-        if self.mainWindow.commitDriverPanel():
-            self.mainWindow.switchDriverPanel (driver, app)
-            if type == "config":
-                self.mainWindow.activateConfigButtons(obj.writable)
-            elif type == "device":
-                self.mainWindow.activateDeviceButtons(obj.config.writable)
-            elif type == "app":
-                self.mainWindow.activateAppButtons(obj.device.config.writable)
-        else:
-            self.select (self.mainWindow.curDriverPanel.app.node)
+        self.mainWindow.commitDriverPanel()
+        self.mainWindow.switchDriverPanel (driver, app)
+        if type == "config":
+            self.mainWindow.activateConfigButtons(obj.writable)
+        elif type == "device":
+            self.mainWindow.activateDeviceButtons(obj.config.writable)
+        elif type == "app":
+            self.mainWindow.activateAppButtons(obj.device.config.writable)
 
     def moveItem (self, inc):
         if len(self.selection) == 0:
@@ -855,9 +882,7 @@ class MainWindow (GtkWindow):
 
     def commitDriverPanel (self):
         if self.curDriverPanel != None:
-            return self.curDriverPanel.commit()
-        else:
-            return 1
+            self.curDriverPanel.commit()
 
     def switchDriverPanel (self, driver=None, app=None):
         if self.curDriverPanel != None:
