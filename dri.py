@@ -289,8 +289,8 @@ class DriverInfo:
 
         try:
             p.Parse (driInfo)
-        except xml.parsers.expat.ExpatError:
-            raise XMLError ("ExpatError")
+        except xml.parsers.expat.ExpatError, problem:
+            raise XMLError ("ExpatError: " + str(problem))
 
     def __str__ (self):
         result = '<driconf>\n'
@@ -310,7 +310,10 @@ class ScreenInfo:
         Raises a XMLError if the config info is illegal. """
         self.num = screen
         driverName = XDriInfo ("driver " + str(screen), dpy)
-        self.driver = GetDriver (driverName, 0)
+        try:
+            self.driver = GetDriver (driverName, 0)
+        except XMLError, problem:
+            raise XMLError (str(problem) + " (driver " + driverName + ")")
 
 class DisplayInfo:
     """ Maintains config info for all screens and drivers on a display """
@@ -342,6 +345,9 @@ class DisplayInfo:
             screen = ScreenInfo (i, self.dpy)
         except DRIError:
             screen = None
+        except XMLError, problem:
+            self.screens[i] = None
+            raise XMLError (str(problem) + " (screen " + str(i) + ")")
         self.screens[i] = screen
         return screen
 
@@ -461,7 +467,7 @@ class DRIConfig:
             try:
                 p.ParseFile (file)
             except xml.parsers.expat.ExpatError, problem:
-                raise XMLError ("ExpatError " + str(problem))
+                raise XMLError ("ExpatError: " + str(problem))
         else:
             self.fileName = fileName
 
