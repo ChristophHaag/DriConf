@@ -1,3 +1,12 @@
+driconf-0.0.5: Sat Aug 16 15:41:12 CEST 2003
+
+- Adjust toolbar button sensitivity to selected config tree item
+- Reset individual options to their default value
+- Display translated description as option label, name and type as tooltip
+- Use popen2.Popen3 so that xdriinfo's stderr can be captured to produce
+  more helpful error messages
+- Fixed: show an error message dialog if xdriinfo fails on program startup
+
 driconf-0.0.4: Mon Jul 28 23:20:16 CEST 2003
 
 - Support for enum options

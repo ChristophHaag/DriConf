@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name="driconf",
-      version="0.0.4",
+      version="0.0.5",
       description="DRI Configuration GUI",
       author="Felix Kuehling",
       author_email="fxkuehl@gmx.de",
