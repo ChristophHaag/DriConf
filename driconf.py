@@ -169,40 +169,43 @@ class OptionLine:
 
         # get the option value, if it's invalid leave it as a string
         if page.app.options.has_key (opt.name):
-            valid = opt.validate (page.app.options[opt.name])
+            self.isValid = opt.validate (page.app.options[opt.name])
             try:
                 value = dri.StrToValue (page.app.options[opt.name], opt.type)
             except dri.XMLError:
-                valid = 0
-            if not valid:
+                self.isValid = FALSE
+            if not self.isValid:
                 value = page.app.options[opt.name]
         else:
             value = opt.default
-            valid = 1
+            self.isValid = TRUE
         # the widget for editing the option value
-        self.initWidget (opt, value, valid)
+        self.initWidget (opt, value)
         self.widget.set_sensitive (sensitive)
         page.table.attach (self.widget, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
 
-    def initWidget (self, opt, value, valid=1):
+    def initWidget (self, opt, value):
         """ Initialize the option widget.
 
         The widget type is selected automatically based in the option type
         and the set/range of valid values. """
         type = opt.type
-        if not valid:
+        if not self.isValid:
             type = "invalid"
         if type == "bool":
             self.widget = gtk.ToggleButton ()
             self.widget.set_use_stock (TRUE)
-            # need to set_active here, so that the toggled signal isn't
-            # triggered in updateWidget and the config marked as modified.
+            if value:
+                self.widget.set_label ("gtk-yes")
+            else:
+                self.widget.set_label ("gtk-no")
             self.widget.set_active (value)
             self.widget.connect ("toggled", self.activateSignal)
         elif type == "int" and opt.valid and len(opt.valid) == 1:
             adjustment = gtk.Adjustment (value, opt.valid[0].start,
                                         opt.valid[0].end, 1, 10)
             self.widget = gtk.SpinButton (adjustment, digits=0)
+            self.widget.set_value (value)
             adjustment.connect ("value_changed", self.activateSignal)
         elif type == "enum" or \
              (type != "invalid" and opt.valid and
@@ -219,6 +222,7 @@ class OptionLine:
                     optValList.append ((string, vString))
             self.widget = WrappingOptionMenu (optValList, self.activateSignal,
                                               width=180)
+            self.widget.setValue(str(value))
         else:
             self.widget = gtk.Entry ()
             if type == "invalid":
@@ -226,22 +230,22 @@ class OptionLine:
             else:
                 self.widget.set_text (dri.ValueToStr(value, type))
             self.widget.connect ("changed", self.activateSignal)
-        self.updateWidget (value, valid)
+        self.highlightInvalid()
         self.widget.show()
+        if self.widget.__class__ == gtk.Entry:
+            style = self.widget.get_style()
+            self.default_normal_text = style.text[gtk.STATE_NORMAL].copy()
+            self.default_selected_text = style.text[gtk.STATE_SELECTED].copy()
+            self.default_insensitive_text = style.text[gtk.STATE_INSENSITIVE].copy()
 
-    def updateWidget (self, value, valid=1):
+    def updateWidget (self, value, valid):
         """ Update the option widget to a new value. """
-        active = self.check.get_active()
         if self.widget.__class__ == gtk.ToggleButton:
-            if value:
-                self.widget.set_label ("gtk-yes")
-            else:
-                self.widget.set_label ("gtk-no")
             self.widget.set_active (value)
         elif self.widget.__class__ == gtk.SpinButton:
             self.widget.set_value (value)
         elif self.widget.__class__ == WrappingOptionMenu:
-            return self.widget.setValue(str(value))
+            self.widget.setValue(str(value))
         elif self.widget.__class__ == gtk.Entry:
             if self.opt.type == "bool" and valid:
                 if value:
@@ -254,7 +258,6 @@ class OptionLine:
             # is triggered without a real value change
             if newText != self.widget.get_text():
                 self.widget.set_text (newText)
-        self.check.set_active (active)
 
     def getValue (self):
         """ Get the current value from the option widget.
@@ -294,24 +297,32 @@ class OptionLine:
                 self.widget.set_label ("gtk-yes")
             else:
                 self.widget.set_label ("gtk-no")
+        self.doValidate()
         self.page.optionModified (self)
 
     def resetOpt (self, widget):
         """ Reset to default value. """
-        self.updateWidget (self.opt.default)
+        self.updateWidget (self.opt.default, TRUE)
         self.page.optionModified (self)
 
-    def validate (self):
+    def doValidate (self):
         """ Validate the current value from the option widget.
 
         This is only interesting if the check button is active. Only
         gtk.Entry widgets should ever give invalid values in practice.
-        Invalid option widgets are highlighted. """
+        Invalid option widgets are highlighted. If the validity changed
+        then have the page check if its validity was changed, too. """
         value = self.getValue()
         if value == None:
-            return 1
+            return
         valid = self.opt.validate (value)
-        if not valid:
+        if (valid and not self.isValid) or (not valid and self.isValid):
+            self.isValid = valid
+            self.highlightInvalid()
+            self.page.doValidate()
+
+    def highlightInvalid (self):
+        if not self.isValid:
             if self.widget.__class__ == gtk.Entry:
                 self.widget.modify_text (gtk.STATE_NORMAL,
                                          gtk.gdk.Color (65535, 0, 0))
@@ -321,8 +332,15 @@ class OptionLine:
                                          gtk.gdk.Color (65535, 0, 0))
         else:
             if self.widget.__class__ == gtk.Entry:
-                self.widget.set_style (None)
-        return valid
+                self.widget.modify_text (gtk.STATE_NORMAL,
+                                         self.default_normal_text)
+                self.widget.modify_text (gtk.STATE_SELECTED,
+                                         self.default_selected_text)
+                self.widget.modify_text (gtk.STATE_INSENSITIVE,
+                                         self.default_insensitive_text)
+
+    def validate (self):
+        return self.isValid
 
 class SectionPage (gtk.ScrolledWindow):
     """ One page in the DriverPanel with one OptionLine per option. """
@@ -340,20 +358,29 @@ class SectionPage (gtk.ScrolledWindow):
             self.optLines.append (OptionLine (self, i, optSection.optList[i]))
         self.table.show()
         self.add_with_viewport (self.table)
+        self.doValidate (init=TRUE)
 
     def optionModified (self, optLine):
         """ Callback that is invoked by changed option lines. """
         self.app.modified(self.app)
 
-    def validate (self):
+    def doValidate (self, init=FALSE):
         """ Validate the widget settings.
 
         The return value indicates if there are invalid option values. """
-        allValid = 1
+        valid = TRUE
         for optLine in self.optLines:
-            valid = optLine.validate()
-            allValid = allValid and valid
-        return allValid
+            if not optLine.validate():
+                valid = FALSE
+                break
+        if not init and \
+               ((valid and not self.isValid) or (not valid and self.isValid)):
+            self.isValid = valid
+            mainWindow.validateDriverPanel()
+        self.isValid = valid
+
+    def validate (self):
+        return self.isValid
 
     def commit (self):
         """ Commit the widget settings. """
@@ -413,7 +440,7 @@ class UnknownSectionPage(gtk.VBox):
 
     def validate (self):
         """ These options can't be validated. """
-        return 1
+        return TRUE
 
     def commit (self):
         """ These options are never changed. """
@@ -475,13 +502,17 @@ class DriverPanel (gtk.Frame):
             unknownLabel.show()
             notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)
-            self.sectLabels.append (sectLabel)
+            self.sectLabels.append (unknownLabel)
             dialog = gtk.MessageDialog (
                 mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
                 "This application configuration contains options that are not known to the driver. Either you edited your configuration file manually or the driver configuration changed. See the page named \"Unknown\" for details. It is probably safe to remove these options. Otherwise they are left unchanged.")
             dialog.connect ("response", lambda d,r: d.destroy())
             dialog.show()
+        if len(self.sectLabels) > 0:
+            style = self.sectLabels[0].get_style()
+            self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
+            self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
         self.validate()
         notebook.show()
         table.attach (notebook, 0, 2, 1, 2,
@@ -498,7 +529,7 @@ class DriverPanel (gtk.Frame):
         Labels of invalid section pages are highlighted. Returns whether
         there were invalid option values. """
         index = 0
-        allValid = 1
+        allValid = TRUE
         for sectPage in self.sectPages:
             valid = sectPage.validate()
             if not valid:
@@ -508,7 +539,10 @@ class DriverPanel (gtk.Frame):
                 self.sectLabels[index].modify_fg (
                     gtk.STATE_ACTIVE, gtk.gdk.Color (65535, 0, 0))
             else:
-                self.sectLabels[index].set_style (None)
+                self.sectLabels[index].modify_fg (
+                    gtk.STATE_NORMAL, self.default_normal_fg)
+                self.sectLabels[index].modify_fg (
+                    gtk.STATE_ACTIVE, self.default_active_fg)
             allValid = allValid and valid
             index = index+1
         return allValid
@@ -1176,6 +1210,12 @@ class MainWindow (gtk.Window):
 
     def commitDriverPanel (self):
         if self.curDriverPanel != None:
+            self.curDriverPanel.commit()
+            self.configTree.validateAppNode (self.curDriverPanel.app)
+
+    def validateDriverPanel (self):
+        if self.curDriverPanel != None:
+            self.curDriverPanel.validate()
             self.curDriverPanel.commit()
             self.configTree.validateAppNode (self.curDriverPanel.app)
 
