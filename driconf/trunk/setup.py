@@ -5,7 +5,7 @@ setup(name="driconf",
       description="DRI Configuration GUI (gtk-2.0)",
       author="Felix Kuehling",
       author_email="fxkuehl@gmx.de",
-      url="http://dri.sourceforge.net/cgi-bin/moin.cgi/DriConf"
+      url="http://dri.sourceforge.net/cgi-bin/moin.cgi/DriConf",
       py_modules=["dri", "driconf", "driconf_xpm"],
       scripts=["driconf"])
 
