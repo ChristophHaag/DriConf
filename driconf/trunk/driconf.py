@@ -804,6 +804,11 @@ class ConfigTree (GtkCTree):
         self.addDeviceNode (config.node, device)
 
     def saveConfig (self, widget):
+        self.doSaveConfig()
+
+    def doSaveConfig (self, reallySave="dunno"):
+        if reallySave == "No":
+            return
         if len(self.selection) == 0:
             MessageDialog ("Notice", "Select a configuration file or device.")
             return
@@ -818,21 +823,33 @@ class ConfigTree (GtkCTree):
         if type == "device":
             config = config.config
             type = "config"
+        if reallySave == "dunno":
+            valid = 1
+            for device in config.devices:
+                try:
+                    driver = device.getDriver (dpy)
+                except dri.XMLError, problem:
+                    driver = None
+                if driver == None:
+                    continue
+                for app in device.apps:
+                    valid = valid and driver.validate (app.options)
+            if not valid:
+                MessageDialog ("Question",
+                               "The configuration contains invalid entries. Save anyway?",
+                               ["Yes", "No"], self.doSaveConfig)
+                return
         try:
             file = open (config.fileName, "w")
         except IOError:
             MessageDialog ("Error",
                            "Can't open \""+config.fileName+"\" for writing.")
             return
-        valid = self.mainWindow.commitDriverPanel()
+        self.mainWindow.commitDriverPanel()
         file.write (str(config))
         file.close()
-        if valid:
-            MessageDialog ("Success",
-                           "\""+config.fileName+"\" saved successfully.")
-        else:
-            MessageDialog ("Warning",
-                           "\""+config.fileName+"\" saved with invalid entries.")
+        MessageDialog ("Success",
+                       "\""+config.fileName+"\" saved successfully.")
 
 class MainWindow (GtkWindow):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
