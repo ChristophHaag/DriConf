@@ -1,0 +1,11 @@
+driconf-0.0.1: Sun Jul 13 19:29:12 CEST 2003
+
+- Added CHANGELOG
+- Added TODO
+- Fixed: Forgot to commit changed entries before saving
+- Fixed: Install to $PREFIX/lib/$PYTHON/site-packages. It seems .pyo files
+      	 are ignored. Install .pyc files instead.
+
+driconf-0.0.0: Sun Jul 13 17:00:00 CEST 2003
+
+First release
