@@ -479,29 +479,39 @@ class UnknownSectionPage(gtk.VBox):
         scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.app = app
         # copy options (dict function does not exist in Python 2.1 :( )
-        self.opts = {}
+        opts = {}
         for name,val in app.options.items():
-            self.opts[name] = val
+            opts[name] = val
         # remove all options known to the driver
+        self.driverOpts = {}
         for sect in driver.optSections:
             for opt in sect.optList:
-                if self.opts.has_key (opt.name):
-                    del self.opts[opt.name]
+                self.driverOpts[opt.name] = opt
+                if opts.has_key (opt.name):
+                    del opts[opt.name]
         # short cut
-        if len(self.opts) == 0:
+        self.opts = []
+        if len(opts) == 0:
             return
         # list all remaining options here
-        self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN)
         self.view = gtk.TreeView (self.store)
         self.view.set_rules_hint (TRUE)
-        column = gtk.TreeViewColumn (_("Option"), gtk.CellRendererText(), text=0)
+        optionRenderer = gtk.CellRendererText()
+        optionRenderer.connect ("edited", self.editedSignal, 0)
+        column = gtk.TreeViewColumn (_("Option"), optionRenderer,
+                                     text=0, editable=2)
         self.view.append_column (column)
-        column = gtk.TreeViewColumn (_("Value"), gtk.CellRendererText(), text=1)
+        valueRenderer = gtk.CellRendererText()
+        valueRenderer.connect ("edited", self.editedSignal, 1)
+        column = gtk.TreeViewColumn (_("Value"), valueRenderer,
+                                     text=1, editable=2)
         self.view.append_column (column)
         self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
-        for name,val in self.opts.items():
+        for name,val in opts.items():
             iter = self.store.append ()
-            self.store.set (iter, 0, str(name), 1, str(val))
+            self.store.set (iter, 0, str(name), 1, str(val), 2, TRUE)
+            self.opts.append (name)
         self.view.show()
         scrolledWindow.add (self.view)
         scrolledWindow.show()
@@ -533,6 +543,28 @@ class UnknownSectionPage(gtk.VBox):
                 self.store.remove (iter)
                 self.app.modified(self.app)
             iter = next_iter
+
+    def editedSignal (self, widget, row, newVal, value):
+        row = int(row)
+        name = self.opts[row]
+        print "%s(%d): %s" % (name, row, newVal)
+        iter = self.store.get_iter_first()
+        for i in range(row): iter = self.store.iter_next (iter)
+        if value:
+            if self.app.options[name] == newVal:
+                return
+            self.app.options[name] = newVal
+            self.store.set (iter, 0, str(name), 1, str(newVal), 2, TRUE)
+        else:
+            if name == newVal or self.app.options.has_key(newVal) or \
+                   self.driverOpts.has_key(newVal):
+                return
+            val = self.app.options.pop(name)
+            name = newVal
+            self.opts[row] = name
+            self.app.options[name] = val
+            self.store.set (iter, 0, str(name), 1, str(val), 2, TRUE)
+        self.app.modified(self.app)
 
 class DriverPanel (gtk.Frame):
     """ Panel for driver settings for a specific application. """
