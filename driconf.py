@@ -683,7 +683,14 @@ class ConfigTreeModel (gtk.GenericTreeModel):
                 name = "general"
             return str(name)
         elif node.__class__ == dri.AppConfig:
-            return str(node.name)
+            try:
+                driver = node.device.getDriver(dpy)
+            except dri.XMLError:
+                driver = None
+            if driver and not driver.validate (node.options):
+                return '<span foreground="red">' + str(node.name) + '</span>'
+            else:
+                return str(node.name)
         else:
             return "What's this?"
     def on_iter_next (self, node):
@@ -835,7 +842,7 @@ class ConfigTreeView (gtk.TreeView):
         self.get_selection().set_mode (gtk.SELECTION_BROWSE)
         self.get_selection().connect ("changed", self.selectionChangedSignal)
         column = gtk.TreeViewColumn ("ConfigTree", gtk.CellRendererText(),
-                                     text=0)
+                                     markup=0)
         self.append_column (column)
 
     def getConfigList (self):
@@ -897,20 +904,11 @@ class ConfigTreeView (gtk.TreeView):
 
     # highlight invalid nodes
     def validateAppNode (self, app):
-        try:
-            driver = app.device.getDriver(dpy)
-        except dri.XMLError:
-            driver = None
-        if driver and driver.validate (app.options):
-            #style = self.get_style().copy()
-            #style.fg[gtk.STATE_NORMAL] = self.defaultFg
-            #self.node_set_row_style(app.node, style)
-            pass
-        else:
-            #style = self.get_style().copy()
-            #style.fg[gtk.STATE_NORMAL] = gtk.gdk.Color (65535, 0, 0)
-            #self.node_set_row_style(app.node, style)
-            pass
+        # The validation is done in ConfigTreeModel.get_value. Just emit a
+        # row_changed event so that get_value is called once more.
+        path = self.model.getPathFromNode (app)
+        iter = self.model.get_iter (path)
+        self.model.row_changed (path, iter)
 
     # UI actions on the config tree
     def moveUp (self, widget):
