@@ -627,18 +627,26 @@ class NameDialog (gtk.Dialog):
         self.callback = callback
         self.data = data
         self.connect ("response", self.responseSignal)
-        hbox = gtk.HBox()
-        label = gtk.Label ("Name:")
+        table = gtk.Table(2, 2)
+        commentLabel = gtk.Label ("Enter the name of the application below. \
+This is just a descriptive string. \
+Don't forget to set the executable correctly.")
+        commentLabel.set_line_wrap (TRUE)
+        commentLabel.show()
+        table.attach (commentLabel, 0, 2, 0, 1,
+                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+        label = gtk.Label ("Application Name")
         label.show()
-        hbox.pack_start (label, TRUE, TRUE, 10)
+        table.attach (label, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
         self.entry = gtk.Entry()
         self.entry.set_text (name)
         self.entry.select_region (0, len(name))
         self.entry.connect ("activate", self.activateSignal)
         self.entry.show()
-        hbox.pack_start (self.entry, TRUE, TRUE, 10)
-        hbox.show()
-        self.vbox.pack_start (hbox, TRUE, TRUE, 10)
+        table.attach (self.entry, 1, 2, 1, 2,
+                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+        table.show()
+        self.vbox.pack_start (table, TRUE, TRUE, 5)
         self.show()
         self.entry.grab_focus()
 
@@ -660,27 +668,36 @@ class DeviceDialog (gtk.Dialog):
         self.callback = callback
         self.data = data
         self.connect ("response", self.responseSignal)
-        table = gtk.Table (2, 2)
-        screenLabel = gtk.Label ("Screen:")
+        table = gtk.Table (2, 3)
+        commentLabel = gtk.Label ("Describe the device that you would like to \
+configure. You need to specify an X screen number or a driver name or both. \
+You can pick them from a list or enter them manually. In order to configure a \
+driver, DRIconf needs to be able to determine the driver name and find the \
+driver.")
+        commentLabel.set_line_wrap (TRUE)
+        commentLabel.show()
+        table.attach (commentLabel, 0, 2, 0, 1,
+                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+        screenLabel = gtk.Label ("Screen Number")
         screenLabel.show()
-        table.attach (screenLabel, 0, 1, 0, 1, 0, 0, 5, 5)
+        table.attach (screenLabel, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
         self.screenCombo = gtk.Combo()
         self.screenCombo.set_popdown_strings (
             [""]+map(str,range(len(dpy.screens))))
         self.screenCombo.entry.connect ("activate", self.screenSignal)
         self.screenCombo.list.connect ("select_child", self.screenSignal)
         self.screenCombo.show()
-        table.attach (self.screenCombo, 1, 2, 0, 1,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 5, 5)
-        driverLabel = gtk.Label ("Driver:")
+        table.attach (self.screenCombo, 1, 2, 1, 2,
+                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+        driverLabel = gtk.Label ("Driver Name")
         driverLabel.show()
-        table.attach (driverLabel, 0, 1, 1, 2, 0, 0, 5, 5)
+        table.attach (driverLabel, 0, 1, 2, 3, 0, gtk.EXPAND, 10, 5)
         self.driverCombo = gtk.Combo()
         self.driverCombo.set_popdown_strings (
             [""]+[str(driver.name) for driver in dri.DisplayInfo.drivers.values()])
         self.driverCombo.show()
-        table.attach (self.driverCombo, 1, 2, 1, 2,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 5, 5)
+        table.attach (self.driverCombo, 1, 2, 2, 3,
+                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
         table.show()
         self.vbox.pack_start (table, TRUE, TRUE, 5)
         self.show()
