@@ -1579,7 +1579,7 @@ class MainWindow (gtk.Window):
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
             gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-            u"DRIconf 0.2.4\n"
+            u"DRIconf 0.2.5\n"
             u"%s\n"
             u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n"
             u"\n"
