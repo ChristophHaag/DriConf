@@ -662,7 +662,7 @@ class ConfigTree (GtkCTree):
             except dri.XMLError, problem:
                 driver = None
                 MessageDialog ("Error",
-                               "Parsing the driver's configuration information: " + problem,
+                               "Parsing the driver's configuration information: " + str(problem),
                                modal=FALSE)
             else:
                 if driver == None:
