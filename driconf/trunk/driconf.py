@@ -368,6 +368,7 @@ class ConfigTree (GtkCTree):
     def __init__ (self, configList):
         GtkCTree.__init__ (self, 1, 0)
         self.set_usize (200, 0)
+        self.set_selection_mode (SELECTION_BROWSE)
         for config in configList:
             self.addConfig (config)
         self.connect ("select_row", self.selectRowSignal, None)
@@ -431,6 +432,12 @@ class ConfigTree (GtkCTree):
             app = None
         if mainWindow.commitDriverPanel():
             mainWindow.switchDriverPanel (driver, app)
+            if type == "config":
+                mainWindow.activateConfigButtons()
+            elif type == "device":
+                mainWindow.activateDeviceButtons()
+            elif type == "app":
+                mainWindow.activateAppButtons()
         else:
             self.select (mainWindow.curDriverPanel.app.node)
 
@@ -600,27 +607,28 @@ class MainWindow (GtkWindow):
         self.paned.show()
         self.toolbar = GtkToolbar (ORIENTATION_HORIZONTAL, TOOLBAR_BOTH)
         self.toolbar.set_button_relief (RELIEF_NONE)
-        self.toolbar.append_item ("Save", "Save selected configuration file", "priv",
-                                  DataPixmap (self, tb_save_xpm),
-                                  self.configTree.saveConfig)
-        self.toolbar.append_item ("New", "Create a new device or application", "priv",
-                                  DataPixmap (self, tb_new_xpm),
-                                  self.configTree.newItem)
-        self.toolbar.append_item ("Rename", "Rename selected application", "priv",
-                                  DataPixmap (self, tb_edit_xpm),
-                                  self.configTree.renameApp)
-        self.toolbar.append_item ("Remove", "Remove selected device or application", "priv",
-                                  DataPixmap (self, tb_trash_xpm),
-                                  self.configTree.removeItem)
-        self.toolbar.append_item ("Up", "Move selected item up", "priv",
-                                  DataPixmap (self, tb_up_arrow_xpm),
-                                  self.configTree.moveUp)
-        self.toolbar.append_item ("Down", "Move selected item down", "priv",
-                                  DataPixmap (self, tb_down_arrow_xpm),
-                                  self.configTree.moveDown)
-        self.toolbar.append_item ("Exit", "Exit DRI configuration", "priv",
-                                  DataPixmap (self, tb_exit_xpm),
-                                  mainquit)
+        self.saveButton = self.toolbar.append_item (
+            "Save", "Save selected configuration file", "priv",
+            DataPixmap (self, tb_save_xpm), self.configTree.saveConfig)
+        self.newButton = self.toolbar.append_item (
+            "New", "Create a new device or application", "priv",
+            DataPixmap (self, tb_new_xpm), self.configTree.newItem)
+        self.removeButton = self.toolbar.append_item (
+            "Remove", "Remove selected device or application", "priv",
+            DataPixmap (self, tb_trash_xpm), self.configTree.removeItem)
+        self.upButton = self.toolbar.append_item (
+            "Up", "Move selected item up", "priv",
+            DataPixmap (self, tb_up_arrow_xpm), self.configTree.moveUp)
+        self.downButton = self.toolbar.append_item (
+            "Down", "Move selected item down", "priv",
+            DataPixmap (self, tb_down_arrow_xpm), self.configTree.moveDown)
+        self.renameButton = self.toolbar.append_item (
+            "Rename", "Rename selected application", "priv",
+            DataPixmap (self, tb_edit_xpm), self.configTree.renameApp)
+        self.exitButton = self.toolbar.append_item (
+            "Exit", "Exit DRI configuration", "priv",
+            DataPixmap (self, tb_exit_xpm), mainquit)
+        self.activateConfigButtons()
         self.toolbar.show()
         self.vbox.pack_start (self.toolbar, FALSE, TRUE, 0)
         self.vbox.pack_start (self.paned, TRUE, TRUE, 0)
@@ -664,6 +672,30 @@ class MainWindow (GtkWindow):
     def renameApp (self, app):
         if self.curDriverPanel != None and self.curDriverPanel.app == app:
             self.curDriverPanel.renameApp()
+
+    def activateConfigButtons (self):
+        self.saveButton  .set_sensitive (TRUE)
+        self.newButton   .set_sensitive (TRUE)
+        self.removeButton.set_sensitive (FALSE)
+        self.upButton    .set_sensitive (FALSE)
+        self.downButton  .set_sensitive (FALSE)
+        self.renameButton.set_sensitive (FALSE)
+
+    def activateDeviceButtons (self):
+        self.saveButton  .set_sensitive (FALSE)
+        self.newButton   .set_sensitive (TRUE)
+        self.removeButton.set_sensitive (TRUE)
+        self.upButton    .set_sensitive (TRUE)
+        self.downButton  .set_sensitive (TRUE)
+        self.renameButton.set_sensitive (FALSE)
+
+    def activateAppButtons (self):
+        self.saveButton  .set_sensitive (FALSE)
+        self.newButton   .set_sensitive (FALSE)
+        self.removeButton.set_sensitive (TRUE)
+        self.upButton    .set_sensitive (TRUE)
+        self.downButton  .set_sensitive (TRUE)
+        self.renameButton.set_sensitive (TRUE)
 
 def main():
     # initialize locale
