@@ -18,7 +18,7 @@
 
 # Contact: http://fxk.de.vu/
 
-import popen2
+import os
 import string
 import xml.parsers.expat
 
@@ -43,11 +43,10 @@ def XDriInfo (argStr, dpy = None):
         dpyStr = "-display " + dpy + " "
     else:
         dpyStr = ""
-    child = popen2.Popen3 ("xdriinfo " + dpyStr + argStr, 1)
-    driInfo = child.fromchild.read ()
-    driError = child.childerr.read ()
-    result = child.wait()
-    if result != 0:
+    infopipe = os.popen ("xdriinfo " + dpyStr + argStr, "r")
+    driInfo = infopipe.read()
+    result = infopipe.close()
+    if result != None:
         signal = result & 0xff
         status = result >> 8
         if signal != 0:
