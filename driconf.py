@@ -962,9 +962,9 @@ class ConfigTree (gtk.CTree):
                 (config.fileName, str(problem)))
             dialog.run()
             dialog.destroy()
-            os.close (cfile)
+            cfile.close()
             return
-        os.close (cfile)
+        cfile.close()
         # Check if the file is writable in the end.
         newConfig.writable = fileIsWritable (config.fileName)
         # find the position of config
@@ -1212,8 +1212,10 @@ def main():
                     (fileName, str(problem)))
                 dialog.run()
                 dialog.destroy()
+                cfile.close()
                 continue
             else:
+                cfile.close()
                 # Check if the file is writable in the end.
                 config.writable = fileIsWritable (fileName)
         if config:
