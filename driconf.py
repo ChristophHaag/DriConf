@@ -1152,7 +1152,7 @@ class MainWindow (gtk.Window):
     def __init__ (self, configList):
         gtk.Window.__init__ (self)
         self.set_title ("DRI Configuration")
-        self.connect ("destroy", gtk.mainquit)
+        self.connect ("destroy", gtk.main_quit)
         self.connect ("delete_event", self.exitHandler)
         self.vbox = gtk.VBox()
         self.paned = gtk.HPaned()
@@ -1308,14 +1308,14 @@ class MainWindow (gtk.Window):
             dialog.show()
             return TRUE
         elif event == None:
-            gtk.mainquit()
+            gtk.main_quit()
         else:
             return FALSE
 
     def doExit (self, dialog, response):
         dialog.destroy()
         if response == gtk.RESPONSE_YES:
-            gtk.mainquit()
+            gtk.main_quit()
 
 def fileIsWritable(filename):
     """ Find out if a file is writable.
@@ -1440,4 +1440,4 @@ def main():
         dialog.destroy()
 
     # run
-    gtk.mainloop()
+    gtk.main()
