@@ -957,6 +957,8 @@ class ConfigTree (GtkCTree):
             config = obj.device.config
         elif type == "device":
             config = obj.config
+        else:
+            config = obj
         if reallyReload == "dunno":
             MessageDialog ("Question",
                            "Really reload " + config.fileName + " from disk?",
