@@ -234,13 +234,13 @@ class OptionLine:
             else:
                 self.widget.set_text (dri.ValueToStr(value, type))
             self.widget.connect ("changed", self.activateSignal)
-        self.highlightInvalid()
-        self.widget.show()
         if self.widget.__class__ == gtk.Entry:
             style = self.widget.get_style()
             self.default_normal_text = style.text[gtk.STATE_NORMAL].copy()
             self.default_selected_text = style.text[gtk.STATE_SELECTED].copy()
             self.default_insensitive_text = style.text[gtk.STATE_INSENSITIVE].copy()
+        self.highlightInvalid()
+        self.widget.show()
 
     def updateWidget (self, value, valid):
         """ Update the option widget to a new value. """
