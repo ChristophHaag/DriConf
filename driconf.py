@@ -943,12 +943,12 @@ class ConfigTreeView (gtk.TreeView):
         dialog.destroy ()
         if response != gtk.RESPONSE_YES:
             return
-        self.model.removeNode (node)
         if node.__class__ == dri.AppConfig:
             mainWindow.removeApp (node)
         elif node.__class__ == dri.DeviceConfig:
             for app in node.apps:
                 mainWindow.removeApp (app)
+        self.model.removeNode (node)
         parent.modified(parent)
         path = self.model.getPathFromNode (parent)
         self.get_selection().select_path(path)
@@ -1056,12 +1056,12 @@ class ConfigTreeView (gtk.TreeView):
             sibling = None
         else:
             sibling = configList[index+1]
-        self.model.removeNode (config)
         if node.__class__ == dri.AppConfig:
             mainWindow.removeApp (node)
         elif node.__class__ == dri.DeviceConfig:
             for app in node.apps:
                 mainWindow.removeApp (app)
+        self.model.removeNode (config)
         self.model.addNode (newConfig, sibling)
         self.expand_row (self.model.getPathFromNode (newConfig), TRUE)
 
