@@ -314,6 +314,7 @@ class OptionLine:
     def resetOpt (self, widget):
         """ Reset to default value. """
         self.updateWidget (self.opt.default)
+        self.page.optionModified (self)
 
     def validate (self):
         """ Validate the current value from the option widget.
