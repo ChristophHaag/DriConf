@@ -1,3 +1,11 @@
+driconf-0.0.3: Mon Jul 21 00:37:56 CEST 2003
+
+- Appropriate widgets for specific option types and valid ranges
+- Changed options get activated automatically
+- Added a DRI logo
+- Installation using Python's distutils
+- Handles invalid configuration files gracefully
+
 driconf-0.0.2: Sun Jul 13 23:35:00 CEST 2003
 
 - For non-existent files create one device per screen each with one empty
