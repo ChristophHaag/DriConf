@@ -1211,12 +1211,11 @@ def main():
                     (fileName, str(problem)))
                 dialog.run()
                 dialog.destroy()
-                cfile.close()
                 continue
             else:
-                cfile.close()
                 # Check if the file is writable in the end.
                 config.writable = fileIsWritable (fileName)
+            cfile.close()
         if config:
             configList.append (config)
 
