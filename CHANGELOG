@@ -1,3 +1,13 @@
+driconf-0.0.6: Thu Aug 21 03:40:37 CEST 2003
+
+- Added a custom GtkOptionMenu-like widget for enums that wraps lines
+- Display options' XML elements as tooltip
+- Make widgets of disabled options unsensitive
+- Fixed: workaround for a strange problem with a modal dialog opened in the
+  select_row callback of a ctree with selection mode SELECTION_BROWSE. It
+  locked up the entire X session in a way that no more input was accepted!
+- Fixed: popen2.Popen3 didn't seem to work from inside gtk callbacks.
+
 driconf-0.0.5: Sat Aug 16 15:41:12 CEST 2003
 
 - Adjust toolbar button sensitivity to selected config tree item
