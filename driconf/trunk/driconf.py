@@ -1581,19 +1581,16 @@ class MainWindow (gtk.Window):
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
             gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-            u"DRIconf 0.2.5\n"
+            u"DRIconf 0.2.6\n"
             u"%s\n"
             u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n"
+            u"\n"
+            u"%s: David Rubio (es), Felix K\u00fchling (de)\n"
             u"\n"
             u"%s: http://dri.freedesktop.org/wiki/DriConf\n"
             u"%s: dri-users@lists.sourceforge.net" % (
             _("A configuration GUI for DRI drivers"),
-            _("Website"), _("Feedback")))
-        # Going to add a list of translators.
-        # u"\n"
-        # u"%s: <more people>, Felix K\u00fchling"
-        # Make the label available for translation.
-        _("Translators")
+            _("Translators"), _("Website"), _("Feedback")))
         dialog.set_title("About DRIconf")
         dialog.connect("response", lambda dialog, response: dialog.destroy())
         dialog.show()
