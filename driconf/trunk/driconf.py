@@ -467,15 +467,6 @@ class UnknownSectionPage(gtk.VBox):
     def __init__ (self, driver, app):
         """ Constructor. """
         gtk.VBox.__init__ (self)
-        label = gtk.Label (
-            _("Some settings in this application configuration are "
-              "unknown to the driver. Maybe the driver version changed and "
-              "does not support these options any more. It is probably "
-              "safe to delete these settings."))
-        label.set_size_request (500, -1)
-        label.set_line_wrap (TRUE)
-        label.show()
-        self.pack_start (label, FALSE, FALSE, 0)
         scrolledWindow = gtk.ScrolledWindow ()
         scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.app = app
@@ -510,17 +501,30 @@ class UnknownSectionPage(gtk.VBox):
         self.view.append_column (column)
         self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
         for name,val in opts.items():
-            iter = self.store.append ()
-            self.store.set (iter, 0, str(name), 1, str(val), 2, TRUE)
+            self.store.set (self.store.append(),
+                            0, str(name), 1, str(val), 2, TRUE)
             self.opts.append (name)
         self.view.show()
         scrolledWindow.add (self.view)
         scrolledWindow.show()
         self.pack_start (scrolledWindow, TRUE, TRUE, 0)
-        self.removeButton = gtk.Button (stock="gtk-delete")
-        self.removeButton.show()
-        self.removeButton.connect ("clicked", self.removeSelection)
-        self.pack_start (self.removeButton, FALSE, FALSE, 0)
+        buttonBox = gtk.HButtonBox()
+        buttonBox.set_layout (gtk.BUTTONBOX_END)
+        newButton = gtk.Button (stock="gtk-new")
+        newButton.connect ("clicked", self.newSetting)
+        newButton.show()
+        buttonBox.add (newButton)
+        deleteButton = gtk.Button (stock="gtk-delete")
+        deleteButton.connect ("clicked", self.deleteSelection)
+        deleteButton.show()
+        buttonBox.add (deleteButton)
+        helpButton = gtk.Button (stock="gtk-help")
+        helpButton.connect ("clicked", self.help)
+        helpButton.show()
+        buttonBox.add (helpButton)
+        buttonBox.set_child_secondary (helpButton, TRUE)
+        buttonBox.show()
+        self.pack_start (buttonBox, FALSE, FALSE, 0)
 
     def validate (self):
         """ These options can't be validated. """
@@ -530,31 +534,61 @@ class UnknownSectionPage(gtk.VBox):
         """ These options are never changed. """
         pass
 
-    def removeSelection (self, widget):
-        """ Remove the selected items from the list and app config. """
+    def deleteSelection (self, widget):
+        """ Delete the selected items from the list and app config. """
         # Damn it! gtk.TreeSelection.get_selected_rows doesn't exist.
         # So we iterate over the whole list store and delete all selected
         # items.
-        iter = self.store.get_iter_first()
-        while iter:
-            next_iter = self.store.iter_next (iter)
-            if self.view.get_selection().iter_is_selected(iter):
-                name = self.store.get_value(iter, 0)
+        cur = self.store.get_iter_first()
+        i = 0
+        while cur:
+            next = self.store.iter_next (cur)
+            if self.view.get_selection().iter_is_selected (cur):
+                name = self.store.get_value (cur, 0)
                 del self.app.options[name]
-                self.store.remove (iter)
+                del self.opts[i]
+                self.store.remove (cur)
                 self.app.modified(self.app)
-            iter = next_iter
+            else:
+                i = i + 1
+            cur = next
+
+    def newSetting (self, widget):
+        """ Create a new setting. Choose a unique option name, that is
+        unknown to the driver. """
+        name = "option"
+        val = ""
+        i = 0
+        while self.app.options.has_key(name) or \
+                  self.driverOpts.has_key(name):
+            i = i + 1
+            name = "option%d" % i
+        self.app.options[name] = val
+        self.opts.append (name)
+        self.store.set (self.store.append(), 0, str(name), 1, str(val), 2, TRUE)
+        self.app.modified(self.app)
+
+    def help (self, widget):
+        dialog = gtk.MessageDialog (
+            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
+            _("Some settings in this application configuration are "
+              "unknown to the driver. Maybe the driver version changed and "
+              "does not support these options any more. It is probably "
+              "safe to delete these settings."))
+        dialog.connect ("response", lambda d,r: d.destroy())
+        dialog.show()
 
     def editedSignal (self, widget, row, newVal, value):
         row = int(row)
         name = self.opts[row]
-        iter = self.store.get_iter_first()
-        for i in range(row): iter = self.store.iter_next (iter)
+        cursor = self.store.get_iter_first()
+        for i in range(row): cursor = self.store.iter_next (cursor)
         if value:
             if self.app.options[name] == newVal:
                 return
             self.app.options[name] = newVal
-            self.store.set (iter, 0, str(name), 1, str(newVal), 2, TRUE)
+            self.store.set (cursor, 0, str(name), 1, str(newVal), 2, TRUE)
         else:
             if name == newVal or self.app.options.has_key(newVal) or \
                    self.driverOpts.has_key(newVal):
@@ -563,7 +597,7 @@ class UnknownSectionPage(gtk.VBox):
             name = newVal
             self.opts[row] = name
             self.app.options[name] = val
-            self.store.set (iter, 0, str(name), 1, str(val), 2, TRUE)
+            self.store.set (cursor, 0, str(name), 1, str(val), 2, TRUE)
         self.app.modified(self.app)
 
 class DriverPanel (gtk.Frame):
