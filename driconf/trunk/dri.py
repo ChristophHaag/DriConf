@@ -20,6 +20,7 @@
 
 import os
 import string
+import popen2
 import xml.parsers.expat
 
 class Error (Exception):
@@ -43,18 +44,19 @@ def XDriInfo (argStr, dpy = None):
         dpyStr = "-display " + dpy + " "
     else:
         dpyStr = ""
-    infopipe = os.popen ("xdriinfo " + dpyStr + argStr, "r")
-    driInfo = infopipe.read ()
-    result = infopipe.close ()
-    if result != None:
+    child = popen2.Popen3 ("xdriinfo " + dpyStr + argStr, 1)
+    driInfo = child.fromchild.read ()
+    driError = child.childerr.read ()
+    result = child.wait()
+    if result != 0:
         signal = result & 0xff
         status = result >> 8
         if signal != 0:
-            raise DRIError ("xdriinfo killed by signal " + signal)
+            raise DRIError ("XDriInfo killed by signal " + signal + ".")
         elif status == 127:
-            raise DRIError ("xdriinfo not found")
+            raise DRIError ("XDriInfo not found.")
         else:
-            raise DRIError ("xdrinfo failed")
+            raise DRIError ("XDriInfo failed: " + driError)
     return driInfo
 
 def StrToValue (str, type):
@@ -305,7 +307,7 @@ class ScreenInfo:
         """ Find or create the driver for this screen.
 
         Raises a DRIError if the screen is not direct rendering capable or
-        the driver does not support configuration.
+        if the DRI driver does not support configuration.
 
         Raises a XMLError if the config info is illegal. """
         self.num = screen
@@ -317,7 +319,9 @@ class DisplayInfo:
     drivers = {}
 
     def __init__ (self, dpy = None):
-        """ Find all direct rendering capable screens on dpy. """
+        """ Find all direct rendering capable screens on dpy.
+
+        Raises a DRIError if xdriinfo does not work for some reason. """
         self.dpy = dpy
         nScreens = int(XDriInfo ("nscreens", dpy))
         self.screens = [None for i in range (nScreens)]
@@ -325,6 +329,13 @@ class DisplayInfo:
             self.getScreen (i)
 
     def getScreen (self, i):
+        """ Get the screen object for screen i.
+
+        Returns None if the screen is not direct rendering capable or if
+        the DRI driver does not support configuration.
+
+        Raises a XMLError if the DRI driver's configuration information is
+        invalid. """
         if i < 0 or i >= len(self.screens):
             return None
         if self.screens[i] != None:
@@ -337,6 +348,12 @@ class DisplayInfo:
         return screen
 
 def GetDriver (name, catch=1):
+    """ Get the driver object for the named driver.
+
+    Returns None if the DRI driver does not support configuration.
+
+    Raises a XMLError if the DRI driver's configuration information is
+    invalid. """
     if DisplayInfo.drivers.has_key (name):
         return DisplayInfo.drivers[name]
     try:
