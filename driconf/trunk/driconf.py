@@ -57,6 +57,11 @@ def findInShared (name):
     # nothing found
     return None
 
+# Helper function:
+# escape text that is going to be passed as markup to pango
+def escapeMarkup (text):
+    return text.replace ("<", "&lt;").replace (">", "&gt;")
+
 class StockImage (gtk.Image):
     """ A stock image. """
     def __init__ (self, stock, size):
@@ -71,14 +76,23 @@ class WrappingCheckButton (gtk.CheckButton):
         """ Constructor. """
         gtk.CheckButton.__init__ (self)
         checkHBox = gtk.HBox()
-        checkLabel = gtk.Label(label)
-        checkLabel.set_justify (justify)
-        checkLabel.set_line_wrap (wrap)
-        checkLabel.set_size_request (width, height)
-        checkLabel.show()
-        checkHBox.pack_start (checkLabel, FALSE, FALSE, 0)
+        self.text = escapeMarkup (label)
+        self.label = gtk.Label(label)
+        self.label.set_justify (justify)
+        self.label.set_line_wrap (wrap)
+        self.label.set_size_request (width, height)
+        self.label.show()
+        checkHBox.pack_start (self.label, FALSE, FALSE, 0)
         checkHBox.show()
         self.add (checkHBox)
+
+    def highlight (self, flag):
+        """ Highlight the label. """
+        if flag:
+            self.label.set_markup ('<span foreground="red">' +  self.text + \
+                                   '</span>')
+        else:
+            self.label.set_markup (self.text)
 
 class WrappingOptionMenu (gtk.Button):
     """ Something that looks similar to a gtk.OptionMenu ...
@@ -297,11 +311,6 @@ class OptionLine:
             else:
                 self.widget.set_text (dri.ValueToStr(value, type))
             self.widget.connect ("changed", self.activateSignal)
-        if self.widget.__class__ == gtk.Entry:
-            style = self.widget.get_style()
-            self.default_normal_text = style.text[gtk.STATE_NORMAL].copy()
-            self.default_selected_text = style.text[gtk.STATE_SELECTED].copy()
-            self.default_insensitive_text = style.text[gtk.STATE_INSENSITIVE].copy()
         self.highlightInvalid()
         self.widget.show()
 
@@ -392,22 +401,7 @@ class OptionLine:
             self.page.doValidate()
 
     def highlightInvalid (self):
-        if not self.isValid and self.check.get_active():
-            if self.widget.__class__ == gtk.Entry:
-                self.widget.modify_text (gtk.STATE_NORMAL,
-                                         gtk.gdk.Color (65535, 0, 0))
-                self.widget.modify_text (gtk.STATE_SELECTED,
-                                         gtk.gdk.Color (65535, 0, 0))
-                self.widget.modify_text (gtk.STATE_INSENSITIVE,
-                                         gtk.gdk.Color (65535, 0, 0))
-        else:
-            if self.widget.__class__ == gtk.Entry:
-                self.widget.modify_text (gtk.STATE_NORMAL,
-                                         self.default_normal_text)
-                self.widget.modify_text (gtk.STATE_SELECTED,
-                                         self.default_selected_text)
-                self.widget.modify_text (gtk.STATE_INSENSITIVE,
-                                         self.default_insensitive_text)
+        self.check.highlight (not self.isValid and self.check.get_active())
 
     def validate (self):
         return self.isValid or not self.check.get_active()
@@ -546,7 +540,8 @@ class DriverPanel (gtk.Frame):
         """ Constructor. """
         gtk.Frame.__init__ (self)
         frameLabel = gtk.Label()
-        frameLabel.set_markup ("<b>"+_("Application")+": "+app.name+"</b>")
+        frameLabel.set_markup ("<b>" + escapeMarkup(
+            _("Application")+": "+app.name) + "</b>")
         frameLabel.show()
         self.set_label_widget (frameLabel)
         self.driver = driver
@@ -856,7 +851,7 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             if col == 0:
                 return self.configIcon
             else:
-                return "<b>" + str(node.fileName) + "</b>"
+                return "<b>" + escapeMarkup(str(node.fileName)) + "</b>"
         elif node.__class__ == dri.DeviceConfig:
             if node.screen and node.driver:
                 name = _("%s on screen %s") % (node.driver.capitalize(),
@@ -874,14 +869,15 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             if col == 0:
                 return icon
             else:
-                return str(name)
+                return escapeMarkup(str(name))
         elif node.__class__ == dri.AppConfig:
             if col == 0:
                 return self.appIcon
             elif not node.isValid:
-                return '<span foreground="red">' + str(node.name) + '</span>'
+                return '<span foreground="red">' + \
+                       escapeMarkup(str(node.name)) + '</span>'
             else:
-                return str(node.name)
+                return escapeMarkup(str(node.name))
     def on_iter_next (self, node):
         if node.__class__ == dri.DRIConfig:
             list = self.configList
