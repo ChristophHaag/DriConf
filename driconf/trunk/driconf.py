@@ -1725,7 +1725,7 @@ def main():
     # mainWindow.show().
     global mainWindow
     mainWindow = MainWindow(configList)
-    mainWindow.set_default_size (750, 550)
+    mainWindow.set_default_size (750, 375)
     mainWindow.initSelection()
     mainWindow.show ()
     mainWindow.initSelection()
