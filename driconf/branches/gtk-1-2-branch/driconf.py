@@ -1224,13 +1224,14 @@ def main():
             except dri.XMLError, problem:
                 MessageDialog ("Error", "Configuration file \""+fileName+
                                "\" contains errors:\n"+str(problem)+
-                               "\nI will leave the file alone until you fix the problem manually or remove the file.")
-                cfile.close()
+                               "\nI will leave the file alone until you fix the problem manually or remove the file.",
+                               callback = lambda n: mainquit())
+                mainloop()
                 continue
             else:
-                cfile.close()
                 # Check if the file is writable in the end.
                 config.writable = fileIsWritable (fileName)
+            cfile.close()
         if config:
             configList.append (config)
 
