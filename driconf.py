@@ -1490,6 +1490,11 @@ class MainWindow (gtk.Window):
             u"%s: dri-users@lists.sourceforge.net" % (
             _("A configuration GUI for DRI drivers"),
             _("Website"), _("Feedback")))
+        # Going to add a list of translators.
+        # u"\n"
+        # u"%s: <more people>, Felix K\u00fchling"
+        # Make the label available for translation.
+        _("Translators")
         dialog.set_title("About DRIconf")
         dialog.connect("response", lambda dialog, response: dialog.destroy())
         dialog.show()
