@@ -522,15 +522,19 @@ class DriverPanel (gtk.Frame):
         self.driver = driver
         self.app = app
         table = gtk.Table(2, 2)
-        execLabel = gtk.Label ("Executable:")
-        execLabel.show()
-        table.attach (execLabel, 0, 1, 0, 1, 0, 0, 5, 5)
+        self.execCheck = WrappingCheckButton ("Executable")
+        self.execCheck.set_sensitive (app.device.config.writable)
+        self.execCheck.show()
+        table.attach (self.execCheck, 0, 1, 0, 1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
         self.execEntry = gtk.Entry()
         if app.executable != None:
+            self.execCheck.set_active (TRUE)
             self.execEntry.set_text (app.executable)
-        self.execEntry.set_sensitive (app.device.config.writable)
-        self.execEntry.connect ("changed", self.execChanged)
+        self.execEntry.set_sensitive (app.device.config.writable and
+                                      app.executable != None)
         self.execEntry.show()
+        self.execCheck.connect ("toggled", self.execToggled)
+        self.execEntry.connect ("changed", self.execChanged)
         table.attach (self.execEntry, 1, 2, 0, 1,
                       gtk.EXPAND|gtk.FILL, 0, 5, 5)
         notebook = gtk.Notebook()
@@ -576,6 +580,10 @@ class DriverPanel (gtk.Frame):
     def execChanged (self, widget):
         self.app.modified(self.app)
 
+    def execToggled (self, widget):
+        self.execEntry.set_sensitive (self.execCheck.get_active())
+        self.app.modified(self.app)
+
     def validate (self):
         """ Validate the configuration.
 
@@ -603,7 +611,7 @@ class DriverPanel (gtk.Frame):
     def commit (self):
         """ Commit changes to the configuration. """
         executable = self.execEntry.get_text()
-        if executable == "":
+        if not self.execCheck.get_active():
             if self.app.executable != None:
                 self.app.executable = None
                 self.app.modified(self.app)
@@ -863,12 +871,13 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             config = node.device.config
         if config.isModified != b:
             config.isModified = b
-            if node.__class__ == dri.DRIConfig:
-                mainWindow.activateConfigButtons(node)
-            elif node.__class__ == dri.DeviceConfig:
-                mainWindow.activateDeviceButtons(node)
-            elif node.__class__ == dri.AppConfig:
-                mainWindow.activateAppButtons(node)
+            curNode = mainWindow.configTree.getSelection()
+            if curNode.__class__ == dri.DRIConfig:
+                mainWindow.activateConfigButtons(curNode)
+            elif curNode.__class__ == dri.DeviceConfig:
+                mainWindow.activateDeviceButtons(curNode)
+            elif curNode.__class__ == dri.AppConfig:
+                mainWindow.activateAppButtons(curNode)
 
     # higher level model manipulations
     def addNode (self, node, sibling = None):
