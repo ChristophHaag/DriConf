@@ -52,7 +52,8 @@ class MessageDialog (GtkDialog):
                   modal = TRUE):
         """ Constructor. """
         GtkDialog.__init__ (self)
-        self.set_transient_for (mainWindow)
+        if mainWindow:
+            self.set_transient_for (mainWindow)
         self.callback = callback
         self.set_title (title)
         first = None
