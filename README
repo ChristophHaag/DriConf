@@ -37,20 +37,28 @@ creating build
 creating build/lib
 copying dri.py -> build/lib
 copying driconf.py -> build/lib
-copying driconf_xpm.py -> build/lib
 running build_scripts
-creating build/scripts
-copying and adjusting driconf -> build/scripts
+creating build/scripts-2.3
+copying and adjusting driconf -> build/scripts-2.3
+changing mode of build/scripts-2.3/driconf from 644 to 755
 running install_lib
-copying build/lib/driconf.py -> /usr/local/lib/python2.1/site-packages
-copying build/lib/dri.py -> /usr/local/lib/python2.1/site-packages
-copying build/lib/driconf_xpm.py -> /usr/local/lib/python2.1/site-packages
-byte-compiling /usr/local/lib/python2.1/site-packages/driconf.py to driconf.pyc
-byte-compiling /usr/local/lib/python2.1/site-packages/dri.py to dri.pyc
-byte-compiling /usr/local/lib/python2.1/site-packages/driconf_xpm.py to driconf_xpm.pyc
+copying build/lib/driconf.py -> /usr/local/lib/python2.3/site-packages
+copying build/lib/dri.py -> /usr/local/lib/python2.3/site-packages
+byte-compiling /usr/local/lib/python2.3/site-packages/driconf.py to driconf.pyc
+byte-compiling /usr/local/lib/python2.3/site-packages/dri.py to dri.pyc
 running install_scripts
-copying build/scripts/driconf -> /usr/local/bin
-changing mode of /usr/local/bin/driconf to 100755
+copying build/scripts-2.3/driconf -> /usr/local/bin
+changing mode of /usr/local/bin/driconf to 755
+running install_data
+creating /usr/local/share/driconf
+copying card.png -> /usr/local/share/driconf
+copying screen.png -> /usr/local/share/driconf
+copying screencard.png -> /usr/local/share/driconf
+copying drilogo.jpg -> /usr/local/share/driconf
+creating /usr/local/share/locale
+creating /usr/local/share/locale/de
+creating /usr/local/share/locale/de/LC_MESSAGES
+copying de/LC_MESSAGES/driconf.mo -> /usr/local/share/locale/de/LC_MESSAGES
 
 After successful installation you can run driconf from the shell. I
 hope you find the user interface intuitive and instructive. Feedback
