@@ -44,7 +44,7 @@ class OptionLine:
         self.check = GtkCheckButton (opt.name)
         self.check.set_active (page.app.options.has_key (opt.name))
         self.check.connect ("clicked", self.checkOpt)
-        tooltipString = opt.getDesc([lang])+" ("+typeString+")"
+        tooltipString = opt.getDesc([lang]).text + " ("+typeString+")"
         page.tooltips.set_tip (self.check, tooltipString.encode(encoding))
                                
         self.check.show()
@@ -80,12 +80,27 @@ class OptionLine:
             self.widget = GtkSpinButton (adjustment, digits=0)
             adjustment.connect ("value_changed", self.activateSignal)
             self.widget.show()
-        elif opt.valid and reduce (lambda x,y: x and y,
-                                   map(lambda r: r.start==r.end, opt.valid)):
+        elif opt.type == "enum" or \
+             (opt.valid and reduce (lambda x,y: x and y,
+                                    map(lambda r: r.start==r.end, opt.valid))):
             self.widget = GtkCombo ()
-            self.widget.set_popdown_strings (map(lambda r: str(r.start),
-                                                 opt.valid))
-            self.widget.entry.set_text (dri.ValueToStr(value, opt.type))
+            popdownStrings = []
+            desc = opt.getDesc([lang])
+            realValue = None
+            self.comboEntries = {}
+            for r in opt.valid:
+                for v in range (r.start, r.end+1):
+                    vString = dri.ValueToStr(v, opt.type)
+                    if desc.enums.has_key(v):
+                        string = desc.enums[v].encode(encoding)
+                    else:
+                        string = vString
+                    self.comboEntries[string] = vString
+                    popdownStrings.append (string)
+                    if v == value:
+                        realValue = string
+            self.widget.set_popdown_strings (popdownStrings)
+            self.widget.entry.set_text (realValue)
             self.widget.entry.set_editable (FALSE)
             self.widget.list.connect ("select_child", self.activateSignal)
             self.widget.show()
@@ -107,7 +122,7 @@ class OptionLine:
         elif self.widget.__class__ == GtkSpinButton:
             return str(self.widget.get_value_as_int())
         elif self.widget.__class__ == GtkCombo:
-            return self.widget.entry.get_text()
+            return self.comboEntries[self.widget.entry.get_text()]
         elif self.widget.__class__ == GtkEntry:
             return self.widget.get_text()
         else:
