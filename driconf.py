@@ -116,7 +116,7 @@ class OptionLine:
             opt.getDesc([lang]).text.encode(encoding), width=200)
         self.check.set_active (page.app.options.has_key (opt.name))
         self.check.connect ("clicked", self.checkOpt)
-        tooltipString = typeString + " " + opt.name
+        tooltipString = str(opt)
         page.tooltips.set_tip (self.check, tooltipString.encode(encoding))
         self.check.show()
         page.table.attach (self.check, 0, 1, i, i+1, EXPAND|FILL, 0, 5, 5)
