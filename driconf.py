@@ -312,8 +312,12 @@ class OptionLine:
         valid = self.opt.validate (value)
         if not valid:
             if self.widget.__class__ == gtk.Entry:
-                self.widget.modify_text (gtk.STATE_NORMAL, self.widget.\
-                                         get_colormap().alloc(65535, 0, 0))
+                self.widget.modify_text (gtk.STATE_NORMAL,
+                                         gtk.gdk.Color (65535, 0, 0))
+                self.widget.modify_text (gtk.STATE_SELECTED,
+                                         gtk.gdk.Color (65535, 0, 0))
+                self.widget.modify_text (gtk.STATE_INSENSITIVE,
+                                         gtk.gdk.Color (65535, 0, 0))
         else:
             if self.widget.__class__ == gtk.Entry:
                 self.widget.set_style (None)
@@ -489,9 +493,11 @@ class DriverPanel (gtk.Frame):
         for sectPage in self.sectPages:
             valid = sectPage.validate()
             if not valid:
+                # strange, active and normal appear to be swapped :-/
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_NORMAL,
-                    self.sectLabels[index].get_colormap().alloc(65535, 0, 0))
+                    gtk.STATE_NORMAL, gtk.gdk.Color (65535, 0, 0))
+                self.sectLabels[index].modify_fg (
+                    gtk.STATE_ACTIVE, gtk.gdk.Color (65535, 0, 0))
             else:
                 self.sectLabels[index].set_style (None)
             allValid = allValid and valid
@@ -679,7 +685,7 @@ class ConfigTree (gtk.CTree):
                 self.node_set_row_style(app.node, style)
             else:
                 style = self.get_style().copy()
-                style.fg[gtk.STATE_NORMAL] = self.get_colormap().alloc(65535, 0, 0)
+                style.fg[gtk.STATE_NORMAL] = gtk.gdk.Color (65535, 0, 0)
                 self.node_set_row_style(app.node, style)
 
     def getSelection (self):
