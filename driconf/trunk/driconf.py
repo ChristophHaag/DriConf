@@ -20,6 +20,7 @@
 
 import os
 import locale
+import math
 import dri
 import pygtk
 pygtk.require ("2.0")
@@ -130,6 +131,52 @@ class WrappingOptionMenu (gtk.Button):
         self.setOpt (opt)
         self.callback (self)
 
+class SlideSpinner (gtk.VBox):
+    """ A spin button with a slider below.
+
+    This is used for representing int and float options with a single
+    range. The slider is only displayed on float options or on integer
+    options with a large range (>= 20, arbitrary threshold). """
+    def __init__ (self, callback, lower, upper, integer):
+        gtk.VBox.__init__ (self)
+        diff = upper - lower
+        self.isInteger = integer
+        if integer:
+            step = 1
+            page = (diff+4) / 5
+            self.digits = 1
+        else:
+            self.digits = -int(math.floor(math.log10(diff) + 0.5)) + 3
+            step = math.pow(10, -self.digits + 1)
+            page = step * 10
+            if self.digits < 0:
+                self.digits = 0
+        self.callback = callback
+        self.adjustment = gtk.Adjustment (lower, lower, upper, step, page)
+        self.spinner = gtk.SpinButton (self.adjustment, step, self.digits)
+        self.spinner.set_numeric (TRUE)
+        self.spinner.show()
+        self.pack_start (self.spinner, FALSE, FALSE, 0)
+        if not integer or diff >= 20:
+            self.slider = gtk.HScale (self.adjustment)
+            self.slider.set_size_request (200, -1)
+            self.slider.set_draw_value (FALSE)
+            self.slider.show()
+            self.pack_start (self.slider, FALSE, FALSE, 0)
+        self.adjConn = self.adjustment.connect ("value-changed", callback)
+
+    def getValue (self):
+        self.spinner.update()
+        if self.isInteger:
+            return int(self.adjustment.get_value())
+        else:
+            return self.adjustment.get_value()
+
+    def setValue (self, value):
+        self.adjustment.disconnect (self.adjConn)
+        self.adjustment.set_value (value)
+        self.adjConn = self.adjustment.connect ("value_changed", self.callback)
+
 class OptionLine:
     """ One line in a SectionPage. """
     def __init__ (self, page, i, opt):
@@ -202,11 +249,13 @@ class OptionLine:
             self.widget.set_active (value)
             self.widget.connect ("toggled", self.activateSignal)
         elif type == "int" and opt.valid and len(opt.valid) == 1:
-            adjustment = gtk.Adjustment (value, opt.valid[0].start,
-                                        opt.valid[0].end, 1, 10)
-            self.widget = gtk.SpinButton (adjustment, digits=0)
-            self.widget.set_value (value)
-            adjustment.connect ("value_changed", self.activateSignal)
+            self.widget = SlideSpinner (self.activateSignal, opt.valid[0].start,
+                                        opt.valid[0].end, TRUE)
+            self.widget.setValue (value)
+        elif type == "float" and opt.valid and len(opt.valid) == 1:
+            self.widget = SlideSpinner (self.activateSignal, opt.valid[0].start,
+                                        opt.valid[0].end, FALSE)
+            self.widget.setValue (value)
         elif type == "enum" or \
              (type != "invalid" and opt.valid and
               reduce (lambda x,y: x and y, map(dri.Range.empty, opt.valid))):
@@ -246,8 +295,8 @@ class OptionLine:
         """ Update the option widget to a new value. """
         if self.widget.__class__ == gtk.ToggleButton:
             self.widget.set_active (value)
-        elif self.widget.__class__ == gtk.SpinButton:
-            self.widget.set_value (value)
+        elif self.widget.__class__ == SlideSpinner:
+            self.widget.setValue (value)
         elif self.widget.__class__ == WrappingOptionMenu:
             self.widget.setValue(str(value))
         elif self.widget.__class__ == gtk.Entry:
@@ -274,8 +323,8 @@ class OptionLine:
                 return "true"
             else:
                 return "false"
-        elif self.widget.__class__ == gtk.SpinButton:
-            return str(self.widget.get_value_as_int())
+        elif self.widget.__class__ == SlideSpinner:
+            return str(self.widget.getValue())
         elif self.widget.__class__ == WrappingOptionMenu:
             return self.widget.getValue()
         elif self.widget.__class__ == gtk.Entry:
