@@ -43,7 +43,7 @@ class DataPixmap (gtk.Image):
 
 class StockImage (gtk.Image):
     """ A stock image. """
-    def __init__ (self, stock, size=gtk.ICON_SIZE_LARGE_TOOLBAR):
+    def __init__ (self, stock, size):
         """ Constructor. """
         gtk.Image.__init__ (self)
         self.set_from_stock (stock, size)
@@ -999,32 +999,34 @@ class MainWindow (gtk.Window):
         self.paned.show()
         DataPixmap.window = self
         self.toolbar = gtk.Toolbar ()
-        self.saveButton = self.toolbar.append_item (
-            "Save", "Save selected configuration file", "priv",
-            StockImage ("gtk-save"), self.configTree.saveConfig)
-        self.reloadButton = self.toolbar.append_item (
-            "Reload", "Reload selected configuration file", "priv",
-            StockImage ("gtk-revert-to-saved"), self.configTree.reloadConfig)
+        iconSize = self.toolbar.get_icon_size()
+        self.saveButton = self.toolbar.insert_stock (
+            "gtk-save", "Save selected configuration file", "priv",
+            self.configTree.saveConfig, None, -1)
+        self.reloadButton = self.toolbar.insert_stock (
+            "gtk-revert-to-saved", "Reload selected configuration file", "priv",
+            self.configTree.reloadConfig, None, -1)
         self.toolbar.append_space()
-        self.newButton = self.toolbar.append_item (
-            "New", "Create a new device or application", "priv",
-            StockImage ("gtk-new"), self.configTree.newItem)
-        self.removeButton = self.toolbar.append_item (
-            "Remove", "Remove selected device or application", "priv",
-            StockImage ("gtk-delete"), self.configTree.removeItem)
-        self.upButton = self.toolbar.append_item (
-            "Up", "Move selected item up", "priv",
-            StockImage ("gtk-go-up"), self.configTree.moveUp)
-        self.downButton = self.toolbar.append_item (
-            "Down", "Move selected item down", "priv",
-            StockImage ("gtk-go-down"), self.configTree.moveDown)
+        self.newButton = self.toolbar.insert_stock (
+            "gtk-new", "Create a new device or application", "priv",
+            self.configTree.newItem, None, -1)
+        self.removeButton = self.toolbar.insert_stock (
+            "gtk-delete", "Remove selected device or application", "priv",
+            self.configTree.removeItem, None, -1)
+        self.upButton = self.toolbar.insert_stock (
+            "gtk-go-up", "Move selected item up", "priv",
+            self.configTree.moveUp, None, -1)
+        self.downButton = self.toolbar.insert_stock (
+            "gtk-go-down", "Move selected item down", "priv",
+            self.configTree.moveDown, None, -1)
+        # Properties is too general, have to translate the label myself later
         self.renameButton = self.toolbar.append_item (
             "Rename", "Rename selected application", "priv",
-            StockImage ("gtk-properties"), self.configTree.renameApp)
+            StockImage ("gtk-properties", iconSize), self.configTree.renameApp)
         self.toolbar.append_space()
-        self.exitButton = self.toolbar.append_item (
-            "Exit", "Exit DRI configuration", "priv",
-            StockImage ("gtk-quit"), self.exitHandler)
+        self.exitButton = self.toolbar.insert_stock (
+            "gtk-quit", "Exit DRI configuration", "priv",
+            self.exitHandler, None, -1)
         if len(configList) != 0:
             self.activateConfigButtons (configList[0])
         self.toolbar.show()
