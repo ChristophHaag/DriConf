@@ -13,4 +13,8 @@ X Port to gtk-2 (driconf versions 0.2.x)
 I Make the user interface more intuitive
   (This one may never be really done. I'm open to suggestions, but I think
    it's grown pretty usable.)
-o Internationalize the user interface
+I Internationalize the user interface
+  (The basics are done, all that's needed now is more translations.)
+o Drag and drop in the configuration tree, allowing to move device and
+  application configurations between configuration files and application
+  configurations between devices.
