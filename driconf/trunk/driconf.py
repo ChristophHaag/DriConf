@@ -18,11 +18,11 @@
 
 # Contact: http://fxk.de.vu/
 
-from os import environ
-from driconf_tb_icons import *
+import os
 import locale
 import dri
 from gtk import *
+from driconf_tb_icons import *
 
 class DataPixmap (GtkPixmap):
     def __init__ (self, window, data):
@@ -588,21 +588,36 @@ def main():
     global lang, encoding
     locale.setlocale(locale.LC_ALL, '')
     lang,encoding = locale.getlocale()
-    underscore = lang.find ('_')
-    if underscore != -1:
-        lang = lang[0:underscore]
+    if lang:
+        underscore = lang.find ('_')
+        if underscore != -1:
+            lang = lang[0:underscore]
+    else:
+        lang = "en"
+    if not encoding:
+        encoding = "ISO-8859-1"
 
     # read configuration information from the drivers
+    global dpy
     dpy = dri.DisplayInfo ()
 
     # read configuration files
-    fileNameList = ["/etc/drirc", environ["HOME"] + "/.drirc"]
+    fileNameList = ["/etc/drirc", os.environ["HOME"] + "/.drirc"]
     configList = []
     for fileName in fileNameList:
         try:
             cfile = open (fileName, "r")
         except IOError:
-            configList.append (dri.DRIConfig (None, fileName))
+            config = dri.DRIConfig (None, fileName)
+            for screen in dpy.screens:
+                if screen == None:
+                    continue
+                device = dri.DeviceConfig (config, str(screen.num),
+                                           screen.driver.name)
+                app = dri.AppConfig (device, "all")
+                device.apps.append (app)
+                config.devices.append (device)
+            configList.append (config)
         else:
             configList.append (dri.DRIConfig (cfile))
 

@@ -1,3 +1,10 @@
+driconf-0.0.2: Sun Jul 13 23:35:00 CEST 2003
+
+- For non-existent files create one device per screen each with one empty
+  application config
+- Fixed: Select a default language (en) and encoding (iso-8859-1) if not
+         defined by the locale (e.g. "C")
+
 driconf-0.0.1: Sun Jul 13 19:29:12 CEST 2003
 
 - Added CHANGELOG
