@@ -1106,6 +1106,8 @@ class ConfigTreeView (gtk.TreeView):
         self.model = ConfigTreeModel (configList)
         gtk.TreeView.__init__ (self, self.model)
         self.model.renderIcons (self)
+        self.connect ("style-set", lambda widget, prevStyle:
+                      self.model.renderIcons (widget))
         self.set_size_request (200, -1)
         self.set_headers_visible (FALSE)
         self.expand_all()
