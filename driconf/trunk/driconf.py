@@ -272,8 +272,12 @@ class OptionLine:
         self.check.set_active (active)
 
     def getValue (self):
-        """ Get the current value from the option widget. """
-        if self.widget.__class__ == GtkToggleButton:
+        """ Get the current value from the option widget.
+
+        Returns None if the widget is not activated. """
+        if not self.check.get_active():
+            return None
+        elif self.widget.__class__ == GtkToggleButton:
             if self.widget.get_active():
                 return "true"
             else:
@@ -292,11 +296,9 @@ class OptionLine:
         if self.check.get_active():
             self.widget.set_sensitive (TRUE)
             self.resetButton.set_sensitive (TRUE)
-            self.page.checkOpt (self.opt, self.getValue())
         else:
             self.widget.set_sensitive (FALSE)
             self.resetButton.set_sensitive (FALSE)
-            self.page.checkOpt (self.opt, None)
 
     def activateSignal (self, widget, dummy=None):
         """ Handler for 'widget was activated by the user'. """
@@ -306,7 +308,6 @@ class OptionLine:
                 self.toggleLabel.set_text ("True")
             else:
                 self.toggleLabel.set_text ("False")
-        self.checkOpt (widget)
 
     def resetOpt (self, widget):
         """ Reset to default value. """
@@ -318,9 +319,10 @@ class OptionLine:
         This is only interesting if the check button is active. Only
         GtkEntry widgets should ever give invalid values in practice.
         Invalid option widgets are highlighted. """
-        if not self.check.get_active():
+        value = self.getValue()
+        if value == None:
             return 1
-        valid = self.opt.validate (self.getValue())
+        valid = self.opt.validate (value)
         if not valid:
             if self.widget.__class__ == GtkEntry:
                 self.widget.set_style (self.invalidStyle)
@@ -346,13 +348,6 @@ class SectionPage (GtkScrolledWindow):
         self.table.show()
         self.add_with_viewport (self.table)
 
-    def checkOpt (self, opt, value):
-        """ Callback from OptionLine.checkOpt, modifies the app config. """
-        if value != None and not self.app.options.has_key (opt.name):
-            self.app.options[opt.name] = value
-        elif value == None and self.app.options.has_key (opt.name):
-            del self.app.options[opt.name]
-
     def validate (self):
         """ Validate the widget settings.
 
@@ -366,8 +361,12 @@ class SectionPage (GtkScrolledWindow):
     def commit (self):
         """ Commit the widget settings. """
         for optLine in self.optLines:
-            if self.app.options.has_key (optLine.opt.name):
-                self.app.options[optLine.opt.name] = optLine.getValue()
+            name = optLine.opt.name
+            value = optLine.getValue()
+            if value == None and self.app.options.has_key(name):
+                del self.app.options[name]
+            elif value != None:
+                self.app.options[name] = value
 
 class UnknownSectionPage(GtkScrolledWindow):
     """ Special section page for options unknown to the driver. """
