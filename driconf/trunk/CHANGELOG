@@ -1,3 +1,14 @@
+driconf-0.2.4: Fri Mar 18 12:50:22 CET 2005
+
+- Added an "About" dialog.
+- Added some instructive text to device and application name dialogs.
+- Made the executable attribute more similar to a regular option.
+- Truncate long tab labels and add a tooltip with the full description.
+- More concise device descriptions in the configuration tree.
+- Updated README.
+- Fixed: Problem when closing the DRIconf window through the window manager.
+- Fixed: Wrong button activation after saving a configuration file.
+
 driconf-0.2.3: Mon Mar 14 02:13:30 CET 2005
 
 - Added a new widget for float and integer ranges: spin button + slider.
