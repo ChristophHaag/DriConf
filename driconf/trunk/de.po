@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: driconf\n"
-"POT-Creation-Date: Sun Mar 20 04:15:12 2005\n"
-"PO-Revision-Date: 2005-03-20 04:15+0100\n"
+"POT-Creation-Date: Sat Mar 26 20:16:08 2005\n"
+"PO-Revision-Date: 2005-03-26 20:19+0100\n"
 "Last-Translator: Felix Kuehling <fxkuehl@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -16,7 +16,15 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: driconf.py:473
+#: driconf.py:497
+msgid "Option"
+msgstr "Option"
+
+#: driconf.py:502
+msgid "Value"
+msgstr "Wert"
+
+#: driconf.py:576
 msgid ""
 "Some settings in this application configuration are unknown to the driver. "
 "Maybe the driver version changed and does not support these options any "
@@ -27,23 +35,22 @@ msgstr ""
 "unterstützt diese Optionen nicht mehr. Sie können diese Einstellungen "
 "wahrscheinlich gefahrlos löschen."
 
-#: driconf.py:500
-msgid "Option"
-msgstr "Option"
+#: driconf.py:581
+msgid ""
+"The driver for this device could not be determined or does not support "
+"configuration. You can still change the settings but I cannot verify whether "
+"they are supported and valid."
+msgstr "Der Treiber für dieses Gerät konnte nicht bestimmt werden oder ist nicht konfigurierbar. Sie können die Einstellungen trotzdem bearbeiten. Ich kann jedoch nicht überprüfen, ob sie vom Treiber unterstützt werden und zulässig sind."
 
-#: driconf.py:502
-msgid "Value"
-msgstr "Wert"
-
-#: driconf.py:544
+#: driconf.py:619
 msgid "Application"
 msgstr "Anwendung"
 
-#: driconf.py:549
+#: driconf.py:626
 msgid "Apply only to this executable"
 msgstr "Nur auf diese ausführbare Datei anwenden"
 
-#: driconf.py:551
+#: driconf.py:628
 msgid ""
 "Leave this disabled to configure all applications.\n"
 "Beware that some applications or games are just a shell script that starts a "
@@ -53,15 +60,15 @@ msgstr ""
 "Beachten Sie, dass einige Anwendungen oder Spiele nur Shellskripte sind, die "
 "ein anderes ausführbares Programm starten."
 
-#: driconf.py:574
+#: driconf.py:651
 msgid "Unknown"
 msgstr "Unbekannt"
 
-#: driconf.py:606
+#: driconf.py:684
 msgid "(no description)"
 msgstr "(keine Beschreibung)"
 
-#: driconf.py:682
+#: driconf.py:760
 msgid ""
 "Enter the name of the application below. This serves just a descriptivion "
 "for you. Don't forget to set the executable afterwards."
@@ -70,80 +77,76 @@ msgstr ""
 "Beschreibung. Denken Sie anschließend daran, das ausführbare Programm "
 "festzulegen."
 
-#: driconf.py:690
+#: driconf.py:768
 msgid "Application Name"
 msgstr "Name der Anwendung"
 
-#: driconf.py:724
+#: driconf.py:802
 msgid "Describe the device that you would like to configure."
 msgstr "Beschreiben Sie das Gerät, das Sie konfigurieren möchten."
 
-#: driconf.py:730
+#: driconf.py:808
 msgid "Screen Number"
 msgstr "Bildschirmnummer"
 
-#: driconf.py:741
+#: driconf.py:819
 msgid "Driver Name"
 msgstr "Treibername"
 
-#: driconf.py:855
+#: driconf.py:937
 msgid "%s on screen %s"
 msgstr "%s auf Bildschirm %s"
 
-#: driconf.py:859
+#: driconf.py:941
 msgid "Screen %s"
 msgstr "Bildschirm %s"
 
-#: driconf.py:865
+#: driconf.py:947
 msgid "Unspecified device"
 msgstr "Beliebiges Gerät"
 
-#: driconf.py:1082
+#: driconf.py:1168
 msgid "Parsing the driver's configuration information: %s"
 msgstr "Beim verarbeiten der Treiberkonfigurationsinformationen: %s"
 
-#: driconf.py:1091
-msgid "Can't determine the driver for this device."
-msgstr "Der Treiber für dieses Gerät konnte nicht bestimmt werden."
-
-#: driconf.py:1128
+#: driconf.py:1206
 msgid "Really delete application \"%s\"?"
 msgstr "Anwendung \"%s\" wirklich löschen?"
 
-#: driconf.py:1134
+#: driconf.py:1212
 msgid "Really delete device and all applications in it?"
 msgstr "Dieses Gerät mit allen enthaltenen Anwendungen wirklich löschen?"
 
-#: driconf.py:1156
+#: driconf.py:1234
 msgid "Rename Application"
 msgstr "Anwendung umbenennen"
 
-#: driconf.py:1163
+#: driconf.py:1241
 msgid "New Application"
 msgstr "Neue Anwendung"
 
-#: driconf.py:1166
+#: driconf.py:1244
 msgid "New Device"
 msgstr "Neues Gerät"
 
-#: driconf.py:1190
+#: driconf.py:1268
 msgid "The configuration contains invalid entries. Save anyway?"
 msgstr "Die Konfiguration enthält ungültige Einträge. Trotzdem speichern?"
 
-#: driconf.py:1201
+#: driconf.py:1279
 msgid "Can't open \"%s\" for writing."
 msgstr "Kann \"%s\" nicht zum Schreiben öffnen."
 
-#: driconf.py:1220
+#: driconf.py:1298
 msgid "Really reload \"%s\" from disk?"
 msgstr "\"%s\" wirklich neu laden?"
 
-#: driconf.py:1231
+#: driconf.py:1309
 msgid "Couldn't open \"%s\" for reading. The file was not reloaded."
 msgstr ""
 "Konnte \"%s\" nicht zum Lesen öffnen. Die Datei wurde nicht neu geladen."
 
-#: driconf.py:1243
+#: driconf.py:1321
 msgid ""
 "Configuration file \"%s\" contains errors:\n"
 "%s\n"
@@ -153,67 +156,67 @@ msgstr ""
 "%s\n"
 "Die Datei wurde nicht neu geladen."
 
-#: driconf.py:1343
+#: driconf.py:1421
 msgid "Save selected configuration file"
 msgstr "Gewählte Konfigurationsdatei speichern"
 
-#: driconf.py:1346
+#: driconf.py:1424
 msgid "Reload selected configuration file"
 msgstr "Gewählte Konfigurationsdatei neu laden"
 
-#: driconf.py:1350
+#: driconf.py:1428
 msgid "Create a new device or application"
 msgstr "Neues Gerät oder neue Anwendung anlegen"
 
-#: driconf.py:1353
+#: driconf.py:1431
 msgid "Remove selected device or application"
 msgstr "Gewähltes Gerät oder gewählte Anwendung löschen"
 
-#: driconf.py:1356
+#: driconf.py:1434
 msgid "Move selected item up"
 msgstr "Verschiebe gewählten Eintrag nach oben"
 
-#: driconf.py:1359
+#: driconf.py:1437
 msgid "Move selected item down"
 msgstr "Verschiebe gewählten Eintrag nach unten"
 
-#: driconf.py:1363
+#: driconf.py:1441
 msgid "Rename"
 msgstr "Umbenennen"
 
-#: driconf.py:1363
+#: driconf.py:1441
 msgid "Rename selected application"
 msgstr "Gewählte Anwendung umbenennen"
 
-#: driconf.py:1374
+#: driconf.py:1452
 msgid "About DRIconf"
 msgstr "Über DRIconf"
 
-#: driconf.py:1378
+#: driconf.py:1456
 msgid "Exit DRIconf"
 msgstr "DRIconf beenden"
 
-#: driconf.py:1491
+#: driconf.py:1571
 msgid "A configuration GUI for DRI drivers"
 msgstr "Ein Konfigurationswerkzeug für DRI-Treiber"
 
-#: driconf.py:1492
+#: driconf.py:1572
 msgid "Feedback"
 msgstr "Feedback"
 
-#: driconf.py:1492
+#: driconf.py:1572
 msgid "Website"
 msgstr "Webseite"
 
-#: driconf.py:1497
+#: driconf.py:1577
 msgid "Translators"
 msgstr "Übersetzer"
 
-#: driconf.py:1512
+#: driconf.py:1592
 msgid "There are unsaved modifications. Exit anyway?"
 msgstr "Einige Änderungen wurden noch nicht gespeichert. Trotzdem beenden?"
 
-#: driconf.py:1569
+#: driconf.py:1649
 msgid ""
 "There are errors in a driver's configuration information:\n"
 "%s\n"
@@ -223,7 +226,7 @@ msgstr ""
 "%s\n"
 "Das dürfte nicht passieren. Wahrscheinlich müssen Sie DRIconf aktualisieren."
 
-#: driconf.py:1612
+#: driconf.py:1692
 msgid ""
 "Configuration file \"%s\" contains errors:\n"
 "%s\n"
@@ -235,10 +238,10 @@ msgstr ""
 "Ich werde die Datei ignorieren, bis Sie das Problem von Hand behoben oder "
 "die Datei gelöscht haben."
 
-#: driconf.py:1642
+#: driconf.py:1722
 msgid "Created a new DRI configuration file \"%s\" for you."
 msgstr "Eine neue Konfigurationsdatei \"%s\" wurde für Sie angelegt."
 
-#: driconf.py:1650
+#: driconf.py:1730
 msgid "Created new DRI configuration files %s for you."
 msgstr "Neue Konfigurationsdateien %s wurden für Sie angelegt."

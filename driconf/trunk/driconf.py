@@ -467,23 +467,26 @@ class UnknownSectionPage(gtk.VBox):
     def __init__ (self, driver, app):
         """ Constructor. """
         gtk.VBox.__init__ (self)
+        self.set_size_request (500, 200)
         scrolledWindow = gtk.ScrolledWindow ()
         scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.app = app
+        self.driver = driver
         # copy options (dict function does not exist in Python 2.1 :( )
         opts = {}
         for name,val in app.options.items():
             opts[name] = val
         # remove all options known to the driver
         self.driverOpts = {}
-        for sect in driver.optSections:
-            for opt in sect.optList:
-                self.driverOpts[opt.name] = opt
-                if opts.has_key (opt.name):
-                    del opts[opt.name]
+        if driver:
+            for sect in driver.optSections:
+                for opt in sect.optList:
+                    self.driverOpts[opt.name] = opt
+                    if opts.has_key (opt.name):
+                        del opts[opt.name]
         # short cut
         self.opts = []
-        if len(opts) == 0:
+        if driver and len(opts) == 0:
             return
         # list all remaining options here
         self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN)
@@ -569,13 +572,19 @@ class UnknownSectionPage(gtk.VBox):
         self.app.modified(self.app)
 
     def help (self, widget):
+        if self.driver:
+            msg = _("Some settings in this application configuration are "
+                    "unknown to the driver. Maybe the driver version changed "
+                    "and does not support these options any more. It is "
+                    "probably safe to delete these settings.")
+        else:
+            msg = _("The driver for this device could not be determined or "
+                    "does not support configuration. You can still change "
+                    "the settings but I cannot verify whether they are "
+                    "supported and valid.")
         dialog = gtk.MessageDialog (
             mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-            _("Some settings in this application configuration are "
-              "unknown to the driver. Maybe the driver version changed and "
-              "does not support these options any more. It is probably "
-              "safe to delete these settings."))
+            gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, msg)
         dialog.connect ("response", lambda d,r: d.destroy())
         dialog.show()
 
@@ -637,46 +646,47 @@ class DriverPanel (gtk.Frame):
         self.sectPages = []
         self.sectLabels = []
         unknownPage = UnknownSectionPage (driver, app)
-        if len(unknownPage.opts) > 0:
+        if not driver or len(unknownPage.opts) > 0:
             unknownPage.show()
             unknownLabel = gtk.Label (_("Unknown"))
             unknownLabel.show()
             notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)
             self.sectLabels.append (unknownLabel)
-        for sect in driver.optSections:
-            sectPage = SectionPage (sect, app)
-            sectPage.show()
-            desc = sect.getDesc([lang])
-            if desc:
-                if len(desc) > 30:
-                    # Truncate long section descriptions and add a
-                    # tooltip with the full description.
-                    # Eek: need an event box since tooltips don't work
-                    # on labels.
-                    try:
-                        space = desc[20:].index(' ') + 20
-                        if space < 30:
-                            shortDesc = desc[:space]
-                        else:
+        if driver:
+            for sect in driver.optSections:
+                sectPage = SectionPage (sect, app)
+                sectPage.show()
+                desc = sect.getDesc([lang])
+                if desc:
+                    if len(desc) > 30:
+                        # Truncate long section descriptions and add a
+                        # tooltip with the full description.
+                        # Eek: need an event box since tooltips don't work
+                        # on labels.
+                        try:
+                            space = desc[20:].index(' ') + 20
+                            if space < 30:
+                                shortDesc = desc[:space]
+                            else:
+                                shortDesc = desc[:30]
+                        except ValueError:
                             shortDesc = desc[:30]
-                    except ValueError:
-                        shortDesc = desc[:30]
-                    labelWidget = gtk.EventBox()
-                    tooltips.set_tip (labelWidget, desc)
-                    sectLabel = gtk.Label (shortDesc + " ...")
-                    sectLabel.show()
-                    labelWidget.add (sectLabel)
+                        labelWidget = gtk.EventBox()
+                        tooltips.set_tip (labelWidget, desc)
+                        sectLabel = gtk.Label (shortDesc + " ...")
+                        sectLabel.show()
+                        labelWidget.add (sectLabel)
+                    else:
+                        sectLabel = gtk.Label (desc)
+                        labelWidget = sectLabel
                 else:
-                    sectLabel = gtk.Label (desc)
+                    sectLabel = gtk.Label (_("(no description)"))
                     labelWidget = sectLabel
-            else:
-                sectLabel = gtk.Label (_("(no description)"))
-                labelWidget = sectLabel
-            labelWidget.show()
-            notebook.append_page (sectPage, labelWidget)
-            self.sectPages.append (sectPage)
-            self.sectLabels.append (sectLabel)
+                labelWidget.show()
+                notebook.append_page (sectPage, labelWidget)
+                self.sectPages.append (sectPage)
+                self.sectLabels.append (sectLabel)
         if len(self.sectLabels) > 0:
             style = self.sectLabels[0].get_style()
             self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
@@ -1159,14 +1169,6 @@ class ConfigTreeView (gtk.TreeView):
                     problem)
                 dialog.connect ("response", lambda d,r: d.destroy())
                 dialog.show()
-            else:
-                if driver == None:
-                    dialog = gtk.MessageDialog (
-                        mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                        gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
-                        _("Can't determine the driver for this device."))
-                    dialog.connect ("response", lambda d,r: d.destroy())
-                    dialog.show()
         else:
             driver = None
             app = None
@@ -1492,9 +1494,9 @@ class MainWindow (gtk.Window):
                self.curDriverPanel.app == app:
                 return
             self.paned.remove (self.curDriverPanel)
-        elif driver != None:
+        elif app != None:
             self.paned.remove (self.logo)
-        if driver != None:
+        if app != None:
             self.curDriverPanel = DriverPanel (driver, app)
             self.curDriverPanel.show ()
             self.paned.add2 (self.curDriverPanel)
