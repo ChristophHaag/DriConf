@@ -24,6 +24,9 @@ import dri
 from gtk import *
 from driconf_xpm import *
 
+# global variable: main window
+mainWindow = None
+
 class DataPixmap (GtkPixmap):
     """ A pixmap made from data. """
     window = None
@@ -42,6 +45,7 @@ class MessageDialog (GtkDialog):
                   modal = TRUE):
         """ Constructor. """
         GtkDialog.__init__ (self)
+        self.set_transient_for (mainWindow)
         self.callback = callback
         self.set_title (title)
         first = None
@@ -521,6 +525,7 @@ class BasicDialog (GtkDialog):
     """ Base class for NameDialog and DeviceDialog. """
     def __init__ (self, title, callback):
         GtkDialog.__init__ (self)
+        self.set_transient_for (mainWindow)
         self.set_title (title)
         self.callback = callback
         ok = GtkButton ("OK")
@@ -620,11 +625,10 @@ class ConfigTree (GtkCTree):
         """ Something's wrong with the selection. """
         pass
     
-    def __init__ (self, configList, mainWindow):
+    def __init__ (self, configList):
         GtkCTree.__init__ (self, 1, 0)
         self.set_usize (200, 0)
         self.set_selection_mode (SELECTION_BROWSE)
-        self.mainWindow = mainWindow
         self.defaultFg = self.get_style().fg[STATE_NORMAL]
         self.configList = []
         for config in configList:
@@ -710,11 +714,11 @@ class ConfigTree (GtkCTree):
         if config.modified != b:
             config.modified = b
             if type == "config":
-                self.mainWindow.activateConfigButtons(obj)
+                mainWindow.activateConfigButtons(obj)
             elif type == "device":
-                self.mainWindow.activateDeviceButtons(obj)
+                mainWindow.activateDeviceButtons(obj)
             elif type == "app":
-                self.mainWindow.activateAppButtons(obj)
+                mainWindow.activateAppButtons(obj)
 
     def selectRowSignal (self, widget, row, column, event, data):
         type, obj = self.get_row_data (row)
@@ -735,14 +739,14 @@ class ConfigTree (GtkCTree):
         else:
             driver = None
             app = None
-        self.mainWindow.commitDriverPanel()
-        self.mainWindow.switchDriverPanel (driver, app)
+        mainWindow.commitDriverPanel()
+        mainWindow.switchDriverPanel (driver, app)
         if type == "config":
-            self.mainWindow.activateConfigButtons(obj)
+            mainWindow.activateConfigButtons(obj)
         elif type == "device":
-            self.mainWindow.activateDeviceButtons(obj)
+            mainWindow.activateDeviceButtons(obj)
         elif type == "app":
-            self.mainWindow.activateAppButtons(obj)
+            mainWindow.activateAppButtons(obj)
 
     def moveItem (self, inc):
         try:
@@ -816,10 +820,10 @@ class ConfigTree (GtkCTree):
             return
         siblings.remove (obj)
         if type == "app":
-            self.mainWindow.removeApp (obj)
+            mainWindow.removeApp (obj)
         elif type == "device":
             for app in obj.apps:
-                self.mainWindow.removeApp (app)
+                mainWindow.removeApp (app)
         self.remove_node (node)
         config.modifiedCallback()
 
@@ -837,7 +841,7 @@ class ConfigTree (GtkCTree):
     def renameCallback (self, name, app):
         app.name = name
         self.node_set_text (app.node, 0, name)
-        self.mainWindow.renameApp (app)
+        mainWindow.renameApp (app)
         app.device.config.modifiedCallback()
 
     def newItem (self, widget):
@@ -905,7 +909,7 @@ class ConfigTree (GtkCTree):
             MessageDialog ("Error",
                            "Can't open \""+config.fileName+"\" for writing.")
             return
-        self.mainWindow.commitDriverPanel()
+        mainWindow.commitDriverPanel()
         file.write (str(config))
         file.close()
         config.modifiedCallback(FALSE)
@@ -919,7 +923,7 @@ class MainWindow (GtkWindow):
         self.connect ("delete_event", self.exitHandler)
         self.vbox = GtkVBox()
         self.paned = GtkHPaned()
-        self.configTree = ConfigTree (configList, self)
+        self.configTree = ConfigTree (configList)
         self.configTree.show()
         self.paned.add1(self.configTree)
         self.paned.show()
@@ -1131,6 +1135,7 @@ def main():
             configList.append (config)
 
     # open the main window
+    global mainWindow
     mainWindow = MainWindow(configList)
     mainWindow.show ()
 
