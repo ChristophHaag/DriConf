@@ -1,4 +1,14 @@
+driconf-0.0.8: Sun Sep 28 12:31:48 CEST 2003
+
+- Added a special section page for options that appear in a configuration file
+  but are unknown to the driver (only shows up if necessary).
+- Improved error handling/reporting in case of invalid driver config info.
+- Improved handling of invalid option values.
+- Highlight applications with invalid options in the configuration tree.
+- Ask before saving a configuration with invalid entries.
+
 driconf-0.0.7: Mon Aug 25 23:43:34 CEST 2003
+
 - If an application or device is selected the save button saves the containing
   configuration file.
 - Tries to write the default configuration for non-existing configuration
