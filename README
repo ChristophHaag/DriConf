@@ -96,10 +96,10 @@ name you just entered.
 
 The right pane of the window now shows the options with their settings
 for the new application. Note the entry above the tabs containing the
-actual options. Here you should enter the name of the application's
-executable file. This will make the settings below apply only to this
-particular application. If you leave it empty, the settings will apply
-to all applications.
+actual options. If you activate it you can enter the name of the
+application's executable file. This will make the settings below apply
+only to this particular application. If you leave the entry disabled,
+the settings will apply to all applications.
 
 Beware that some applications and games end up running a different
 executable than what you type in the shell. For example q3demo is only
