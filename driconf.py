@@ -41,43 +41,6 @@ class DataPixmap (gtk.Image):
                                                                  None, data)
         self.set_from_pixmap (pixmap, mask)
 
-class MessageDialog (gtk.Dialog):
-    """ A simple message dialog with configurable buttons and a callback. """
-    def __init__ (self, title, message, buttons = ["OK"], callback = None,
-                  modal = TRUE):
-        """ Constructor. """
-        gtk.Dialog.__init__ (self)
-        if mainWindow:
-            self.set_transient_for (mainWindow)
-        self.callback = callback
-        self.set_title (title)
-        first = None
-        for name in buttons:
-            button = gtk.Button (name)
-            button.set_flags (gtk.CAN_DEFAULT)
-            button.connect ("clicked", self.clickedSignal, name)
-            button.show()
-            self.action_area.pack_start (button, TRUE, FALSE, 10)
-            if not first:
-                first = button
-        hbox = gtk.HBox()
-        label = gtk.Label (message)
-        label.set_justify (gtk.JUSTIFY_LEFT)
-        label.set_line_wrap (TRUE)
-        label.show()
-        hbox.pack_start (label, TRUE, TRUE, 20)
-        hbox.show()
-        self.vbox.pack_start (hbox, TRUE, TRUE, 10)
-        first.grab_default()
-        self.set_modal (modal)
-        self.show()
-
-    def clickedSignal (self, widget, name):
-        """ Handler for clicked signals. """
-        if self.callback:
-            self.callback (name)
-        self.destroy()
-
 class WrappingCheckButton (gtk.CheckButton):
     """ Check button with a line wrapping label. """
     def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=TRUE,
@@ -490,8 +453,12 @@ class DriverPanel (gtk.Frame):
             notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)
             self.sectLabels.append (sectLabel)
-            MessageDialog ("Notice",
-                           "This application configuration contains options that are not known to the driver. Either you edited your configuration file manually or the driver configuration changed. See the page named \"Unknown\" for details. It is probably safe to remove these options. Otherwise they are left unchanged.", modal=FALSE)
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
+                "This application configuration contains options that are not known to the driver. Either you edited your configuration file manually or the driver configuration changed. See the page named \"Unknown\" for details. It is probably safe to remove these options. Otherwise they are left unchanged.")
+            dialog.connect ("response", lambda d,r: d.destroy())
+            dialog.show()
         self.validate()
         notebook.show()
         table.attach (notebook, 0, 2, 1, 2,
@@ -546,12 +513,12 @@ class BasicDialog (gtk.Dialog):
         self.set_title (title)
         self.callback = callback
         ok = gtk.Button ("OK")
-        ok.set_flags (CAN_DEFAULT)
+        ok.set_flags (gtk.CAN_DEFAULT)
         ok.connect ("clicked", self.okSignal)
         ok.show()
         self.action_area.pack_start (ok, TRUE, FALSE, 10)
         cancel = gtk.Button ("Cancel")
-        cancel.set_flags (CAN_DEFAULT)
+        cancel.set_flags (gtk.CAN_DEFAULT)
         cancel.connect ("clicked", self.cancelSignal)
         cancel.show()
         self.action_area.pack_start (cancel, TRUE, FALSE, 10)
@@ -754,14 +721,21 @@ class ConfigTree (gtk.CTree):
                 driver = app.device.getDriver (dpy)
             except dri.XMLError, problem:
                 driver = None
-                MessageDialog ("Error",
-                               "Parsing the driver's configuration information: " + str(problem),
-                               modal=FALSE)
+                dialog = gtk.MessageDialog (
+                    mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                    gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                    "Parsing the driver's configuration information: %s" %
+                    problem)
+                dialog.connect ("response", lambda d,r: d.destroy())
+                dialog.show()
             else:
                 if driver == None:
-                    MessageDialog ("Notice",
-                                   "Can't determine the driver for this device.",
-                                   modal=FALSE)
+                    dialog = gtk.MessageDialog (
+                        mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                        gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
+                        "Can't determine the driver for this device.")
+                    dialog.connect ("response", lambda d,r: d.destroy())
+                    dialog.show()
         else:
             driver = None
             app = None
@@ -816,24 +790,22 @@ class ConfigTree (gtk.CTree):
             return
         type, obj = self.node_get_row_data (node)
         if type == "app":
-            MessageDialog ("Question",
-                           "Really delete application \"" + obj.name + "\"?",
-                           ["Yes", "No"], self.doRemoveItem)
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+                "Really delete application \"%s\"?" % obj.name)
         elif type == "device":
-            MessageDialog ("Question",
-                           "Really delete device and all applications in it?",
-                           ["Yes", "No"], self.doRemoveItem)
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+                "Really delete device and all applications in it?")
         else:
-            MessageDialog ("Notice", "Select a device or application.")
-
-    def doRemoveItem (self, buttonName):
-        if buttonName != "Yes":
+            # The remove button should be unsensitive.
+            raise Exception ("This should never happen.")
+        response = dialog.run()
+        dialog.destroy ()
+        if response != gtk.RESPONSE_YES:
             return
-        try:
-            node = self.getSelection()
-        except SelectionError:
-            return
-        type, obj = self.node_get_row_data (node)
         if type == "app":
             parent = obj.device
             config = parent.config
@@ -842,8 +814,6 @@ class ConfigTree (gtk.CTree):
             parent = obj.config
             config = parent
             siblings = parent.devices
-        else:
-            return
         siblings.remove (obj)
         if type == "app":
             mainWindow.removeApp (obj)
@@ -898,11 +868,6 @@ class ConfigTree (gtk.CTree):
         device.config.modifiedCallback()
 
     def saveConfig (self, widget):
-        self.doSaveConfig()
-
-    def doSaveConfig (self, reallySave="dunno"):
-        if reallySave == "No":
-            return
         try:
             node = self.getSelection()
         except SelectionError:
@@ -914,27 +879,34 @@ class ConfigTree (gtk.CTree):
         if type == "device":
             config = config.config
             type = "config"
-        if reallySave == "dunno":
-            valid = 1
-            for device in config.devices:
-                try:
-                    driver = device.getDriver (dpy)
-                except dri.XMLError:
-                    driver = None
-                if driver == None:
-                    continue
-                for app in device.apps:
-                    valid = valid and driver.validate (app.options)
-            if not valid:
-                MessageDialog ("Question",
-                               "The configuration contains invalid entries. Save anyway?",
-                               ["Yes", "No"], self.doSaveConfig)
+        valid = 1
+        for device in config.devices:
+            try:
+                driver = device.getDriver (dpy)
+            except dri.XMLError:
+                driver = None
+            if driver == None:
+                continue
+            for app in device.apps:
+                valid = valid and driver.validate (app.options)
+        if not valid:
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+                "The configuration contains invalid entries. Save anyway?")
+            response = dialog.run()
+            dialog.destroy()
+            if response != gtk.RESPONSE_YES:
                 return
         try:
             file = open (config.fileName, "w")
         except IOError:
-            MessageDialog ("Error",
-                           "Can't open \""+config.fileName+"\" for writing.")
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                "Can't open \"%s\" for writing." % config.fileName)
+            dialog.run()
+            dialog.destroy()
             return
         mainWindow.commitDriverPanel()
         file.write (str(config))
@@ -942,11 +914,6 @@ class ConfigTree (gtk.CTree):
         config.modifiedCallback(FALSE)
 
     def reloadConfig (self, widget):
-        self.doReloadConfig ()
-
-    def doReloadConfig (self, reallyReload="dunno"):
-        if reallyReload == "No":
-            return
         try:
             node = self.getSelection()
         except SelectionError:
@@ -956,26 +923,41 @@ class ConfigTree (gtk.CTree):
             config = obj.device.config
         elif type == "device":
             config = obj.config
-        if reallyReload == "dunno":
-            MessageDialog ("Question",
-                           "Really reload " + config.fileName + " from disk?",
-                           ["Yes", "No"], self.doReloadConfig)
+        else:
+            config = obj
+        dialog = gtk.MessageDialog (
+            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+            "Really reload \"%s\" from disk?" % config.fileName)
+        response = dialog.run()
+        dialog.destroy()
+        if response != gtk.RESPONSE_YES:
             return
         try:
             cfile = open (config.fileName, "r")
         except IOError:
-            MessageDialog ("Notice",
-                           "Couldn't open " + config.fileName + " for reading. The file was not reloaded.")
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                "Couldn't open \"%s\" for reading. The file was not reloaded."%
+                config.fileName)
+            dialog.run()
+            dialog.destroy()
             return
         # Try to parse the configuration file.
         try:
             newConfig = dri.DRIConfig (cfile)
         except dri.XMLError, problem:
-            MessageDialog ("Error", "Configuration file \""+config.fileName+
-                           "\" contains errors:\n"+str(problem)+
-                           "\nThe file was not reloaded.")
-            close (cfile)
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                "Configuration file \"%s\" contains errors:\n%s\nThe file was not reloaded." %
+                (config.fileName, str(problem)))
+            dialog.run()
+            dialog.destroy()
+            os.close (cfile)
             return
+        os.close (cfile)
         # Check if the file is writable in the end.
         newConfig.writable = fileIsWritable (config.fileName)
         # find the position of config
@@ -1120,17 +1102,21 @@ class MainWindow (gtk.Window):
                 modified = TRUE
                 break
         if modified:
-            MessageDialog ("Question",
-                           "There are unsaved modifications. Exit anyway?",
-                           ["Yes", "No"], self.doExit)
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
+                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+                "There are unsaved modifications. Exit anyway?")
+            dialog.connect ("response", self.doExit)
+            dialog.show()
             return TRUE
         elif event == None:
             gtk.mainquit()
         else:
             return FALSE
 
-    def doExit (self, choice):
-        if choice == "Yes":
+    def doExit (self, dialog, response):
+        dialog.destroy()
+        if response == gtk.RESPONSE_YES:
             gtk.mainquit()
 
 def fileIsWritable(filename):
@@ -1166,17 +1152,18 @@ def main():
     try:
         dpy = dri.DisplayInfo ()
     except dri.DRIError, problem:
-        MessageDialog ("Error", str(problem),
-                       callback=lambda n: gtk.mainquit())
-        gtk.mainloop()
+        dialog = gtk.MessageDialog (None, 0, gtk.MESSAGE_ERROR,
+                                    gtk.BUTTONS_OK, str(problem))
+        dialog.run()
+        dialog.destroy()
         return
     except dri.XMLError, problem:
-        MessageDialog ("Error",
-                       "There are errors in a driver's configuration information:\n"+
-                       str(problem)+
-                       "\nThis should not happen. It probably means that you have to update driconf.",
-                       callback = lambda n: gtk.mainquit())
-        gtk.mainloop()
+        dialog = gtk.MessageDialog (
+            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            "There are errors in a driver's configuration information:\n%s\nThis should not happen. It probably means that you have to update driconf." %
+            str(problem))
+        dialog.run()
+        dialog.destroy()
         return
 
     # read or create configuration files
@@ -1212,9 +1199,12 @@ def main():
             try:
                 config = dri.DRIConfig (cfile)
             except dri.XMLError, problem:
-                MessageDialog ("Error", "Configuration file \""+fileName+
-                               "\" contains errors:\n"+str(problem)+
-                               "\nI will leave the file alone until you fix the problem manually or remove the file.")
+                dialog = gtk.MessageDialog (
+                    None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
+                    "Configuration file \"%s\" contains errors:\n%s\nI will leave the file alone until you fix the problem manually or remove the file." %
+                    (fileName, str(problem)))
+                dialog.run()
+                dialog.destroy()
                 continue
             else:
                 # Check if the file is writable in the end.
@@ -1228,12 +1218,22 @@ def main():
     mainWindow.show ()
 
     if len(newFiles) == 1:
-        MessageDialog ("Notice", "Created a new DRI configuration file " +
-                       newFiles[0] + " for you.")
+        dialog = gtk.MessageDialog (
+            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
+            "Created a new DRI configuration file \"%s\" for you."
+            % newFiles[0])
+        dialog.run()
+        dialog.destroy()
     elif len(newFiles) > 1:
-        MessageDialog ("Notice", "Created new configuration files " +
-                       reduce(lambda a, b: str(a) + " and " + str(b), newFiles)
-                       + " for you.")
+        dialog = gtk.MessageDialog (
+            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
+            "Created new configuration files %s for you." %
+            reduce(lambda a, b: str(a) + " and " + str(b),
+                   map (lambda a: "\"%s\"" % str(a), newFiles)))
+        dialog.run()
+        dialog.destroy()
 
     # run
     gtk.mainloop()
