@@ -1,10 +1,8 @@
 DRI configuration GUI
 
 This is the first graphical configuration tool for DRI. In order to
-use it you need a recent development verion of DRI. You can either
-download the DRI source code from CVS or install a binary
-snapshot. You find information about both on
-http://dri.sourceforge.net.
+use it you need at least X.org 6.8 or XFree86 4.4. 3D drivers in
+earlier X releases did not support configuration.
 
 This tool is written in Python. Before installing make sure that a
 Python version and the matching packages xml.parsers.expat and
