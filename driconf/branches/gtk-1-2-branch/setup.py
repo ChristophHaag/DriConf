@@ -11,6 +11,13 @@ setup(name="driconf",
 
 errors = 0
 try:
+    import pygtk
+    # make sure gtk version 1.2 is used.
+    pygtk.require ("1.2")
+except ImportError:
+    # not supported everywhere, so ignore import errors
+    pass
+try:
     import gtk
 except ImportError:
     print "Warning: importing gtk doesn't work."
