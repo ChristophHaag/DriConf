@@ -1028,8 +1028,10 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             config = node.device.config
         if config.isModified != b:
             config.isModified = b
-            curNode = mainWindow.configTree.getSelection()
-            if curNode.__class__ == dri.DRIConfig:
+            curNode = mainWindow.configTree.getSelection (allowNone=TRUE)
+            if not curNode:
+                mainWindow.deactivateButtons()
+            elif curNode.__class__ == dri.DRIConfig:
                 mainWindow.activateConfigButtons(curNode)
             elif curNode.__class__ == dri.DeviceConfig:
                 mainWindow.activateDeviceButtons(curNode)
@@ -1176,7 +1178,7 @@ class ConfigTreeView (gtk.TreeView):
         mainWindow.switchDriverPanel (driver, app)
         if not node:
             mainWindow.deactivateButtons()
-        if node.__class__ == dri.DRIConfig:
+        elif node.__class__ == dri.DRIConfig:
             mainWindow.activateConfigButtons(node)
         elif node.__class__ == dri.DeviceConfig:
             mainWindow.activateDeviceButtons(node)
