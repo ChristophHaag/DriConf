@@ -1046,7 +1046,7 @@ class ConfigTreeView (gtk.TreeView):
         column.add_attribute (renderPixbuf, "pixbuf", 0)
         renderText = gtk.CellRendererText()
         column.pack_start (renderText, expand=True)
-        column.add_attribute (renderText, "text", 1)
+        column.add_attribute (renderText, "markup", 1)
         self.append_column (column)
 
     def getConfigList (self):
