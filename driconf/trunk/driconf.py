@@ -622,16 +622,16 @@ class ConfigTree (GtkCTree):
         self.set_selection_mode (SELECTION_BROWSE)
         self.mainWindow = mainWindow
         self.defaultFg = self.get_style().fg[STATE_NORMAL]
-        self.configs = []
+        self.configList = []
         for config in configList:
             self.addConfig (config)
         self.connect ("select_row", self.selectRowSignal, None)
 
-    def getConfigs (self):
-        return self.configs
+    def getConfigList (self):
+        return self.configList
 
     def addConfig (self, config):
-        self.configs.append (config)
+        self.configList.append (config)
         fileName = str(config.fileName)
         fileNode = self.insert_node (None, None, [fileName], 0,
                                      None,None,None,None, FALSE, TRUE)
@@ -943,6 +943,8 @@ class MainWindow (GtkWindow):
         self.exitButton = self.toolbar.append_item (
             "Exit", "Exit DRI configuration", "priv",
             DataPixmap (tb_exit_xpm), self.exitHandler)
+        if len(configList) != 0:
+            self.activateConfigButtons (configList[0])
         self.toolbar.show()
         self.vbox.pack_start (self.toolbar, FALSE, TRUE, 0)
         self.vbox.pack_start (self.paned, TRUE, TRUE, 0)
@@ -1018,7 +1020,7 @@ class MainWindow (GtkWindow):
 
     def exitHandler (self, widget, event=None):
         modified = FALSE
-        for config in self.configTree.getConfigs():
+        for config in self.configTree.getConfigList():
             if config.modified:
                 modified = TRUE
                 break
@@ -1073,13 +1075,9 @@ def main():
         mainloop()
         return
 
-    # open the main window
-    mainWindow = MainWindow([])
-    mainWindow.show ()
-
-    # read configuration files
+    # read or create configuration files
     fileNameList = ["/etc/drirc", os.environ["HOME"] + "/.drirc"]
-    first = 1
+    configList = []
     newFiles = []
     for fileName in fileNameList:
         try:
@@ -1118,10 +1116,11 @@ def main():
                 # Check if the file is writable in the end.
                 config.writable = fileIsWritable (fileName)
         if config:
-            mainWindow.configTree.addConfig (config)
-            if first:
-                mainWindow.activateConfigButtons (config)
-                first = 0
+            configList.append (config)
+
+    # open the main window
+    mainWindow = MainWindow(configList)
+    mainWindow.show ()
 
     if len(newFiles) == 1:
         MessageDialog ("Notice", "Created a new DRI configuration file " +
