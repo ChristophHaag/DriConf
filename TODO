@@ -8,8 +8,9 @@ X Handle invalid configuration files read from disk
 X Reset individual options to their default value
 X Handle invalid option values in configuration files read from disk
 X Handle xdriinfo and driver problems gracefully
+X Reload configuration files
 I Make the user interface more intuitive
-o Reload configuration files
-o Popup menus in the configuration tree
+  (This one may never be really done. I'm open to suggestions, but I think
+   it's grown pretty usable.)
+o Internationalize the user interface
 o Port to gtk2 (keeping as much code as possible common to gtk1.2 and gtk2 versions)
-? Use drag and drop for moving applications and devices around in the tree
