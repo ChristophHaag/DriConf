@@ -1290,7 +1290,7 @@ class MainWindow (gtk.Window):
             self.aboutHandler, None, -1)
         self.toolbar.append_space()
         self.exitButton = self.toolbar.insert_stock (
-            "gtk-quit", "Exit DRI configuration", "priv",
+            "gtk-quit", "Exit DRIconf", "priv",
             self.exitHandler, None, -1)
         if len(configList) != 0:
             self.activateConfigButtons (configList[0])
