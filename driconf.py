@@ -1011,6 +1011,8 @@ class ConfigTreeView (gtk.TreeView):
             config = node.device.config
         elif node.__class__ == dri.DeviceConfig:
             config = node.config
+        elif node.__class__ == dri.DRIConfig:
+            config = node
         valid = TRUE
         for device in config.devices:
             try:
