@@ -1,3 +1,14 @@
+driconf-0.2.0: Tue Oct 28 15:10:20 CET 2003
+
+- Ported driconf to gtk-2.0.
+- Made the configuration tree scrollable.
+- Allow multiple selection in unknown section page.
+- Fixed: reloading didn't work when a config file was selected.
+
+-------------------------------------------------------------------------------
+Versions below were before the fork of separate gtk-1.2 and gtk-2 versions.
+-------------------------------------------------------------------------------
+
 driconf-0.0.11: Thu Oct 23 00:20:06 CEST 2003
 
 - Toggle buttons: "True", "False" -> "Yes", "No".
