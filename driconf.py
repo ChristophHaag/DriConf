@@ -25,8 +25,10 @@ from gtk import *
 from driconf_xpm import *
 
 class DataPixmap (GtkPixmap):
+    """ A pixmap made from data. """
     window = None
     def __init__ (self, data):
+        """ Constructor. """
         DataPixmap.window.realize()
         style = DataPixmap.window.get_style()
         pixmap, mask = create_pixmap_from_xpm_d(DataPixmap.window.get_window(),
@@ -34,9 +36,46 @@ class DataPixmap (GtkPixmap):
                                                 data)
         GtkPixmap.__init__ (self, pixmap, mask)
 
+class MessageDialog (GtkDialog):
+    """ A simple message dialog with configurable buttons and a callback. """
+    def __init__ (self, title, message, buttons = ["OK"], callback = None,
+                  modal = TRUE):
+        """ Constructor. """
+        GtkDialog.__init__ (self)
+        self.callback = callback
+        self.set_title (title)
+        first = None
+        for name in buttons:
+            button = GtkButton (name)
+            button.set_flags (CAN_DEFAULT)
+            button.connect ("clicked", self.clickedSignal, name)
+            button.show()
+            self.action_area.pack_start (button, TRUE, FALSE, 10)
+            if not first:
+                first = button
+        hbox = GtkHBox()
+        label = GtkLabel (message)
+        label.set_justify (JUSTIFY_LEFT)
+        label.set_line_wrap (TRUE)
+        label.show()
+        hbox.pack_start (label, TRUE, TRUE, 20)
+        hbox.show()
+        self.vbox.pack_start (hbox, TRUE, TRUE, 10)
+        first.grab_default()
+        self.set_modal (modal)
+        self.show()
+
+    def clickedSignal (self, widget, name):
+        """ Handler for clicked signals. """
+        if self.callback:
+            self.callback (name)
+        self.destroy()
+
 class WrappingCheckButton (GtkCheckButton):
+    """ Check button with a line wrapping label. """
     def __init__ (self, label, justify=JUSTIFY_LEFT, wrap=TRUE,
                   width=0, height=0):
+        """ Constructor. """
         GtkCheckButton.__init__ (self)
         checkHBox = GtkHBox()
         checkLabel = GtkLabel(label)
@@ -51,9 +90,12 @@ class WrappingCheckButton (GtkCheckButton):
 class WrappingOptionMenu (GtkButton):
     """ Something that looks similar to a GtkOptionMenu ...
 
-    but can wrap the text and has a simpler interface """
+    but can wrap the text and has a simpler interface. It acts as a
+    bidirectional map from option descriptions (opt) to values (val)
+    at the same time. """
     def __init__ (self, optValList, callback, justify=JUSTIFY_LEFT, wrap=TRUE,
                   width=0, height=0):
+        """ Constructor. """
         GtkButton.__init__ (self)
         self.callback = callback
         self.optDict = {}
@@ -84,17 +126,21 @@ class WrappingOptionMenu (GtkButton):
         self.connect("event", self.buttonPress)
 
     def setOpt (self, opt):
+        """ Select an option by the option description. """
         self.label.set_text (opt)
         self.value = self.optDict[opt]
 
     def setValue (self, value):
+        """ Select an option by its value. """
         self.label.set_text (self.valDict[value])
         self.value = value
 
     def getValue (self):
+        """ Return the current value. """
         return self.value
 
     def buttonPress (self, widget, event):
+        """ Popup the menu. """
         if event.type == GDK.BUTTON_PRESS:
             self.menu.popup(None, None, None, event.button, event.time)
             return TRUE
@@ -102,11 +148,14 @@ class WrappingOptionMenu (GtkButton):
             return FALSE
 
     def menuSelect (self, widget, opt):
+        """ React to selection of a menu item by the user. """
         self.setOpt (opt)
         self.callback (self)
 
 class OptionLine:
+    """ One line in a SectionPage. """
     def __init__ (self, page, i, opt):
+        """ Constructor. """
         self.page = page
         self.opt = opt
         typeString = opt.type
@@ -149,6 +198,10 @@ class OptionLine:
         page.table.attach (self.widget, 1, 2, i, i+1, FILL, 0, 5, 5)
 
     def initWidget (self, opt, value):
+        """ Initialize the option widget.
+
+        The widget type is selected automatically based in the option type
+        and the set/range of valid values. """
         if opt.type == "bool":
             self.toggleLabel = GtkLabel()
             self.toggleLabel.show()
@@ -186,6 +239,7 @@ class OptionLine:
         self.widget.show()
 
     def updateWidget (self, value):
+        """ Update the option widget to a new value. """
         active = self.check.get_active()
         if self.widget.__class__ == GtkToggleButton:
             if value:
@@ -202,6 +256,7 @@ class OptionLine:
         self.check.set_active (active)
 
     def getValue (self):
+        """ Get the current value from the option widget. """
         if self.widget.__class__ == GtkToggleButton:
             if self.widget.get_active():
                 return "true"
@@ -217,6 +272,7 @@ class OptionLine:
             return None
 
     def checkOpt (self, widget):
+        """ Handler for 'check button (maybe) toggled'. """
         if self.check.get_active():
             self.widget.set_sensitive (TRUE)
             self.resetButton.set_sensitive (TRUE)
@@ -227,6 +283,7 @@ class OptionLine:
             self.page.checkOpt (self.opt, None)
 
     def activateSignal (self, widget, dummy=None):
+        """ Handler for 'widget was activated by the user'. """
         if self.widget.__class__ == GtkToggleButton:
             value = self.widget.get_active()
             if value:
@@ -236,9 +293,15 @@ class OptionLine:
         self.checkOpt (widget)
 
     def resetOpt (self, widget):
+        """ Reset to default value. """
         self.updateWidget (self.opt.default)
 
     def validate (self):
+        """ Validate the current value from the option widget.
+
+        This is only interesting if the check button is active. Only
+        GtkEntry widgets should ever give invalid values in practice.
+        Invalid option widgets are highlighted. """
         if not self.check.get_active():
             return 1
         valid = self.opt.validate (self.getValue())
@@ -251,7 +314,9 @@ class OptionLine:
         return valid
 
 class SectionPage (GtkScrolledWindow):
+    """ One page in the DriverPanel with one OptionLine per option. """
     def __init__ (self, optSection, app):
+        """ Constructor. """
         GtkScrolledWindow.__init__ (self)
         self.set_policy (POLICY_AUTOMATIC, POLICY_AUTOMATIC)
         self.set_usize (500, 200)
@@ -266,12 +331,16 @@ class SectionPage (GtkScrolledWindow):
         self.add_with_viewport (self.table)
 
     def checkOpt (self, opt, value):
+        """ Callback from OptionLine.checkOpt, modifies the app config. """
         if value != None and not self.app.options.has_key (opt.name):
             self.app.options[opt.name] = value
         elif value == None and self.app.options.has_key (opt.name):
             del self.app.options[opt.name]
 
     def commit (self):
+        """ Commit the widget settings.
+
+        The return value indicates if there are invalid option values. """
         allValid = 1
         for optLine in self.optLines:
             valid = optLine.validate()
@@ -280,8 +349,56 @@ class SectionPage (GtkScrolledWindow):
             allValid = allValid and valid
         return allValid
 
-class DriverPanel (GtkFrame):
+class UnknownSectionPage(GtkScrolledWindow):
+    """ Special section page for options unknown to the driver. """
     def __init__ (self, driver, app):
+        """ Constructor. """
+        GtkScrolledWindow.__init__ (self)
+        self.set_policy (POLICY_AUTOMATIC, POLICY_AUTOMATIC)
+        self.app = app
+        # copy options (dict function does not exist in Python 2.1 :( )
+        self.opts = {}
+        for name,val in app.options.items():
+            self.opts[name] = val
+        # remove all options known to the driver
+        for sect in driver.optSections:
+            for opt in sect.optList:
+                if self.opts.has_key (opt.name):
+                    del self.opts[opt.name]
+        # short cut
+        if len(self.opts) == 0:
+            return
+        # list all remaining options here
+        self.list = GtkCList(2, ["Option", "Value"])
+        for name,val in self.opts.items():
+            self.list.append ([str(name),str(val)])
+        self.list.set_column_justification (1, JUSTIFY_RIGHT)
+        self.list.columns_autosize()
+        self.list.show()
+        self.vbox = GtkVBox()
+        self.vbox.pack_start (self.list, TRUE, TRUE, 0)
+        self.removeButton = GtkButton ("Remove")
+        self.removeButton.show()
+        self.removeButton.connect ("clicked", self.removeSelection)
+        self.vbox.pack_start (self.removeButton, FALSE, FALSE, 0)
+        self.vbox.show()
+        self.add_with_viewport (self.vbox)
+
+    def commit (self):
+        """ These options are never changed or validated. """
+        return 1
+
+    def removeSelection (self, widget):
+        """ Remove the selected items from the list and app config. """
+        for row in self.list.selection:
+            name = self.list.get_text (row, 0)
+            del self.app.options[name]
+            self.list.remove (row)
+
+class DriverPanel (GtkFrame):
+    """ Panel for driver settings for a specific application. """
+    def __init__ (self, driver, app):
+        """ Constructor. """
         GtkFrame.__init__ (self, "Application: " + app.name)
         self.driver = driver
         self.app = app
@@ -306,6 +423,16 @@ class DriverPanel (GtkFrame):
             notebook.append_page (sectPage, sectLabel)
             self.sectPages.append (sectPage)
             self.sectLabels.append (sectLabel)
+        unknownPage = UnknownSectionPage (driver, app)
+        if len(unknownPage.opts) > 0:
+            unknownPage.show()
+            unknownLabel = GtkLabel ("Unknown")
+            unknownLabel.show()
+            notebook.append_page (unknownPage, unknownLabel)
+            self.sectPages.append (unknownPage)
+            self.sectLabels.append (sectLabel)
+            MessageDialog ("Notice",
+                           "This application configuration contains options that are not known to the driver. Either you edited your configuration file manually or the driver configuration changed. See the page named \"Unknown\" for details. It is probably safe to remove these options. Otherwise they are left unchanged.", modal=FALSE)
         if len(self.sectLabels) > 0:
             self.invalidStyle = self.sectLabels[0].get_style().copy()
             self.invalidStyle.fg[STATE_NORMAL] = \
@@ -317,6 +444,10 @@ class DriverPanel (GtkFrame):
         self.add (table)
 
     def commit (self):
+        """ Commit changes to the configuration.
+
+        Labels of invalid section pages are highlighted. Returns whether
+        there were invalid option values. """
         executable = self.execEntry.get_text()
         if executable == "":
             self.app.executable = None
@@ -335,41 +466,11 @@ class DriverPanel (GtkFrame):
         return allValid
 
     def renameApp (self):
+        """ Change the application name. """
         self.set_label ("Application: " + self.app.name)
 
-class MessageDialog (GtkDialog):
-    def __init__ (self, title, message, buttons = ["OK"], callback = None,
-                  modal = TRUE):
-        GtkDialog.__init__ (self)
-        self.callback = callback
-        self.set_title (title)
-        first = None
-        for name in buttons:
-            button = GtkButton (name)
-            button.set_flags (CAN_DEFAULT)
-            button.connect ("clicked", self.clickedSignal, name)
-            button.show()
-            self.action_area.pack_start (button, TRUE, FALSE, 10)
-            if not first:
-                first = button
-        hbox = GtkHBox()
-        label = GtkLabel (message)
-        label.set_justify (JUSTIFY_LEFT)
-        label.set_line_wrap (TRUE)
-        label.show()
-        hbox.pack_start (label, TRUE, TRUE, 20)
-        hbox.show()
-        self.vbox.pack_start (hbox, TRUE, TRUE, 10)
-        first.grab_default()
-        self.set_modal (modal)
-        self.show()
-
-    def clickedSignal (self, widget, name):
-        if self.callback:
-            self.callback (name)
-        self.destroy()
-
 class BasicDialog (GtkDialog):
+    """ Base class for NameDialog and DeviceDialog. """
     def __init__ (self, title, callback):
         GtkDialog.__init__ (self)
         self.set_title (title)
@@ -395,6 +496,7 @@ class BasicDialog (GtkDialog):
         self.destroy()
 
 class NameDialog (BasicDialog):
+    """ Dialog for setting the name of an application. """
     def __init__ (self, title, callback, name, data):
         BasicDialog.__init__ (self, title, callback)
         self.data = data
@@ -418,6 +520,7 @@ class NameDialog (BasicDialog):
         self.destroy()
 
 class DeviceDialog (BasicDialog):
+    """ Dialog for choosing driver and screen of a device. """
     def __init__ (self, title, callback, data):
         BasicDialog.__init__ (self, title, callback)
         self.data = data
@@ -462,6 +565,9 @@ class DeviceDialog (BasicDialog):
         self.destroy()
 
 class ConfigTree (GtkCTree):
+    """ Configuration tree.
+
+    Hierarchy levels: Config (file), Device, Application """
     def __init__ (self, configList, mainWindow):
         GtkCTree.__init__ (self, 1, 0)
         self.set_usize (200, 0)
@@ -696,6 +802,7 @@ class ConfigTree (GtkCTree):
                            "\""+config.fileName+"\" saved with invalid entries.")
 
 class MainWindow (GtkWindow):
+    """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
     def __init__ (self, configList):
         GtkWindow.__init__ (self)
         self.set_title ("DRI Configuration")
