@@ -54,6 +54,7 @@ def findInShared (name):
     # try name in the current directory
     if os.path.isfile (name):
         return name
+    print "Warning: could not find %s." % name
     # nothing found
     return None
 
@@ -810,6 +811,14 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         for config in configList:
             self.addNode (config)
 
+    def iconFromShared (self, name, size, missing):
+        path = findInShared (name)
+        if path:
+            icon = gtk.gdk.pixbuf_new_from_file (path)
+            return icon.scale_simple (size, size, gtk.gdk.INTERP_BILINEAR)
+        else:
+            return missing
+
     def renderIcons (self, widget):
         self.configIcon = widget.render_icon ("gtk-properties",
                                               gtk.ICON_SIZE_MENU, None)
@@ -817,17 +826,13 @@ class ConfigTreeModel (gtk.GenericTreeModel):
                                            gtk.ICON_SIZE_MENU, None)
         self.unspecIcon = widget.render_icon ("gtk-dialog-question",
                                               gtk.ICON_SIZE_MENU, None)
-        screenIcon = gtk.gdk.pixbuf_new_from_file (findInShared ("screen.png"))
-        driverIcon = gtk.gdk.pixbuf_new_from_file (findInShared ("card.png"))
-        screenDriverIcon = gtk.gdk.pixbuf_new_from_file (
-            findInShared ("screencard.png"))
-        size = max (self.configIcon.get_width(), self.configIcon.get_height())
-        self.screenIcon = screenIcon.scale_simple (size, size,
-                                                   gtk.gdk.INTERP_BILINEAR)
-        self.driverIcon = driverIcon.scale_simple (size, size,
-                                                   gtk.gdk.INTERP_BILINEAR)
-        self.screenDriverIcon = screenDriverIcon.scale_simple (
-            size, size, gtk.gdk.INTERP_BILINEAR)
+        missing = widget.render_icon ("gtk-missing-image",
+                                      gtk.ICON_SIZE_MENU, None)
+        size = max (missing.get_width(), missing.get_height())
+        self.screenIcon = self.iconFromShared ("screen.png", size, missing)
+        self.driverIcon = self.iconFromShared ("card.png", size, missing)
+        self.screenDriverIcon = self.iconFromShared ("screencard.png",
+                                                     size, missing)
 
     # implementation of the GenericTreeModel interface
     def on_get_flags (self):
@@ -1421,9 +1426,11 @@ class MainWindow (gtk.Window):
         self.add (self.vbox)
         self.curDriverPanel = None
         self.logo = gtk.EventBox ()
-        image = gtk.Image()
-        image.set_from_file (findInShared("drilogo.jpg"))
-        self.logo.add (image)
+        logoPath = findInShared("drilogo.jpg")
+        if logoPath:
+            image = gtk.Image()
+            image.set_from_file (logoPath)
+            self.logo.add (image)
         self.logo.modify_bg (gtk.STATE_NORMAL,
                              gtk.gdk.Color (65535, 65535, 65535))
         self.logo.show_all()
