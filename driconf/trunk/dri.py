@@ -122,6 +122,9 @@ class Range:
         else:
             return str(self.start) + ":" + str(self.end)
 
+    def empty (self):
+        return self.start == self.end
+
 class OptDesc:
     """ An option description in one language with enum values. """
     def __init__ (self, lang, text):
