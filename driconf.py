@@ -753,12 +753,12 @@ class ConfigTree (GtkCTree):
         else:
             return
         siblings.remove (obj)
-        self.remove_node (node)
         if type == "app":
             self.mainWindow.removeApp (obj)
         elif type == "device":
             for app in obj.apps:
                 self.mainWindow.removeApp (app)
+        self.remove_node (node)
 
     def renameApp (self, widget):
         if len(self.selection) == 0:
