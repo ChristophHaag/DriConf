@@ -269,9 +269,9 @@ class OptionLine:
         active = self.check.get_active()
         if self.widget.__class__ == GtkToggleButton:
             if value:
-                self.toggleLabel.set_text ("True")
+                self.toggleLabel.set_text ("Yes")
             else:
-                self.toggleLabel.set_text ("False")
+                self.toggleLabel.set_text ("No")
             self.widget.set_active (value)
         elif self.widget.__class__ == GtkSpinButton:
             self.widget.set_value (value)
@@ -326,9 +326,9 @@ class OptionLine:
         if self.widget.__class__ == GtkToggleButton:
             value = self.widget.get_active()
             if value:
-                self.toggleLabel.set_text ("True")
+                self.toggleLabel.set_text ("Yes")
             else:
-                self.toggleLabel.set_text ("False")
+                self.toggleLabel.set_text ("No")
         self.page.optionModified (self)
 
     def resetOpt (self, widget):
