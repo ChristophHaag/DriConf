@@ -637,34 +637,36 @@ class ConfigTree (GtkCTree):
         appNode = self.insert_node (parent, None, [name])
         app.node = appNode
         self.node_set_row_data (appNode, ("app", app))
+        self.validateAppNode(app)
         return appNode
+
+    def validateAppNode (self, app):
+        try:
+            driver = app.device.getDriver(dpy)
+        except dri.XMLError:
+            driver = None
+        if driver:
+            if driver.validate (app.options):
+                pass
+            else:
+                pass
 
     def selectRowSignal (self, widget, row, column, event, data):
         type, obj = self.get_row_data (row)
         if type == "app":
             app = obj
-            device = app.device
-            driver = None
-            if device.driver:
-                try:
-                    driver = dri.GetDriver (device.driver)
-                except dri.XMLError, problem:
-                    MessageDialog ("Error",
-                                   "Parsing the driver's configuration information: " + problem,
-                                   modal=FALSE)
-            elif device.screen:
-                try:
-                    screenNum = int(device.screen)
-                except ValueError:
-                    pass
-                else:
-                    screen = dpy.getScreen(screenNum)
-                    if screen != None:
-                        driver = screen.driver
-            if driver == None:
-                MessageDialog ("Notice",
-                               "Can't determine the driver for this device.",
+            try:
+                driver = app.device.getDriver (dpy)
+            except dri.XMLError, problem:
+                driver = None
+                MessageDialog ("Error",
+                               "Parsing the driver's configuration information: " + problem,
                                modal=FALSE)
+            else:
+                if driver == None:
+                    MessageDialog ("Notice",
+                                   "Can't determine the driver for this device.",
+                                   modal=FALSE)
         else:
             driver = None
             app = None
