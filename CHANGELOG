@@ -1,3 +1,13 @@
+driconf-0.0.11: Thu Oct 23 00:20:06 CEST 2003
+
+- Toggle buttons: "True", "False" -> "Yes", "No".
+- Pushing "New" while an application is selected creates a new application
+  in the same device.
+- Fixed: Handle options without any description.
+- Fixed: Entry widget always marked the configuration as modified.
+- Fixed: Message dialogs opened before the main window was created crashed.
+- Fixed: Segfault reloading a config file while an application was selected.
+
 driconf-0.0.10: Sat Oct 11 23:37:19 CEST 2003
 
 - Added a "reload" button to reload a configuration from disk.
