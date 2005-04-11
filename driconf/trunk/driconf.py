@@ -26,7 +26,7 @@ import dri
 import pygtk
 pygtk.require ("2.0")
 import gtk
-from gtk import TRUE, FALSE
+#from gtk import True, False
 import gobject
 
 # Install translations. Search in the current directory first (for
@@ -40,7 +40,7 @@ except IOError:
         _ = gettext.translation ("driconf").ugettext
     except IOError:
         _ = gettext.translation ("driconf", "/usr/local/share/locale",
-                                 fallback=TRUE).ugettext
+                                 fallback=True).ugettext
 
 # global variable: main window
 mainWindow = None
@@ -77,7 +77,7 @@ class StockImage (gtk.Image):
 
 class WrappingCheckButton (gtk.CheckButton):
     """ Check button with a line wrapping label. """
-    def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=TRUE,
+    def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=True,
                   width=-1, height=-1):
         """ Constructor. """
         gtk.CheckButton.__init__ (self)
@@ -88,7 +88,7 @@ class WrappingCheckButton (gtk.CheckButton):
         self.label.set_line_wrap (wrap)
         self.label.set_size_request (width, height)
         self.label.show()
-        checkHBox.pack_start (self.label, FALSE, FALSE, 0)
+        checkHBox.pack_start (self.label, False, False, 0)
         checkHBox.show()
         self.add (checkHBox)
 
@@ -107,7 +107,7 @@ class WrappingOptionMenu (gtk.Button):
     bidirectional map from option descriptions (opt) to values (val)
     at the same time. """
     def __init__ (self, optValList, callback, justify=gtk.JUSTIFY_LEFT,
-                  wrap=TRUE, width=-1, height=-1):
+                  wrap=True, width=-1, height=-1):
         """ Constructor. """
         gtk.Button.__init__ (self)
         self.callback = callback
@@ -126,8 +126,8 @@ class WrappingOptionMenu (gtk.Button):
         self.label.set_line_wrap (wrap)
         self.label.set_size_request (width, height)
         self.label.show()
-        hbox.pack_start (self.label, TRUE, FALSE, 5)
-        hbox.pack_start (arrow, FALSE, FALSE, 0)
+        hbox.pack_start (self.label, True, False, 5)
+        hbox.pack_start (arrow, False, False, 0)
         hbox.show()
         self.add (hbox)
         self.menu = gtk.Menu()
@@ -156,9 +156,9 @@ class WrappingOptionMenu (gtk.Button):
         """ Popup the menu. """
         if event.type == gtk.gdk.BUTTON_PRESS:
             self.menu.popup(None, None, None, event.button, event.time)
-            return TRUE
+            return True
         else:
-            return FALSE
+            return False
 
     def menuSelect (self, widget, opt):
         """ React to selection of a menu item by the user. """
@@ -188,15 +188,15 @@ class SlideSpinner (gtk.VBox):
         self.callback = callback
         self.adjustment = gtk.Adjustment (lower, lower, upper, step, page)
         self.spinner = gtk.SpinButton (self.adjustment, step, self.digits)
-        self.spinner.set_numeric (TRUE)
+        self.spinner.set_numeric (True)
         self.spinner.show()
-        self.pack_start (self.spinner, FALSE, FALSE, 0)
+        self.pack_start (self.spinner, False, False, 0)
         if not integer or diff >= 20:
             self.slider = gtk.HScale (self.adjustment)
             self.slider.set_size_request (200, -1)
-            self.slider.set_draw_value (FALSE)
+            self.slider.set_draw_value (False)
             self.slider.show()
-            self.pack_start (self.slider, FALSE, FALSE, 0)
+            self.pack_start (self.slider, False, False, 0)
         self.adjConn = self.adjustment.connect ("value-changed", callback)
 
     def getValue (self):
@@ -254,12 +254,12 @@ class OptionLine:
             try:
                 value = dri.StrToValue (page.app.options[opt.name], opt.type)
             except dri.XMLError:
-                self.isValid = FALSE
+                self.isValid = False
             if not self.isValid:
                 value = page.app.options[opt.name]
         else:
             value = opt.default
-            self.isValid = TRUE
+            self.isValid = True
         # the widget for editing the option value
         self.initWidget (opt, value)
         self.widget.set_sensitive (sensitive)
@@ -275,7 +275,7 @@ class OptionLine:
             type = "invalid"
         if type == "bool":
             self.widget = gtk.ToggleButton ()
-            self.widget.set_use_stock (TRUE)
+            self.widget.set_use_stock (True)
             if value:
                 self.widget.set_label ("gtk-yes")
             else:
@@ -284,11 +284,11 @@ class OptionLine:
             self.widget.connect ("toggled", self.activateSignal)
         elif type == "int" and opt.valid and len(opt.valid) == 1:
             self.widget = SlideSpinner (self.activateSignal, opt.valid[0].start,
-                                        opt.valid[0].end, TRUE)
+                                        opt.valid[0].end, True)
             self.widget.setValue (value)
         elif type == "float" and opt.valid and len(opt.valid) == 1:
             self.widget = SlideSpinner (self.activateSignal, opt.valid[0].start,
-                                        opt.valid[0].end, FALSE)
+                                        opt.valid[0].end, False)
             self.widget.setValue (value)
         elif type == "enum" or \
              (type != "invalid" and opt.valid and
@@ -364,11 +364,11 @@ class OptionLine:
     def checkOpt (self, widget):
         """ Handler for 'check button (maybe) toggled'. """
         if self.check.get_active():
-            self.widget.set_sensitive (TRUE)
-            self.resetButton.set_sensitive (TRUE)
+            self.widget.set_sensitive (True)
+            self.resetButton.set_sensitive (True)
         else:
-            self.widget.set_sensitive (FALSE)
-            self.resetButton.set_sensitive (FALSE)
+            self.widget.set_sensitive (False)
+            self.resetButton.set_sensitive (False)
         if not self.isValid:
             self.highlightInvalid()
             self.page.doValidate()
@@ -387,7 +387,7 @@ class OptionLine:
 
     def resetOpt (self, widget):
         """ Reset to default value. """
-        self.updateWidget (self.opt.default, TRUE)
+        self.updateWidget (self.opt.default, True)
         self.page.optionModified (self)
 
     def doValidate (self):
@@ -427,20 +427,20 @@ class SectionPage (gtk.ScrolledWindow):
             self.optLines.append (OptionLine (self, i, optSection.optList[i]))
         self.table.show()
         self.add_with_viewport (self.table)
-        self.doValidate (init=TRUE)
+        self.doValidate (init=True)
 
     def optionModified (self, optLine):
         """ Callback that is invoked by changed option lines. """
         self.app.modified(self.app)
 
-    def doValidate (self, init=FALSE):
+    def doValidate (self, init=False):
         """ Validate the widget settings.
 
         The return value indicates if there are invalid option values. """
-        valid = TRUE
+        valid = True
         for optLine in self.optLines:
             if not optLine.validate():
-                valid = FALSE
+                valid = False
                 break
         if not init and \
                ((valid and not self.isValid) or (not valid and self.isValid)):
@@ -494,7 +494,7 @@ class UnknownSectionPage(gtk.VBox):
         # list all remaining options here
         self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN)
         self.view = gtk.TreeView (self.store)
-        self.view.set_rules_hint (TRUE)
+        self.view.set_rules_hint (True)
         optionRenderer = gtk.CellRendererText()
         optionRenderer.connect ("edited", self.editedSignal, 0)
         column = gtk.TreeViewColumn (_("Option"), optionRenderer,
@@ -508,12 +508,12 @@ class UnknownSectionPage(gtk.VBox):
         self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
         for name,val in opts.items():
             self.store.set (self.store.append(),
-                            0, str(name), 1, str(val), 2, TRUE)
+                            0, str(name), 1, str(val), 2, True)
             self.opts.append (name)
         self.view.show()
         scrolledWindow.add (self.view)
         scrolledWindow.show()
-        self.pack_start (scrolledWindow, TRUE, TRUE, 0)
+        self.pack_start (scrolledWindow, True, True, 0)
         buttonBox = gtk.HButtonBox()
         buttonBox.set_layout (gtk.BUTTONBOX_END)
         newButton = gtk.Button (stock="gtk-new")
@@ -528,13 +528,13 @@ class UnknownSectionPage(gtk.VBox):
         helpButton.connect ("clicked", self.help)
         helpButton.show()
         buttonBox.add (helpButton)
-        buttonBox.set_child_secondary (helpButton, TRUE)
+        buttonBox.set_child_secondary (helpButton, True)
         buttonBox.show()
-        self.pack_start (buttonBox, FALSE, FALSE, 0)
+        self.pack_start (buttonBox, False, False, 0)
 
     def validate (self):
         """ These options can't be validated. """
-        return TRUE
+        return True
 
     def commit (self):
         """ These options are never changed. """
@@ -571,7 +571,7 @@ class UnknownSectionPage(gtk.VBox):
             name = "option%d" % i
         self.app.options[name] = val
         self.opts.append (name)
-        self.store.set (self.store.append(), 0, str(name), 1, str(val), 2, TRUE)
+        self.store.set (self.store.append(), 0, str(name), 1, str(val), 2, True)
         self.app.modified(self.app)
 
     def help (self, widget):
@@ -600,7 +600,7 @@ class UnknownSectionPage(gtk.VBox):
             if self.app.options[name] == newVal:
                 return
             self.app.options[name] = newVal
-            self.store.set (cursor, 0, str(name), 1, str(newVal), 2, TRUE)
+            self.store.set (cursor, 0, str(name), 1, str(newVal), 2, True)
         else:
             if name == newVal or self.app.options.has_key(newVal) or \
                    self.driverOpts.has_key(newVal):
@@ -609,7 +609,7 @@ class UnknownSectionPage(gtk.VBox):
             name = newVal
             self.opts[row] = name
             self.app.options[name] = val
-            self.store.set (cursor, 0, str(name), 1, str(val), 2, TRUE)
+            self.store.set (cursor, 0, str(name), 1, str(val), 2, True)
         self.app.modified(self.app)
 
 class DriverPanel (gtk.Frame):
@@ -636,7 +636,7 @@ class DriverPanel (gtk.Frame):
         table.attach (self.execCheck, 0, 1, 0, 1, 0, 0, 5, 5)
         self.execEntry = gtk.Entry()
         if app.executable != None:
-            self.execCheck.set_active (TRUE)
+            self.execCheck.set_active (True)
             self.execEntry.set_text (app.executable)
         self.execEntry.set_sensitive (app.device.config.writable and
                                       app.executable != None)
@@ -714,7 +714,7 @@ class DriverPanel (gtk.Frame):
         Labels of invalid section pages are highlighted. Returns whether
         there were invalid option values. """
         index = 0
-        allValid = TRUE
+        allValid = True
         for sectPage in self.sectPages:
             valid = sectPage.validate()
             if not valid:
@@ -764,7 +764,7 @@ class NameDialog (gtk.Dialog):
             "Enter the name of the application below. This serves just a "
             "descriptivion for you. Don't forget to set the executable "
             "afterwards."))
-        commentLabel.set_line_wrap (TRUE)
+        commentLabel.set_line_wrap (True)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
@@ -779,7 +779,7 @@ class NameDialog (gtk.Dialog):
         table.attach (self.entry, 1, 2, 1, 2,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
         table.show()
-        self.vbox.pack_start (table, TRUE, TRUE, 5)
+        self.vbox.pack_start (table, True, True, 5)
         self.show()
         self.entry.grab_focus()
 
@@ -804,7 +804,7 @@ class DeviceDialog (gtk.Dialog):
         table = gtk.Table (2, 3)
         commentLabel = gtk.Label (_(
             "Describe the device that you would like to configure."))
-        commentLabel.set_line_wrap (TRUE)
+        commentLabel.set_line_wrap (True)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
@@ -834,7 +834,7 @@ class DeviceDialog (gtk.Dialog):
             if data.driver:
                 self.driverCombo.entry.set_text (data.driver)
         table.show()
-        self.vbox.pack_start (table, TRUE, TRUE, 5)
+        self.vbox.pack_start (table, True, True, 5)
         self.show()
 
     def screenSignal (self, widget, data=None):
@@ -1027,7 +1027,7 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         return self.configList
 
     # callback for registring modifications
-    def nodeModified (self, node, b=TRUE):
+    def nodeModified (self, node, b=True):
         if node.__class__ == dri.DRIConfig:
             config = node
         elif node.__class__ == dri.DeviceConfig:
@@ -1036,7 +1036,7 @@ class ConfigTreeModel (gtk.GenericTreeModel):
             config = node.device.config
         if config.isModified != b:
             config.isModified = b
-            curNode = mainWindow.configTree.getSelection (allowNone=TRUE)
+            curNode = mainWindow.configTree.getSelection (allowNone=True)
             if not curNode:
                 mainWindow.deactivateButtons()
             elif curNode.__class__ == dri.DRIConfig:
@@ -1065,7 +1065,7 @@ class ConfigTreeModel (gtk.GenericTreeModel):
     def initNode (self, node):
         node.modified = self.nodeModified
         if node.__class__ == dri.DRIConfig:
-            node.isModified = FALSE
+            node.isModified = False
             for device in node.devices:
                 self.initNode (device)
         elif node.__class__ == dri.DeviceConfig:
@@ -1117,9 +1117,9 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         except dri.XMLError:
             driver = None
         if driver and not driver.validate (app.options):
-            app.isValid = FALSE
+            app.isValid = False
         else:
-            app.isValid = TRUE
+            app.isValid = True
 
 class ConfigTreeView (gtk.TreeView):
     def __init__ (self, configList):
@@ -1129,17 +1129,17 @@ class ConfigTreeView (gtk.TreeView):
         self.connect ("style-set", lambda widget, prevStyle:
                       self.model.renderIcons (widget))
         self.set_size_request (200, -1)
-        self.set_headers_visible (FALSE)
+        self.set_headers_visible (False)
         self.expand_all()
         self.get_selection().set_mode (gtk.SELECTION_BROWSE)
         self.get_selection().connect ("changed", self.selectionChangedSignal)
         column = gtk.TreeViewColumn()
         column.set_spacing (2)
         renderPixbuf = gtk.CellRendererPixbuf()
-        column.pack_start (renderPixbuf, expand=FALSE)
+        column.pack_start (renderPixbuf, expand=False)
         column.add_attribute (renderPixbuf, "pixbuf", 0)
         renderText = gtk.CellRendererText()
-        column.pack_start (renderText, expand=TRUE)
+        column.pack_start (renderText, expand=True)
         column.add_attribute (renderText, "markup", 1)
         self.append_column (column)
 
@@ -1147,7 +1147,7 @@ class ConfigTreeView (gtk.TreeView):
         return self.model.getConfigList()
 
     # selection handling
-    def getSelection (self, allowNone=FALSE):
+    def getSelection (self, allowNone=False):
         model, iter = self.get_selection().get_selected()
         assert iter or allowNone
         if iter:
@@ -1160,9 +1160,9 @@ class ConfigTreeView (gtk.TreeView):
         if app:
             path = self.model.getPathFromNode (app)
             self.get_selection().select_path (path)
-            self.scroll_to_cell (path=path, use_align=FALSE)
+            self.scroll_to_cell (path=path, use_align=False)
     def selectionChangedSignal (self, data):
-        node = self.getSelection (allowNone=TRUE)
+        node = self.getSelection (allowNone=True)
         if not node:
             driver = None
             app = None
@@ -1222,7 +1222,7 @@ class ConfigTreeView (gtk.TreeView):
                 _("Really delete device and all applications in it?"))
         else:
             # The remove button should be unsensitive.
-            assert FALSE
+            assert False
         response = dialog.run()
         dialog.destroy ()
         if response != gtk.RESPONSE_YES:
@@ -1236,7 +1236,7 @@ class ConfigTreeView (gtk.TreeView):
         parent.modified(parent)
         path = self.model.getPathFromNode (parent)
         self.get_selection().select_path (path)
-        self.scroll_to_cell (path=path, use_align=FALSE)
+        self.scroll_to_cell (path=path, use_align=False)
     def properties (self, widget):
         node = self.getSelection()
         if node.__class__ == dri.AppConfig:
@@ -1263,7 +1263,7 @@ class ConfigTreeView (gtk.TreeView):
             config = node.config
         elif node.__class__ == dri.DRIConfig:
             config = node
-        valid = TRUE
+        valid = True
         for device in config.devices:
             try:
                 driver = device.getDriver (dpy)
@@ -1295,7 +1295,7 @@ class ConfigTreeView (gtk.TreeView):
         mainWindow.commitDriverPanel()
         file.write (str(config))
         file.close()
-        config.modified(config, FALSE)
+        config.modified(config, False)
     def reloadConfig (self, widget):
         node = self.getSelection()
         if node.__class__ == dri.AppConfig:
@@ -1356,9 +1356,9 @@ class ConfigTreeView (gtk.TreeView):
         self.model.removeNode (config)
         self.model.addNode (newConfig, sibling)
         path = self.model.getPathFromNode (newConfig)
-        self.expand_row (path, TRUE)
+        self.expand_row (path, True)
         self.get_selection().select_path (path)
-        self.scroll_to_cell (path=path, use_align=FALSE)
+        self.scroll_to_cell (path=path, use_align=False)
 
     # helper function for moving tree nodes around
     def moveItem (self, inc):
@@ -1370,7 +1370,7 @@ class ConfigTreeView (gtk.TreeView):
             parent = node.config
             siblings = parent.devices
         else:
-            assert FALSE
+            assert False
         index = siblings.index (node)
         newIndex = index+inc
         if newIndex < 0 or newIndex >= len(siblings):
@@ -1385,7 +1385,7 @@ class ConfigTreeView (gtk.TreeView):
         self.model.rows_reordered (path, iter, newOrder)
         parent.modified(parent)
         path = self.model.getPathFromNode (node)
-        self.scroll_to_cell (path=path, use_align=FALSE)
+        self.scroll_to_cell (path=path, use_align=False)
 
     # callbacks from dialogs
     def renameCallback (self, name, app):
@@ -1406,18 +1406,18 @@ class ConfigTreeView (gtk.TreeView):
         app = dri.AppConfig (device, name)
         self.model.addNode (app)
         if len(device.apps) == 1:
-            self.expand_row (self.model.getPathFromNode(device), TRUE)
+            self.expand_row (self.model.getPathFromNode(device), True)
         device.modified(device)
         path = self.model.getPathFromNode (app)
         self.get_selection().select_path (path)
-        self.scroll_to_cell (path=path, use_align=FALSE)
+        self.scroll_to_cell (path=path, use_align=False)
     def newDeviceCallback (self, screen, driver, config):
         device = dri.DeviceConfig (config, screen, driver)
         self.model.addNode (device)
         config.modified(config)
         path = self.model.getPathFromNode (device)
         self.get_selection().select_path (path)
-        self.scroll_to_cell (path=path, use_align=FALSE)
+        self.scroll_to_cell (path=path, use_align=False)
 
 class MainWindow (gtk.Window):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
@@ -1477,8 +1477,8 @@ class MainWindow (gtk.Window):
         if len(configList) != 0:
             self.activateConfigButtons (configList[0])
         self.toolbar.show()
-        self.vbox.pack_start (self.toolbar, FALSE, TRUE, 0)
-        self.vbox.pack_start (self.paned, TRUE, TRUE, 0)
+        self.vbox.pack_start (self.toolbar, False, True, 0)
+        self.vbox.pack_start (self.paned, True, True, 0)
         self.vbox.show()
         self.add (self.vbox)
         self.curDriverPanel = None
@@ -1536,30 +1536,30 @@ class MainWindow (gtk.Window):
             self.curDriverPanel.renameApp()
 
     def deactivateButtons (self):
-        self.saveButton      .set_sensitive (FALSE)
-        self.reloadButton    .set_sensitive (FALSE)
-        self.newButton       .set_sensitive (FALSE)
-        self.removeButton    .set_sensitive (FALSE)
-        self.upButton        .set_sensitive (FALSE)
-        self.downButton      .set_sensitive (FALSE)
-        self.propertiesButton.set_sensitive (FALSE)
+        self.saveButton      .set_sensitive (False)
+        self.reloadButton    .set_sensitive (False)
+        self.newButton       .set_sensitive (False)
+        self.removeButton    .set_sensitive (False)
+        self.upButton        .set_sensitive (False)
+        self.downButton      .set_sensitive (False)
+        self.propertiesButton.set_sensitive (False)
 
     def activateConfigButtons (self, config):
         writable = config.writable
         modified = config.isModified
         self.saveButton      .set_sensitive (writable and modified)
-        self.reloadButton    .set_sensitive (TRUE)
+        self.reloadButton    .set_sensitive (True)
         self.newButton       .set_sensitive (writable)
-        self.removeButton    .set_sensitive (FALSE)
-        self.upButton        .set_sensitive (FALSE)
-        self.downButton      .set_sensitive (FALSE)
-        self.propertiesButton.set_sensitive (FALSE)
+        self.removeButton    .set_sensitive (False)
+        self.upButton        .set_sensitive (False)
+        self.downButton      .set_sensitive (False)
+        self.propertiesButton.set_sensitive (False)
 
     def activateDeviceButtons (self, device):
         writable = device.config.writable
         modified = device.config.isModified
         self.saveButton      .set_sensitive (writable and modified)
-        self.reloadButton    .set_sensitive (TRUE)
+        self.reloadButton    .set_sensitive (True)
         self.newButton       .set_sensitive (writable)
         self.removeButton    .set_sensitive (writable)
         self.upButton        .set_sensitive (writable)
@@ -1570,7 +1570,7 @@ class MainWindow (gtk.Window):
         writable = app.device.config.writable
         modified = app.device.config.isModified
         self.saveButton      .set_sensitive (writable and modified)
-        self.reloadButton    .set_sensitive (TRUE)
+        self.reloadButton    .set_sensitive (True)
         self.newButton       .set_sensitive (writable)
         self.removeButton    .set_sensitive (writable)
         self.upButton        .set_sensitive (writable)
@@ -1596,10 +1596,10 @@ class MainWindow (gtk.Window):
         dialog.show()
 
     def exitHandler (self, widget, event=None):
-        modified = FALSE
+        modified = False
         for config in self.configTree.getConfigList():
             if config.isModified:
-                modified = TRUE
+                modified = True
                 break
         if modified:
             dialog = gtk.MessageDialog (
@@ -1608,13 +1608,13 @@ class MainWindow (gtk.Window):
                 _("There are unsaved modifications. Exit anyway?"))
             dialog.connect ("response", self.doExit)
             dialog.show()
-            return TRUE
+            return True
         elif event == None:
             # called from toolbar button: main_quit!
             gtk.main_quit()
         else:
             # called from delete_event: indicate it's ok to destroy
-            return FALSE
+            return False
 
     def doExit (self, dialog, response):
         dialog.destroy()
