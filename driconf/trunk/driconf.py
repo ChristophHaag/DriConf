@@ -26,7 +26,6 @@ import dri
 import pygtk
 pygtk.require ("2.0")
 import gtk
-#from gtk import True, False
 import gobject
 
 # Install translations. Search in the current directory first (for
