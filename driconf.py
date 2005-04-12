@@ -1577,21 +1577,42 @@ class MainWindow (gtk.Window):
         self.propertiesButton.set_sensitive (writable)
 
     def aboutHandler (self, widget):
-        dialog = gtk.MessageDialog (
-            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
-            gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-            u"DRIconf 0.2.6\n"
-            u"%s\n"
-            u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n"
-            u"\n"
-            u"%s: David Rubio (es), Felix K\u00fchling (de)\n"
-            u"\n"
-            u"%s: http://dri.freedesktop.org/wiki/DriConf\n"
-            u"%s: dri-users@lists.sourceforge.net" % (
-            _("A configuration GUI for DRI drivers"),
-            _("Translators"), _("Website"), _("Feedback")))
-        dialog.set_title(_("About DRIconf"))
-        dialog.connect("response", lambda dialog, response: dialog.destroy())
+        version = "0.2.6"
+        translators = _("translator-credits")
+        if translators == "translator-credits":
+            translators = None
+        if gtk.__dict__.has_key("AboutDialog"):
+            dialog = gtk.AboutDialog()
+            dialog.set_name("DRIconf")
+            dialog.set_version(version)
+            dialog.set_copyright(u"Copyright \u00a9 2003-2005  "
+                                 u"Felix K\u00fchling")
+            dialog.set_comments(_("A configuration GUI for DRI drivers"))
+            dialog.set_website(u"http://dri.freedesktop.org/wiki/DriConf")
+            if translators:
+                dialog.set_translator_credits(translators)
+            else:
+                dialog.set_translator_credits("hi")
+            logoPath = findInShared("drilogo.jpg")
+            if logoPath:
+                logo = gtk.gdk.pixbuf_new_from_file (logoPath)
+                dialog.set_logo(logo)
+        else:
+            text = u"DRIconf %s\n" \
+                   u"%s\n" \
+                   u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n" \
+                   u"\n" \
+                   u"http://dri.freedesktop.org/wiki/DriConf" \
+                   % (version,  _("A configuration GUI for DRI drivers"))
+            if translators:
+                text = text + (u"\n\n%s: %s" % (_("Translated by"),
+                                              _("translator-credits")))
+            dialog = gtk.MessageDialog (
+                mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
+                gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, text)
+            dialog.set_title(_("About DRIconf"))
+        dialog.connect("response",
+                       lambda dialog, response: dialog.destroy())
         dialog.show()
 
     def exitHandler (self, widget, event=None):
