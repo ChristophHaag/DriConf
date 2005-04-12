@@ -16,7 +16,7 @@
 # the example above) to translate the strings. Please make sure that
 # your editor encodes the file in UTF-8.
 
-# Finally run "make mo" to generate a new binary file for gettext. It
+# Finally run "make" to generate a new binary file for gettext. It
 # will be stored in <lang>/LC_MESSAGES/driconf.mo. You can test the
 # new translation by running ./driconf in the current directory
 # without reinstalling DRIconf all the time. Of course you need to
@@ -33,12 +33,18 @@
 # The set of supported languages. Add languages as needed.
 POS=de.po es.po
 
-# Automatically generated list of mo files.
+#
+# Don't change anything below, unless you know what you're doing.
+#
+LANGS=$(POS:%.po=%)
 MOS=$(POS:%.po=%/LC_MESSAGES/driconf.mo)
+POT=driconf.pot
 
-.PHONY: mo po
+.PHONY: all pot po mo
 
 # Default target. Use this to update your .mo files from the .po files.
+all: mo
+
 mo:
 	@for mo in $(MOS); do \
 		lang=$${mo%%/*}; \
@@ -51,16 +57,20 @@ mo:
 # driconf.py.
 po: $(POS)
 
+pot: $(POT)
+
 # Extract message catalog from driconf.py.
-driconf.pot: driconf.py
-	xgettext -L python -o driconf.pot driconf.py
+$(POT): driconf.py
+	xgettext -L python --from-code utf-8 -o $(POT) driconf.py
 
 # Create or update a .po file for a specific language.
-%.po: driconf.pot
-	if [ -f $@ ]; then \
+%.po: $(POT)
+	@if [ -f $@ ]; then \
+		echo "Merging new strings from $(POT) into $@."; \
 		mv $@ $@~; \
-		msgmerge -o $@ $@~ driconf.pot; \
+		msgmerge -o $@ $@~ $(POT); \
 	else \
-		msginit -o $@~ --locale=$*; \
+		echo "Initializing $@ from $(POT)."; \
+		msginit -i $(POT) -o $@~ --locale=$*; \
 		sed -e 's/charset=.*\\n/charset=UTF-8\\n/' $@~ > $@; \
 	fi
