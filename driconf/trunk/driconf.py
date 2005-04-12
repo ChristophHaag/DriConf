@@ -661,32 +661,31 @@ class DriverPanel (gtk.Frame):
                 sectPage.show()
                 desc = sect.getDesc([lang])
                 if desc:
-                    if len(desc) > 30:
-                        # Truncate long section descriptions and add a
-                        # tooltip with the full description.
-                        # Eek: need an event box since tooltips don't work
-                        # on labels.
-                        try:
-                            space = desc[20:].index(' ') + 20
-                            if space < 30:
-                                shortDesc = desc[:space]
+                    if len(desc) > 40:
+                        # Manual line wrapping of long labels
+                        rest = desc.lstrip()
+                        desc = ""
+                        while len(rest) > 40:
+                            try:
+                                space = rest[:40].rindex(' ')
+                            except ValueError:
+                                try:
+                                    space = rest.index(' ')
+                                except ValueError:
+                                    space = len(rest)
+                            line = rest[:space]
+                            rest = rest[space:].lstrip()
+                            if desc:
+                                desc = desc + "\n" + line
                             else:
-                                shortDesc = desc[:30]
-                        except ValueError:
-                            shortDesc = desc[:30]
-                        labelWidget = gtk.EventBox()
-                        tooltips.set_tip (labelWidget, desc)
-                        sectLabel = gtk.Label (shortDesc + " ...")
-                        sectLabel.show()
-                        labelWidget.add (sectLabel)
-                    else:
-                        sectLabel = gtk.Label (desc)
-                        labelWidget = sectLabel
+                                desc = line
+                        if rest:
+                            desc = desc + "\n" + rest
+                    sectLabel = gtk.Label (desc)
                 else:
                     sectLabel = gtk.Label (_("(no description)"))
-                    labelWidget = sectLabel
-                labelWidget.show()
-                notebook.append_page (sectPage, labelWidget)
+                sectLabel.show()
+                notebook.append_page (sectPage, sectLabel)
                 self.sectPages.append (sectPage)
                 self.sectLabels.append (sectLabel)
         if len(self.sectLabels) > 0:
@@ -1591,8 +1590,6 @@ class MainWindow (gtk.Window):
             dialog.set_website(u"http://dri.freedesktop.org/wiki/DriConf")
             if translators:
                 dialog.set_translator_credits(translators)
-            else:
-                dialog.set_translator_credits("hi")
             logoPath = findInShared("drilogo.jpg")
             if logoPath:
                 logo = gtk.gdk.pixbuf_new_from_file (logoPath)
