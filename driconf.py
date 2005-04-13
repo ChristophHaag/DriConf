@@ -1637,7 +1637,7 @@ def fileIsWritable(filename):
 
 def main():
     # initialize locale
-    global lang, encoding
+    global lang
     locale.setlocale(locale.LC_ALL, '')
     lang,encoding = locale.getlocale(locale.LC_MESSAGES)
     if lang:
@@ -1646,8 +1646,7 @@ def main():
             lang = lang[0:underscore]
     else:
         lang = "en"
-    if not encoding:
-        encoding = "ISO-8859-1"
+    # encoding is only a dummy. Pango uses UTF-8 everywhere. :)
 
     # read configuration information from the drivers
     global dpy
