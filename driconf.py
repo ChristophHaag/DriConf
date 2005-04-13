@@ -1548,15 +1548,8 @@ class MainWindow (gtk.Window):
         self.propertiesButton.set_sensitive (writable)
 
     def activateAppButtons (self, app):
-        writable = app.device.config.writable
-        modified = app.device.config.isModified
-        self.saveButton      .set_sensitive (writable and modified)
-        self.reloadButton    .set_sensitive (True)
-        self.newButton       .set_sensitive (writable)
-        self.removeButton    .set_sensitive (writable)
-        self.upButton        .set_sensitive (writable)
-        self.downButton      .set_sensitive (writable)
-        self.propertiesButton.set_sensitive (writable)
+        # Button sensitivity is identical for apps and devices.
+        self.activateDeviceButtons (app.device)
 
     def aboutHandler (self, widget):
         version = "0.2.6"
@@ -1624,16 +1617,16 @@ class MainWindow (gtk.Window):
 def fileIsWritable(filename):
     """ Find out if a file is writable.
 
-    Returns 1 for existing writable files, 0 otherwise. """
+    Returns True for existing writable files, False otherwise. """
     try:
         fd = os.open (filename, os.O_WRONLY)
     except OSError:
-        return 0
+        return False
     if fd == -1:
-        return 0
+        return False
     else:
         os.close (fd)
-        return 1
+        return True
 
 def main():
     # initialize locale
@@ -1670,7 +1663,7 @@ def main():
         return
 
     # read or create configuration files
-    fileNameList = ["/etc/drirc", os.environ["HOME"] + "/.drirc"]
+    fileNameList = ["/etc/drirc", os.path.join (os.environ["HOME"], ".drirc")]
     configList = []
     newFiles = []
     for fileName in fileNameList:
@@ -1679,7 +1672,7 @@ def main():
         except IOError:
             # Make a default configuration file.
             config = dri.DRIConfig (None, fileName)
-            config.writable = 1
+            config.writable = True
             for screen in dpy.screens:
                 if screen == None:
                     continue
