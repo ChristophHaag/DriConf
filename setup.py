@@ -1,7 +1,13 @@
 from distutils.core import setup
 
+langs = ["de", "es"]
+translations = []
+for lang in langs:
+    translations.append (("share/locale/%s/LC_MESSAGES" % lang,
+                          ["%s/LC_MESSAGES/driconf.mo" % lang]))
+
 setup(name="driconf",
-      version="0.2.5",
+      version="0.2.6",
       description="A configuration GUI for DRI drivers",
       author="Felix Kuehling",
       author_email="fxkuehl@gmx.de",
@@ -9,9 +15,7 @@ setup(name="driconf",
       py_modules=["dri", "driconf"],
       scripts=["driconf"],
       data_files=[("share/driconf", ["card.png", "screen.png", "screencard.png",
-                                     "drilogo.jpg"]),
-                  ("share/locale/de/LC_MESSAGES", ["de/LC_MESSAGES/driconf.mo"])
-                  ])
+                                     "drilogo.jpg"])] + translations)
 
 #
 # Search for obsolete files.
