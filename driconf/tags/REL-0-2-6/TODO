@@ -1,0 +1,20 @@
+o = todo
+X = done
+? = maybe
+I = in progress
+
+X Use different widgets for different option types and valid ranges
+X Handle invalid configuration files read from disk
+X Reset individual options to their default value
+X Handle invalid option values in configuration files read from disk
+X Handle xdriinfo and driver problems gracefully
+X Reload configuration files
+X Port to gtk-2 (driconf versions 0.2.x)
+I Make the user interface more intuitive
+  (This one may never be really done. I'm open to suggestions, but I think
+   it's grown pretty usable.)
+I Internationalize the user interface
+  (The basics are done, all that's needed now is more translations.)
+o Drag and drop in the configuration tree, allowing to move device and
+  application configurations between configuration files and application
+  configurations between devices.
