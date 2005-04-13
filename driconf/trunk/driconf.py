@@ -645,6 +645,8 @@ class DriverPanel (gtk.Frame):
         table.attach (self.execEntry, 1, 2, 0, 1,
                       gtk.EXPAND|gtk.FILL, 0, 5, 5)
         notebook = gtk.Notebook()
+        notebook.popup_enable()
+        notebook.set_scrollable (True)
         self.sectPages = []
         self.sectLabels = []
         unknownPage = UnknownSectionPage (driver, app)
@@ -661,27 +663,8 @@ class DriverPanel (gtk.Frame):
                 sectPage.show()
                 desc = sect.getDesc([lang])
                 if desc:
-                    if len(desc) > 40:
-                        # Manual line wrapping of long labels
-                        rest = desc.lstrip()
-                        desc = ""
-                        while len(rest) > 40:
-                            try:
-                                space = rest[:40].rindex(' ')
-                            except ValueError:
-                                try:
-                                    space = rest.index(' ')
-                                except ValueError:
-                                    space = len(rest)
-                            line = rest[:space]
-                            rest = rest[space:].lstrip()
-                            if desc:
-                                desc = desc + "\n" + line
-                            else:
-                                desc = line
-                        if rest:
-                            desc = desc + "\n" + rest
                     sectLabel = gtk.Label (desc)
+                    sectLabel.set_line_wrap (True)
                 else:
                     sectLabel = gtk.Label (_("(no description)"))
                 sectLabel.show()
