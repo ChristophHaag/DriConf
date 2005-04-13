@@ -1,3 +1,16 @@
+driconf-0.2.6: Thu Apr 14 01:08:41 CEST 2005
+
+- Spanish translation by David Rubio Miguélez.
+- .po-files included in the source release.
+- Look for translations in the current directory first. This makes it easier
+  to test new translations when older ones are installed in the standard place.
+- Use gtk-2.6 AboutDialog if available.
+- Changed handling of long tab labels. This gets rid of visual artifacts on
+  truncated tab labels+tooltips with some gtk themes.
+- Fixed: lots of deprecation warnings with pygtk 2.6 about gtk.TRUE and
+         gtk.FALSE. Now using True and False, requires Python 2.3.
+- Fixed: small problems with the Makefile for maintaining translations.
+
 driconf-0.2.5: Sun Mar 27 15:32:59 CEST 2005
 
 - I18N support, initial German translation. More translations are welcome.
