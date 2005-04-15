@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-langs = ["de", "es"]
+langs = ["de", "es", "it"]
 translations = []
 for lang in langs:
     translations.append (("share/locale/%s/LC_MESSAGES" % lang,
