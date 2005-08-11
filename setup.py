@@ -1,13 +1,13 @@
 from distutils.core import setup
 
-langs = ["de", "es", "it"]
+langs = ["de", "es", "it", "ru"]
 translations = []
 for lang in langs:
     translations.append (("share/locale/%s/LC_MESSAGES" % lang,
                           ["%s/LC_MESSAGES/driconf.mo" % lang]))
 
 setup(name="driconf",
-      version="0.2.6",
+      version="0.2.7",
       description="A configuration GUI for DRI drivers",
       author="Felix Kuehling",
       author_email="fxkuehl@gmx.de",
@@ -20,6 +20,9 @@ setup(name="driconf",
 #
 # Search for obsolete files.
 #
+# driconf_xpm is gone for good, the other two python modules were moved to
+# <prefix>/lib/driconf/...
+#
 from os.path import isfile, isdir, join
 from distutils.sysconfig import get_python_lib
 obsoleteFiles = []
@@ -30,13 +33,16 @@ for prefix in [None, "/usr/local"]:
         pyLibPath = get_python_lib(prefix=prefix)
     if not isdir (pyLibPath):
         continue
-    for f in ["driconf_xpm.py", "driconf_xpm.pyc", "driconf_xpm.pyo"]:
+    for f in ["driconf_xpm.py", "driconf_xpm.pyc", "driconf_xpm.pyo",
+              "driconf.py", "driconf.pyc", "driconf.pyo",
+              "dri.py", "dri.pyc", "dri.pyo"]:
         path = join (pyLibPath, f)
         if isfile (path):
             obsoleteFiles.append (path)
 if obsoleteFiles:
     print "\n*** Obsolete files from previous DRIconf versions were found on " \
-          "your system.\n*** You can probably delete them:"
+          "your system.\n*** Unless you tweaked setup.cfg you can probably " \
+          "delete them:"
     for f in obsoleteFiles:
         print "***\t%s" % f
 

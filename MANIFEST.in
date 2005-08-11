@@ -5,3 +5,5 @@ include Makefile
 include *.po
 recursive-include de *.mo
 recursive-include es *.mo
+recursive-include it *.mo
+recursive-include ru *.mo
