@@ -1,0 +1,252 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: driconf\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-08-11 10:47-0400\n"
+"PO-Revision-Date: 2005-08-11 10:53-0400\n"
+"Last-Translator: Konstantin A. Lepikhov <lakostis@altlinux.org>\n"
+"Language-Team: Russian <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: driconf.py:499
+msgid "Option"
+msgstr "Опция"
+
+#: driconf.py:504
+msgid "Value"
+msgstr "Значение"
+
+#: driconf.py:578
+msgid ""
+"Some settings in this application configuration are unknown to the driver. "
+"Maybe the driver version changed and does not support these options any "
+"more. It is probably safe to delete these settings."
+msgstr ""
+"Некоторые установки в конфигурации данного приложения не поддерживаются "
+"драйвером. Возможно, изменилась версия драйвера, и эти установки больше не "
+"поддерживаются. Лучше удалите эти установки."
+
+#: driconf.py:583
+msgid ""
+"The driver for this device could not be determined or does not support "
+"configuration. You can still change the settings but it cannot be verified "
+"whether they are supported and valid."
+msgstr ""
+"Драйвер для этого устройства не может быть определен или не поддерживает "
+"возможности конфигурирования. Вы все равно сможете изменить настройки, но "
+"нет гарантии, что они будут правильными и будут поддерживаться."
+
+#: driconf.py:621
+msgid "Application"
+msgstr "Программа"
+
+#: driconf.py:628
+msgid "Apply only to this executable"
+msgstr "Применить только для заданного файла"
+
+#: driconf.py:631
+msgid ""
+"Leave this disabled to configure all applications.\n"
+"Beware that some applications or games are just a shell script that starts a "
+"real executable with a different name."
+msgstr ""
+"Оставить отключенным для конфигурации всех приложений.\n"
+"Внимание! Некоторые приложения или игры являются просто shell скриптами, "
+"которые запускают другое приложение с другим именем."
+
+#: driconf.py:655
+msgid "Unknown"
+msgstr "Неизвестные"
+
+#: driconf.py:669
+msgid "(no description)"
+msgstr "(нет описания)"
+
+#: driconf.py:745
+msgid ""
+"Enter the name of the application below. This serves just a descriptivion "
+"for you. Don't forget to set the executable afterwards."
+msgstr ""
+"Введите название приложения. Это название будет кратким описанием "
+"приложения. Не забудьте указать название файла для запуска приложения."
+
+#: driconf.py:752
+msgid "Application Name"
+msgstr "Название приложения"
+
+#: driconf.py:787
+msgid "Describe the device that you would like to configure."
+msgstr "Опишите устройство, которое вы хотите настроить."
+
+#: driconf.py:792
+msgid "Screen Number"
+msgstr "Номер Экрана"
+
+#: driconf.py:803
+msgid "Driver Name"
+msgstr "Драйвер"
+
+#: driconf.py:926
+#, python-format
+msgid "%s on screen %s"
+msgstr "%s на экране %s"
+
+#: driconf.py:930
+#, python-format
+msgid "Screen %s"
+msgstr "Экран %s"
+
+#: driconf.py:936
+msgid "Unspecified device"
+msgstr "Неизвестное устройство"
+
+#: driconf.py:1159
+#, python-format
+msgid "Parsing the driver's configuration information: %s"
+msgstr "Обрабатываю информацию о конфигурации драйвера: %s"
+
+#: driconf.py:1197
+#, python-format
+msgid "Really delete application \"%s\"?"
+msgstr "Действительно хотите удалить приложение \"%s\"?"
+
+#: driconf.py:1203
+msgid "Really delete device and all applications in it?"
+msgstr ""
+"Действительно хотите удалить устройство и все связанные с ним приложения?"
+
+#: driconf.py:1224
+msgid "Rename Application"
+msgstr "Переименовать приложение"
+
+#: driconf.py:1227
+msgid "Device Properties"
+msgstr "Свойства"
+
+#: driconf.py:1234
+msgid "New Application"
+msgstr "Новое приложение"
+
+#: driconf.py:1237
+msgid "New Device"
+msgstr "Новое устройство"
+
+#: driconf.py:1261
+msgid "The configuration contains invalid entries. Save anyway?"
+msgstr "Эта конфигурация содержит неверные данные. Все равно сохранить?"
+
+#: driconf.py:1272
+#, python-format
+msgid "Can't open \"%s\" for writing."
+msgstr "Не могу открыть \"%s\" для записи."
+
+#: driconf.py:1291
+#, python-format
+msgid "Really reload \"%s\" from disk?"
+msgstr "Действительно хотите перечитать \"%s\"?"
+
+#: driconf.py:1302
+#, python-format
+msgid "Couldn't open \"%s\" for reading. The file was not reloaded."
+msgstr "Не могу открыть \"%s\" для чтения. Файл не был перечитан заново."
+
+#: driconf.py:1314
+#, python-format
+msgid ""
+"Configuration file \"%s\" contains errors:\n"
+"%s\n"
+"The file was not reloaded."
+msgstr ""
+"Файл конфигурации \"%s\" содержит ошибки:\n"
+"%s\n"
+"Этот файл не будет перечитан заново."
+
+#: driconf.py:1423
+msgid "Save selected configuration file"
+msgstr "Сохранить выбранный файл конфигурации"
+
+#: driconf.py:1426
+msgid "Reload selected configuration file"
+msgstr "Перечитать выбранный файл конфигурации"
+
+#: driconf.py:1430
+msgid "Create a new device or application"
+msgstr "Создать новое устройство или программу"
+
+#: driconf.py:1433
+msgid "Remove selected device or application"
+msgstr "Удалить выбранное устройство или приложение"
+
+#: driconf.py:1436
+msgid "Move selected item up"
+msgstr "Переместить выбранный элемент вверх"
+
+#: driconf.py:1439
+msgid "Move selected item down"
+msgstr "Переместить выбранный элемент вниз"
+
+#: driconf.py:1442
+msgid "Properties of selected device or application"
+msgstr "Свойства выбранного устройства или приложения"
+
+#: driconf.py:1452 driconf.py:1586
+msgid "About DRIconf"
+msgstr "О DRIconf"
+
+#: driconf.py:1456
+msgid "Exit DRIconf"
+msgstr "Выход из DRIconf"
+
+#: driconf.py:1556 driconf.py:1582
+msgid "translator-credits"
+msgstr "Konstantin A. Lepikhov <lakostis@altlinux.org>"
+
+#: driconf.py:1565 driconf.py:1579
+msgid "A configuration GUI for DRI drivers"
+msgstr "Графическая среда для настройки DRI драйверов"
+
+#: driconf.py:1581
+msgid "Translated by"
+msgstr "Переводчики"
+
+#: driconf.py:1601
+msgid "There are unsaved modifications. Exit anyway?"
+msgstr "У Вас есть несохраненные изменения. Все равно выйти?"
+
+#: driconf.py:1657
+#, python-format
+msgid ""
+"There are errors in a driver's configuration information:\n"
+"%s\n"
+"This should not happen. It probably means that you have to update DRIconf."
+msgstr ""
+"Возникли ошибки при чтении конфигурации драйвера:\n"
+"%s\n"
+"Это может нарушить работу программы. Возможно, Вам следует обновить DRIconf."
+
+#: driconf.py:1700
+#, python-format
+msgid ""
+"Configuration file \"%s\" contains errors:\n"
+"%s\n"
+"I will leave the file alone until you fix the problem manually or remove the "
+"file."
+msgstr ""
+"Файл конфигурации \"%s\" содержит ошибки:\n"
+"%s\n"
+"Программа не будет его использовать до тех пор, пока ошибки не будут "
+"исправлены вручную, либо файл будет удален."
+
+#: driconf.py:1731
+#, python-format
+msgid "Created a new DRI configuration file \"%s\" for you."
+msgstr "Для Вас был создан новый файл конфигурации \"%s\"."
+
+#: driconf.py:1739
+#, python-format
+msgid "Created new DRI configuration files %s for you."
+msgstr "Для Вас были созданы новые файлы конфигурации %s."
