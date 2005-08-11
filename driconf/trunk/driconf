@@ -20,6 +20,9 @@
 
 # Contact: http://fxk.de.vu/
 
+import sys
+sys.path.append("/usr/local/lib/driconf")
+
 import driconf
 
 driconf.main()

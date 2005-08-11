@@ -1,3 +1,10 @@
+driconf-0.2.7:
+
+- Italian translation by Giampaolo Bozzali.
+- Russian translation by Konstantin A. Lepikhov.
+- Changed installation. Python modules are now installed to
+  /usr/local/lib/driconf.
+
 driconf-0.2.6: Thu Apr 14 01:08:41 CEST 2005
 
 - Spanish translation by David Rubio Miguélez.
