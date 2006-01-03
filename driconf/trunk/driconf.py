@@ -74,6 +74,46 @@ class StockImage (gtk.Image):
         gtk.Image.__init__ (self)
         self.set_from_stock (stock, size)
 
+class WrappingLabel (gtk.Label):
+    """ Line wrapping label with a highlight method """
+    def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=True,
+                  width=-1, height=-1):
+        self.text = escapeMarkup (label)
+        gtk.Label.__init__ (self, label)
+        self.set_justify (justify)
+        self.set_line_wrap (wrap)
+        self.set_size_request (width, height)
+
+    def highlight (self, flag):
+        """ Highlight the label. """
+        if flag:
+            self.set_markup ('<span foreground="red">' +  self.text + \
+                             '</span>')
+        else:
+            self.set_markup (self.text)
+
+class WrappingDummyCheckButton (gtk.HBox):
+    """ Dummy Check button with a line wrapping label. """
+    def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=True,
+                  width=-1, height=-1):
+        """ Constructor. """
+        gtk.HBox.__init__ (self)
+        self.text = escapeMarkup (label)
+        self.label = WrappingLabel (label, justify, wrap, width, height)
+        self.label.show()
+        self.pack_start (self.label, False, False, 0)
+
+    def highlight (self, flag):
+        """ Highlight the label. """
+        self.label.highlight (flag)
+
+    def get_active (self):
+        """ Hack: make it behave like a check button ...
+
+        ... to some extent such that OptionLine does not need to
+        distinguish between simple and complex mode. """
+        return True
+
 class WrappingCheckButton (gtk.CheckButton):
     """ Check button with a line wrapping label. """
     def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=True,
@@ -82,10 +122,7 @@ class WrappingCheckButton (gtk.CheckButton):
         gtk.CheckButton.__init__ (self)
         checkHBox = gtk.HBox()
         self.text = escapeMarkup (label)
-        self.label = gtk.Label(label)
-        self.label.set_justify (justify)
-        self.label.set_line_wrap (wrap)
-        self.label.set_size_request (width, height)
+        self.label = WrappingLabel (label, justify, wrap, width, height)
         self.label.show()
         checkHBox.pack_start (self.label, False, False, 0)
         checkHBox.show()
@@ -93,11 +130,7 @@ class WrappingCheckButton (gtk.CheckButton):
 
     def highlight (self, flag):
         """ Highlight the label. """
-        if flag:
-            self.label.set_markup ('<span foreground="red">' +  self.text + \
-                                   '</span>')
-        else:
-            self.label.set_markup (self.text)
+        self.label.highlight (flag)
 
 class WrappingOptionMenu (gtk.Button):
     """ Something that looks similar to a gtk.OptionMenu ...
@@ -226,17 +259,20 @@ class OptionLine:
             desc = desc.text
         else:
             desc = u"(no description available)"
-        self.check = WrappingCheckButton (desc, width=200)
-        self.check.set_active (page.app.options.has_key (opt.name))
-        self.check.set_sensitive (page.app.device.config.writable)
-        self.check.connect ("clicked", self.checkOpt)
+        if page.simple:
+            self.label = WrappingDummyCheckButton (desc, width=200)
+        else:
+            self.label = WrappingCheckButton (desc, width=200)
+            self.label.set_active (page.app.options.has_key (opt.name))
+            self.label.set_sensitive (page.app.device.config.writable)
+            self.label.connect ("clicked", self.checkOpt)
         tooltipString = str(opt)
-        page.tooltips.set_tip (self.check, tooltipString)
-        self.check.show()
-        page.table.attach (self.check, 0, 1, i, i+1,
+        page.tooltips.set_tip (self.label, tooltipString)
+        self.label.show()
+        page.table.attach (self.label, 0, 1, i, i+1,
                            gtk.EXPAND|gtk.FILL, 0, 5, 5)
         # a button to reset the option to its default value
-        sensitive = self.check.get_active() and page.app.device.config.writable
+        sensitive = self.label.get_active() and page.app.device.config.writable
         self.resetButton = gtk.Button ()
         pixmap = StockImage ("gtk-undo", gtk.ICON_SIZE_SMALL_TOOLBAR)
         pixmap.show()
@@ -344,7 +380,7 @@ class OptionLine:
         """ Get the current value from the option widget.
 
         Returns None if the widget is not activated. """
-        if not self.check.get_active():
+        if not self.label.get_active():
             return None
         elif self.widget.__class__ == gtk.ToggleButton:
             if self.widget.get_active():
@@ -362,7 +398,7 @@ class OptionLine:
 
     def checkOpt (self, widget):
         """ Handler for 'check button (maybe) toggled'. """
-        if self.check.get_active():
+        if self.label.get_active():
             self.widget.set_sensitive (True)
             self.resetButton.set_sensitive (True)
         else:
@@ -406,19 +442,20 @@ class OptionLine:
             self.page.doValidate()
 
     def highlightInvalid (self):
-        self.check.highlight (not self.isValid and self.check.get_active())
+        self.label.highlight (not self.isValid and self.label.get_active())
 
     def validate (self):
-        return self.isValid or not self.check.get_active()
+        return self.isValid or not self.label.get_active()
 
 class SectionPage (gtk.ScrolledWindow):
     """ One page in the DriverPanel with one OptionLine per option. """
-    def __init__ (self, optSection, app):
+    def __init__ (self, optSection, app, simple):
         """ Constructor. """
         gtk.ScrolledWindow.__init__ (self)
         self.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.optSection = optSection
         self.app = app
+        self.simple = simple
         self.tooltips = gtk.Tooltips()
         self.table = gtk.Table (len(optSection.optList), 3)
         self.optLines = []
@@ -659,7 +696,10 @@ class DriverPanel (gtk.Frame):
             self.sectLabels.append (unknownLabel)
         if driver:
             for sect in driver.optSections:
-                sectPage = SectionPage (sect, app)
+                sectPage = SectionPage (sect, app,
+                                        hasattr (app.device, "isSimplified") \
+                                        and app.device.isSimplified \
+                                        and app.executable == None)
                 sectPage.show()
                 desc = sect.getDesc([lang])
                 if desc:
