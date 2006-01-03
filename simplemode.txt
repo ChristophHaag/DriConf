@@ -1,0 +1,159 @@
+Design of a simplified and more intuitive user interface for DRIconf
+====================================================================
+
+1. The Problem
+
+The current user interface of DRIconf allows reflects the structure of
+the configuration files and exposes it directly to the user. This
+makes it very powerful but can lead to confusing results, especially
+for users who do not think like programmers.
+
+  * Multiple device sections can apply to the same physical
+    screen. The order of sections matters.
+
+  * Multiple application sections (in the same or separate device
+    sections) can apply to the same application. Again, the order
+    matters.
+
+  * Devices that are not currently available can be configured.
+
+  * If users forget to set the executable name, settings meant for a
+    specific application apply to all applications instead.
+
+These facts can make it hard to track, which settings will actually
+apply to a given application on a given screen.
+
+2. Requirements
+
+A simplified user interface should
+
+  * show and modify only the user configuration file (not the
+    system-wide configuration file),
+
+  * use settings in the system-wide configuration file as defaults for
+    new configurations,
+
+  * show and modify only existing screens on the current display and
+
+  * make it clear which settings will eventually apply to a given
+    application.
+
+3. Implications
+
+3.1 Invisible sections
+
+The user interface will only show screens on the current display. Thus
+not all sections in the configuration file(s) are visible to the
+user. Invisible sections should not be modified by DRIconf, but they
+must not have any effect on visible devices. Thus sections for visible
+devices will always be written to the end of the configuration file.
+
+3.2 Structure of the configuration file
+
+Parts of the configuration files written by the simplified UI will
+have a simpler structure. Device sections always identify devices by
+screen number and driver name. Each device section starts with a
+default application that overrides all options in order to cancel the
+effects of invisible sections. Application sections for specific
+applications follow after the default section, overriding only those
+options that the user wants to customize.
+
+3.3 System wide settings
+
+As a consequence of 3.2 system wide settings will be
+overridden. Changes by the system administrator will not have any
+immediate effect on the user.¹ However, system wide settings should be
+honored as default values by the user interface when creating new
+device configurations or when resetting options to their default
+value.
+
+¹) With the exception of new options that did not exist the last time
+DRIconf wrote the user configuration file.
+
+3.4 Generating a simplified configuration from a complex one
+
+Whenever the simplified user interface loads a configuration file, it
+needs to generate a simplified internal representation of that
+configuration file that matches the original configuration as closely
+as possible. It should regard all sections in the user and the
+system-wide configuration file that apply to existing screens and
+ignore all sections that don't apply. Sections that do not identify
+visible devices by both screen number and driver name or sections that
+contain unknown options are regarded when reading the configuration
+file but are written back unmodified and in the original order as
+well, since they may apply to other devices possibly on other
+computers that are not currently visible. Only sections in the user
+configuration file that identify currently visible devices by both
+screen number and driver name and contain only known options are
+replaced by simplified device sections as described in 3.2.
+
+The net result of this simplification process is a configuration file
+that has the same effect as the original configuration file in
+combination with the system-wide configuration and contains exactly
+one device section for each visible device at the end of the
+configuration file.
+
+4. Proposed user interface
+
+4.1 Devices
+
+The user interface must allow the user to select visible
+devices. Screen numbers and driver names are known and do not need to
+be entered by the user. The user interface may use glxinfo in order to
+obtain more intelligible information about the devices, for example
+the vendor and renderer strings.
+
+4.2 Default settings
+
+For each device it should present the user with a configuration panel
+similar to the right pane of the current user interface. This panel
+should be used to set the default configuration of the device. As
+opposed to the current user interface the check boxes at the left of
+each option are not needed, since the device section will override all
+options.
+
+4.3 Application settings
+
+The user should be able to configure specific applications. The
+executable name is mandatory. The screen that represents application
+configuration should show only the options that the user wants to
+modify. The user can add new options from a structured menu or remove
+options from the application configuration.
+
+4.4 Miscellanea
+
+The user interface should work like a configuration panel in
+GNOME. This means:
+
+  * The configuration file is saved implicitly each time a setting is
+    changed.
+
+  * No more button bar.
+
+  * Devices are represented as tabs in a notebook.
+
+  * Application overrides are hidden in an expander.
+
+5. Expert mode
+
+The current user interface should be retained as an optional Expert
+mode. Expert mode should be selectable on the command line and in the
+simplified user interface. The latter means that both user interfaces
+should operate on the same internal data representation.
+
+Expert mode is entered automatically if a non-writable user
+configuration file is found.
+
+6. Shared program components
+
+Simplified and expert mode can and should share some program
+components.
+
+  * XML parser and associated data structures
+
+  * Driver panel including option widgets.
+
+The driver panel will need modifications in order to hide check
+buttons in simplified mode. Interactions with higher levels of the
+user interface must be revisited in order to fit it into the new user
+interface.
