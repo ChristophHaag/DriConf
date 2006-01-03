@@ -146,7 +146,8 @@ GNOME. This means:
 
 Option sections are already represented as a notebook. Nested
 notebooks do not look very clean. Instead a list of devices may be
-more intuitive.
+more intuitive. If only one configurable device is installed (the most
+common case) no device selection would be needed at all.
 
 [end modification]
 
