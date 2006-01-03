@@ -3,10 +3,10 @@ Design of a simplified and more intuitive user interface for DRIconf
 
 1. The Problem
 
-The current user interface of DRIconf allows reflects the structure of
-the configuration files and exposes it directly to the user. This
-makes it very powerful but can lead to confusing results, especially
-for users who do not think like programmers.
+The current user interface of DRIconf reflects the structure of the
+configuration files and exposes it directly to the user. This makes it
+very powerful but can lead to confusing results, especially for users
+who do not think like programmers.
 
   * Multiple device sections can apply to the same physical
     screen. The order of sections matters.
@@ -87,6 +87,16 @@ configuration file that identify currently visible devices by both
 screen number and driver name and contain only known options are
 replaced by simplified device sections as described in 3.2.
 
+[modification: January 2, 2006]
+
+Invalid or unknown options in the user configuration file in device
+sections that specify both the screen and the driver and that affect
+an existing device should be included in the simplified
+configuration. Otherwise such settings would be silently lost in the
+simplification process.
+
+[end modification]
+
 The net result of this simplification process is a configuration file
 that has the same effect as the original configuration file in
 combination with the system-wide configuration and contains exactly
@@ -131,6 +141,14 @@ GNOME. This means:
   * No more button bar.
 
   * Devices are represented as tabs in a notebook.
+
+[modification: January 2, 2006]
+
+Option sections are already represented as a notebook. Nested
+notebooks do not look very clean. Instead a list of devices may be
+more intuitive.
+
+[end modification]
 
   * Application overrides are hidden in an expander.
 
