@@ -7,7 +7,7 @@ for lang in langs:
                           ["%s/LC_MESSAGES/driconf.mo" % lang]))
 
 setup(name="driconf",
-      version="0.2.7",
+      version="0.2.8",
       description="A configuration GUI for DRI drivers",
       author="Felix Kuehling",
       author_email="fxkuehl@gmx.de",

@@ -318,6 +318,15 @@ class DriverInfo:
             allValid = allValid and optSection.validate (valDict)
         return allValid
 
+    def getOptInfo (self, name):
+        """ Return an option info for a given option name.
+
+        If no such option exists in any section, None is returned. """
+        for optSection in self.optSections:
+            if optSection.options.has_key(name):
+                return optSection.options[name]
+        return None
+
 class ScreenInfo:
     """ References a DriverInfo object with the real config info. """
     def __init__ (self, screen, dpy = None):
