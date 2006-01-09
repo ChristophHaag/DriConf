@@ -5,144 +5,198 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-04-12 17:13+0200\n"
+"POT-Creation-Date: 2006-01-08 22:18-0500\n"
 "PO-Revision-Date: 2005-04-15 13:08+0100\n"
 "Last-Translator: Giampaolo Bozzali <giampaolo.bozzali@gmail.com>\n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: KBabel 1.10\n"
-"Language-Team: \n"
 "X-Poedit-Language: Italian\n"
 "X-Poedit-Country: ITALY\n"
 
-#: driconf.py:499
+#: driconf.py:275
+#, python-format
+msgid ""
+"There are errors in a driver's configuration information:\n"
+"%s\n"
+"This should not happen. It probably means that you have to update DRIconf."
+msgstr ""
+"Ci sono degli errori nelle informazioni sulla configurazione di un driver:\n"
+"%s\n"
+"Questo non dovrebbe accadere. Probabilmente significa che devi aggiornare "
+"DRIconf."
+
+#: driconf.py:318
+#, python-format
+msgid ""
+"Configuration file \"%s\" contains errors:\n"
+"%s\n"
+"I will leave the file alone until you fix the problem manually or remove the "
+"file."
+msgstr ""
+"Il file di configurazione \"%s\" contiene degli errori:\n"
+"%s\n"
+"Il file non verrà considerato finchè il problema non sarà risolto a mano o "
+"il file sarà rimosso."
+
+#: driconf.py:363
+#, python-format
+msgid "Created a new DRI configuration file \"%s\" for you."
+msgstr "Creato un nuovo file di configurazione \"%s\"."
+
+#: driconf.py:371
+#, python-format
+msgid "Created new DRI configuration files %s for you."
+msgstr "Creati nuovi file di configurazione %s."
+
+#: driconf_commonui.py:550
 msgid "Option"
 msgstr "Opzioni"
 
-#: driconf.py:504
+#: driconf_commonui.py:555
 msgid "Value"
 msgstr "Valore"
 
-#: driconf.py:578
-msgid "Some settings in this application configuration are unknown to the driver. Maybe the driver version changed and does not support these options any more. It is probably safe to delete these settings."
-msgstr "Alcune impostazioni in questa applicazione non sono riconosciute dal driver. Potrebbe darsi che una versione più recente del driver non supporti più queste opzioni. E' più sicuro rimuovere queste impostazioni."
+#: driconf_commonui.py:629
+msgid ""
+"Some settings in this application configuration are unknown to the driver. "
+"Maybe the driver version changed and does not support these options any "
+"more. It is probably safe to delete these settings."
+msgstr ""
+"Alcune impostazioni in questa applicazione non sono riconosciute dal driver. "
+"Potrebbe darsi che una versione più recente del driver non supporti più "
+"queste opzioni. E' più sicuro rimuovere queste impostazioni."
 
-#: driconf.py:583
-msgid "The driver for this device could not be determined or does not support configuration. You can still change the settings but it cannot be verified whether they are supported and valid."
-msgstr "Non è possibile determinare il driver di questa periferica oppure il driver non permette configurazioni. E' possibile comunque modificare le impostazioni ma non è possibile verificare se siano supportate e se siano valide."
+#: driconf_commonui.py:634
+msgid ""
+"The driver for this device could not be determined or does not support "
+"configuration. You can still change the settings but it cannot be verified "
+"whether they are supported and valid."
+msgstr ""
+"Non è possibile determinare il driver di questa periferica oppure il driver "
+"non permette configurazioni. E' possibile comunque modificare le "
+"impostazioni ma non è possibile verificare se siano supportate e se siano "
+"valide."
 
-#: driconf.py:621
+#: driconf_complexui.py:39
 msgid "Application"
 msgstr "Applicazione"
 
-#: driconf.py:628
+#: driconf_complexui.py:46
 msgid "Apply only to this executable"
 msgstr "Applicabile solo a questo eseguibile"
 
-#: driconf.py:631
+#: driconf_complexui.py:49
 msgid ""
 "Leave this disabled to configure all applications.\n"
-"Beware that some applications or games are just a shell script that starts a real executable with a different name."
+"Beware that some applications or games are just a shell script that starts a "
+"real executable with a different name."
 msgstr ""
 "Lasciare questo disattivato per configurare tutte le applicazioni.\n"
-"Ricorda che alcune applicazioni o giochi sono semplicemente uno shell script che avviano l'eseguibile reale con un nome differente."
+"Ricorda che alcune applicazioni o giochi sono semplicemente uno shell script "
+"che avviano l'eseguibile reale con un nome differente."
 
-#: driconf.py:653
+#: driconf_complexui.py:73
 msgid "Unknown"
 msgstr "Sconosciuto"
 
-#: driconf.py:686
+#: driconf_complexui.py:87
 msgid "(no description)"
 msgstr "(nessuna descrizione)"
 
-#: driconf.py:763
-msgid "Enter the name of the application below. This serves just a descriptivion for you. Don't forget to set the executable afterwards."
-msgstr "Inserisci qui il nome dell'applicazione. E' solamente una descrizione. Ricorda di impostare l'eseguibile dopo."
+#: driconf_complexui.py:163
+msgid ""
+"Enter the name of the application below. This serves just a descriptivion "
+"for you. Don't forget to set the executable afterwards."
+msgstr ""
+"Inserisci qui il nome dell'applicazione. E' solamente una descrizione. "
+"Ricorda di impostare l'eseguibile dopo."
 
-#: driconf.py:770
+#: driconf_complexui.py:170
 msgid "Application Name"
 msgstr "Nome dell'applicazione"
 
-#: driconf.py:805
+#: driconf_complexui.py:205
 msgid "Describe the device that you would like to configure."
 msgstr "Descrive il dispositivo che intendi configurare."
 
-#: driconf.py:810
+#: driconf_complexui.py:210
 #, fuzzy
 msgid "Screen Number"
 msgstr "Screen Number"
 
-#: driconf.py:821
+#: driconf_complexui.py:221
 msgid "Driver Name"
 msgstr "Nome Driver"
 
-#: driconf.py:944
+#: driconf_complexui.py:344
 #, fuzzy, python-format
 msgid "%s on screen %s"
 msgstr "%s sullo screen %s"
 
-#: driconf.py:948
+#: driconf_complexui.py:348
 #, python-format
 msgid "Screen %s"
 msgstr "Screen %s"
 
-#: driconf.py:954
+#: driconf_complexui.py:354
 msgid "Unspecified device"
 msgstr "Dispositivo non specificato"
 
-#: driconf.py:1177
+#: driconf_complexui.py:578
 #, python-format
 msgid "Parsing the driver's configuration information: %s"
 msgstr "Analizzo le informazioni sulla configurazione del driver: %s"
 
-#: driconf.py:1215
+#: driconf_complexui.py:616
 #, python-format
 msgid "Really delete application \"%s\"?"
 msgstr "Confermi la rimozione dell'applicazione \"%s\"?"
 
-#: driconf.py:1221
+#: driconf_complexui.py:622
 msgid "Really delete device and all applications in it?"
 msgstr "Confermi la rimozione del dispositivo e tutte le sue applicazioni?"
 
-#: driconf.py:1242
+#: driconf_complexui.py:643
 msgid "Rename Application"
 msgstr "Rinomina Applicazione"
 
-#: driconf.py:1245
+#: driconf_complexui.py:646
 msgid "Device Properties"
 msgstr "Proprieta' del Dispositivo"
 
-#: driconf.py:1252
+#: driconf_complexui.py:653
 msgid "New Application"
 msgstr "Nuova Applicazione"
 
-#: driconf.py:1255
+#: driconf_complexui.py:656
 msgid "New Device"
 msgstr "Nuovo Dispositivo"
 
-#: driconf.py:1279
+#: driconf_complexui.py:680
 msgid "The configuration contains invalid entries. Save anyway?"
 msgstr "La configurazione contiene voci non valide. Salvare comunque?"
 
-#: driconf.py:1290
+#: driconf_complexui.py:691
 #, python-format
 msgid "Can't open \"%s\" for writing."
 msgstr "Impossibile aprire \"%s\" in scrittura."
 
-#: driconf.py:1309
+#: driconf_complexui.py:710
 #, python-format
 msgid "Really reload \"%s\" from disk?"
 msgstr "Sei sicuro di voler ricaricare \"%s\" dal disco?"
 
-#: driconf.py:1320
+#: driconf_complexui.py:721
 #, python-format
 msgid "Couldn't open \"%s\" for reading. The file was not reloaded."
 msgstr "Impossibile aprire \"%s\" in lettura. Il file non è stato ricaricato."
 
-#: driconf.py:1332
+#: driconf_complexui.py:733
 #, python-format
 msgid ""
 "Configuration file \"%s\" contains errors:\n"
@@ -153,90 +207,54 @@ msgstr ""
 "%s\n"
 "Il file non è stato ricaricato"
 
-#: driconf.py:1441
+#: driconf_complexui.py:842
 msgid "Save selected configuration file"
 msgstr "Salva il file di configurazione selezionato"
 
-#: driconf.py:1444
+#: driconf_complexui.py:845
 msgid "Reload selected configuration file"
 msgstr "Ricarica il file di configurazione selezionato"
 
-#: driconf.py:1448
+#: driconf_complexui.py:849
 msgid "Create a new device or application"
 msgstr "Crea un nuovo dispositivo o una applicazione"
 
-#: driconf.py:1451
+#: driconf_complexui.py:852
 msgid "Remove selected device or application"
 msgstr "Rimuovi il dispositivo selezionato o l'applicazione"
 
-#: driconf.py:1454
+#: driconf_complexui.py:855
 msgid "Move selected item up"
 msgstr "Sposta su l'elemento selezionato"
 
-#: driconf.py:1457
+#: driconf_complexui.py:858
 msgid "Move selected item down"
 msgstr "Sposta giù l'elemento selezionato"
 
-#: driconf.py:1460
+#: driconf_complexui.py:861
 msgid "Properties of selected device or application"
 msgstr "Proprietà del dispositivo selezionato o dell'applicazione"
 
-#: driconf.py:1470
-#: driconf.py:1613
+#: driconf_complexui.py:871 driconf_complexui.py:1005
 msgid "About DRIconf"
 msgstr "Informazioni su DRIconf"
 
-#: driconf.py:1474
+#: driconf_complexui.py:875
 msgid "Exit DRIconf"
 msgstr "Esci da DRIconf"
 
-#: driconf.py:1581
-#: driconf.py:1609
+#: driconf_complexui.py:975 driconf_complexui.py:1001
 msgid "translator-credits"
 msgstr "Giampaolo Bozzali <giampaolo.bozzali@gmail.com>"
 
-#: driconf.py:1590
-#: driconf.py:1606
+#: driconf_complexui.py:984 driconf_complexui.py:998
 msgid "A configuration GUI for DRI drivers"
 msgstr "Interfaccia di configurazione per i drivers DRI"
 
-#: driconf.py:1608
+#: driconf_complexui.py:1000
 msgid "Translated by"
 msgstr "Tradotto da"
 
-#: driconf.py:1631
+#: driconf_complexui.py:1020
 msgid "There are unsaved modifications. Exit anyway?"
 msgstr "Ci sono delle modifiche. Uscire comunque?"
-
-#: driconf.py:1688
-#, python-format
-msgid ""
-"There are errors in a driver's configuration information:\n"
-"%s\n"
-"This should not happen. It probably means that you have to update DRIconf."
-msgstr ""
-"Ci sono degli errori nelle informazioni sulla configurazione di un driver:\n"
-"%s\n"
-"Questo non dovrebbe accadere. Probabilmente significa che devi aggiornare DRIconf."
-
-#: driconf.py:1731
-#, python-format
-msgid ""
-"Configuration file \"%s\" contains errors:\n"
-"%s\n"
-"I will leave the file alone until you fix the problem manually or remove the file."
-msgstr ""
-"Il file di configurazione \"%s\" contiene degli errori:\n"
-"%s\n"
-"Il file non verrà considerato finchè il problema non sarà risolto a mano o il file sarà rimosso."
-
-#: driconf.py:1762
-#, python-format
-msgid "Created a new DRI configuration file \"%s\" for you."
-msgstr "Creato un nuovo file di configurazione \"%s\"."
-
-#: driconf.py:1770
-#, python-format
-msgid "Created new DRI configuration files %s for you."
-msgstr "Creati nuovi file di configurazione %s."
-
