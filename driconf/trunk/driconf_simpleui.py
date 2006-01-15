@@ -250,8 +250,27 @@ class MainWindow (gtk.Window):
 
         self.userConfig = [config for config in configList if isUserConfig(config)][0]
         self.screens = [screen for screen in commonui.dpy.screens if screen]
-        # Start with screen0
-        self.curScreen = self.screens[0]
+
+        self.vbox = gtk.VBox()
+        self.deviceBox = gtk.combo_box_new_text()
+        for screen in self.screens:
+            if screen.glxInfo:
+                self.deviceBox.append_text(_("Screen %d: %s (%s)") % (
+                    screen.num, screen.glxInfo.renderer, screen.glxInfo.vendor))
+            else:
+                self.deviceBox.append_text(_("Screen %d: %s") % (
+                    screen.num, screen.driver.name))
+        self.deviceBox.set_active(0)
+        self.deviceBox.connect("changed", self.changeDevice)
+        self.deviceBox.show()
+        self.vbox.pack_start(self.deviceBox, False, False, 5)
+        self.notebook = None
+        self.selectScreen(0)
+        self.vbox.show()
+        self.add(self.vbox)
+
+    def selectScreen (self, n):
+        self.curScreen = self.screens[n]
         # Find that device's configuration in the user config. Search
         # from the end, because that's where the simplified configs are.
         self.deviceConfig = None
@@ -263,16 +282,18 @@ class MainWindow (gtk.Window):
                 self.deviceConfig = self.userConfig.devices[i]
                 self.driver = self.curScreen.driver
                 break
+            i = i - 1
         assert(self.deviceConfig)
         assert(len(self.deviceConfig.apps) > 0 and
                self.deviceConfig.apps[0].executable == None)
         # Register modified callback
         self.deviceConfig.apps[0].modified = self.configModified
-
-        vbox = gtk.VBox()
-        notebook = gtk.Notebook()
-        notebook.popup_enable()
-        notebook.set_scrollable(True)
+        # Build UI for the screen configuration
+        if self.notebook:
+            self.vbox.remove(self.notebook)
+        self.notebook = gtk.Notebook()
+        self.notebook.popup_enable()
+        self.notebook.set_scrollable(True)
         self.sectPages = []
         self.sectLabels = []
         unknownPage = UnknownSectionPage (self.driver, self.deviceConfig.apps[0])
@@ -280,7 +301,7 @@ class MainWindow (gtk.Window):
             unknownPage.show()
             unknownLabel = gtk.Label (_("Unknown"))
             unknownLabel.show()
-            notebook.append_page (unknownPage, unknownLabel)
+            self.notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)
             self.sectLabels.append (unknownLabel)
         for sect in self.driver.optSections:
@@ -293,17 +314,18 @@ class MainWindow (gtk.Window):
             else:
                 sectLabel = gtk.Label (_("(no description)"))
             sectLabel.show()
-            notebook.append_page (sectPage, sectLabel)
+            self.notebook.append_page (sectPage, sectLabel)
             self.sectPages.append (sectPage)
             self.sectLabels.append (sectLabel)
         if len(self.sectLabels) > 0:
             style = self.sectLabels[0].get_style()
             self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
             self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
-        notebook.show()
-        vbox.pack_start(notebook)
-        vbox.show()
-        self.add(vbox)
+        self.notebook.show()
+        self.vbox.pack_start(self.notebook, True, True, 0)
+
+    def changeDevice (self, combo):
+        self.selectScreen(combo.get_active())
 
     def configModified (self, node, b=True):
         if b != True:

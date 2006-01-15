@@ -1,6 +1,6 @@
 # Python interface to DRI configuration
 
-# Copyright (C) 2003-2005  Felix Kuehling
+# Copyright (C) 2003-2006  Felix Kuehling
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 import os
 import string
+import re
 import xml.parsers.expat
 
 class Error (Exception):
@@ -327,6 +328,38 @@ class DriverInfo:
                 return optSection.options[name]
         return None
 
+class GLXInfo:
+    def __init__ (self, screen, dpy):
+        if dpy == None:
+            if os.environ.has_key("DISPLAY"):
+                dpy = os.environ["DISPLAY"]
+            else:
+                dpy = ":0"
+        dot = dpy.find(".")
+        if dot != -1:
+            dpy = dpy[:dot]
+        dpyStr = "-display " + dpy + "." + str(screen)
+        infopipe = os.popen ("glxinfo " + dpyStr, "r")
+        glxInfo = infopipe.read()
+        result = infopipe.close()
+        if result != None:
+            signal = result & 0xff
+            status = result >> 8
+            if signal != 0:
+                raise DRIError ("glxinfo killed by signal " + signal + ".")
+            elif status == 127:
+                raise DRIError ("glxinfo not found.")
+            else:
+                raise DRIError ("glxinfo returned with non-zero exit code.")
+        else:
+            # Parse
+            self.vendor = re.search ("^OpenGL vendor string: (.*)$", glxInfo,
+                                     re.M).group(1)
+            self.renderer = re.search("^OpenGL renderer string: (.*)$", glxInfo,
+                                      re.M).group(1)
+            if not self.vendor or not self.renderer:
+                raise DRIError ("unable to parse glxinfo output.")
+
 class ScreenInfo:
     """ References a DriverInfo object with the real config info. """
     def __init__ (self, screen, dpy = None):
@@ -342,6 +375,11 @@ class ScreenInfo:
             self.driver = GetDriver (driverName, 0)
         except XMLError, problem:
             raise XMLError (str(problem) + " (driver " + driverName + ")")
+        else:
+            try:
+                self.glxInfo = GLXInfo (screen, dpy)
+            except DRIError:
+                self.glxInfo = None
 
 class DisplayInfo:
     """ Maintains config info for all screens and drivers on a display """
