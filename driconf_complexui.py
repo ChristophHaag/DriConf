@@ -740,7 +740,7 @@ class ConfigTreeView (gtk.TreeView):
             return
         cfile.close()
         # Check if the file is writable in the end.
-        newConfig.writable = fileIsWritable (config.fileName)
+        newConfig.writable = commonui.fileIsWritable (config.fileName)
         # find the position of config
         configList = self.getConfigList()
         index = configList.index (config)
