@@ -21,6 +21,7 @@
 import os
 import locale
 import gettext
+import math
 import dri
 import pygtk
 pygtk.require ("2.0")
