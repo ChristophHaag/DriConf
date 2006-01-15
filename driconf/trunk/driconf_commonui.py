@@ -76,6 +76,20 @@ def findInShared (name):
     # nothing found
     return None
 
+def fileIsWritable(filename):
+    """ Find out if a file is writable.
+
+    Returns True for existing writable files, False otherwise. """
+    try:
+        fd = os.open (filename, os.O_WRONLY)
+    except OSError:
+        return False
+    if fd == -1:
+        return False
+    else:
+        os.close (fd)
+        return True
+
 # Helper function:
 # escape text that is going to be passed as markup to pango
 def escapeMarkup (text):
@@ -508,12 +522,7 @@ class SectionPage (gtk.ScrolledWindow):
             value = optLine.getValue()
             if value == None and self.app.options.has_key(name):
                 del self.app.options[name]
-                self.app.modified(self.app)
             elif value != None:
-                if not self.app.options.has_key(name) or \
-                   (self.app.options.has_key(name) and \
-                    value != self.app.options[name]):
-                    self.app.modified(self.app)
                 self.app.options[name] = value
 
 class UnknownSectionPage(gtk.VBox):
