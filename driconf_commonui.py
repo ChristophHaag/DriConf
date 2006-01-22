@@ -274,7 +274,7 @@ class SlideSpinner (gtk.VBox):
 
 class OptionLine:
     """ One line in a SectionPage. """
-    def __init__ (self, page, i, opt):
+    def __init__ (self, page, i, opt, simple, removable = False):
         """ Constructor. """
         self.page = page
         self.opt = opt
@@ -288,7 +288,7 @@ class OptionLine:
             desc = desc.text
         else:
             desc = u"(no description available)"
-        if page.simple:
+        if simple:
             self.label = WrappingDummyCheckButton (desc, width=200)
         else:
             self.label = WrappingCheckButton (desc, width=200)
@@ -303,12 +303,20 @@ class OptionLine:
         # a button to reset the option to its default value
         sensitive = self.label.get_active() and page.app.device.config.writable
         self.resetButton = gtk.Button ()
-        pixmap = StockImage ("gtk-undo", gtk.ICON_SIZE_SMALL_TOOLBAR)
+        if removable:
+            pixmap = StockImage ("gtk-remove", gtk.ICON_SIZE_SMALL_TOOLBAR)
+        else:
+            pixmap = StockImage ("gtk-undo", gtk.ICON_SIZE_SMALL_TOOLBAR)
         pixmap.show()
         self.resetButton.add (pixmap)
         self.resetButton.set_relief (gtk.RELIEF_NONE)
         self.resetButton.set_sensitive (sensitive)
-        self.resetButton.connect ("clicked", self.resetOpt)
+        if removable:
+            page.tooltips.set_tip(self.resetButton, _("Remove"))
+            self.resetButton.connect ("clicked", self.removeOpt)
+        else:
+            page.tooltips.set_tip(self.resetButton, _("Reset to default value"))
+            self.resetButton.connect ("clicked", self.resetOpt)
         self.resetButton.show()
         page.table.attach (self.resetButton, 2, 3, i, i+1, 0, 0, 5, 5)
 
@@ -454,6 +462,10 @@ class OptionLine:
         self.updateWidget (self.opt.default, True)
         self.page.optionModified (self)
 
+    def removeOpt (self, widget):
+        """ Reset to default value. """
+        self.page.removeOption (self, self.opt)
+
     def doValidate (self):
         """ Validate the current value from the option widget.
 
@@ -489,7 +501,7 @@ class SectionPage (gtk.ScrolledWindow):
         self.table = gtk.Table (len(optSection.optList), 3)
         self.optLines = []
         for i in range (len(optSection.optList)):
-            self.optLines.append (OptionLine (self, i, optSection.optList[i]))
+            self.optLines.append (OptionLine (self, i, optSection.optList[i], simple))
         self.table.show()
         self.add_with_viewport (self.table)
         self.doValidate (init=True)
