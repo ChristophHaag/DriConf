@@ -18,6 +18,7 @@
 
 # Contact: http://fxk.de.vu/
 
+import sys
 import os
 import dri
 import pygtk
@@ -127,7 +128,10 @@ def main():
     # Before makes sure that the initial window size is correct.
     # After is needed since the selection seems to get lost in
     # mainWindow.show().
-    expert = False
+    if len(sys.argv) >= 2 and sys.argv[1] == "-e":
+        expert = True
+    else:
+        expert = False
     if expert:
         mainWindow = complexui.MainWindow(configList)
         commonui.mainWindow = mainWindow

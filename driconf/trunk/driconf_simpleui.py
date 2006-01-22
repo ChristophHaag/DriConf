@@ -241,30 +241,103 @@ def simplifyConfig(configList, dpy):
     removeRedundantDevices (userConfig, deviceConfigs)
     return deviceConfigs
 
+class AppPage (gtk.ScrolledWindow):
+    def __init__ (self, driver, app):
+        """ Constructor. """
+        gtk.ScrolledWindow.__init__ (self)
+        self.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.driver = driver
+        self.app = app
+        self.tooltips = gtk.Tooltips()
+        self.table = None
+        self.refreshOptions()
+
+    def refreshOptions (self):
+        if self.table:
+            self.remove(self.get_child())
+        self.optLines = []
+        self.table = gtk.Table(len(self.app.options)+1, 3)
+        self.add_with_viewport(self.table)
+        optionTree = gtk.TreeStore(gobject.TYPE_STRING)
+        appOpts = self.app.options.copy()
+        i = 0
+        for sect in self.driver.optSections:
+            sectIter = optionTree.append(None, [sect.getDesc([lang])])
+            sectHasOpts = False
+            for opt in sect.optList:
+                if appOpts.has_key(opt.name):
+                    self.optLines.append(
+                        commonui.OptionLine(self, i, opt, True, True))
+                    i = i + 1
+                    del appOpts[opt.name]
+                else:
+                    optionTree.append(sectIter, [opt.getDesc([lang]).text])
+                    sectHasOpts = True
+            if not sectHasOpts:
+                optionTree.remove(sectIter)
+        combobox = gtk.ComboBox(optionTree)
+        cell = gtk.CellRendererText()
+        combobox.pack_start(cell, True)
+        combobox.add_attribute(cell, 'text', 0)
+        combobox.show()
+        self.table.attach(combobox, 0, 3, i, i+1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
+        self.table.show()
+        if len(appOpts) > 0:
+            print "FIXME: Option left over: %s. Need to handle unknown options." % repr(appOpts)
+
+    def optionModified (self, optLine):
+        self.app.modified(self.app)
+
+    def removeOption (self, optLine, opt):
+        del self.app.options[opt.name]
+        self.refreshOptions()
+    
+    def doValidate (self):
+        pass
+
+    def commit (self):
+        for optLine in self.optLines:
+            name = optLine.opt.name
+            value = optLine.getValue()
+            if value == None and self.app.options.has_key(name):
+                del self.app.options[name]
+            elif value != None:
+                self.app.options[name] = value
+
 class MainWindow (gtk.Window):
     def __init__ (self, configList):
         gtk.Window.__init__(self)
-        self.set_title ("DRIconf")
-        self.connect ("destroy", lambda dummy: gtk.main_quit())
-        self.connect ("delete_event", self.exitHandler)
+        self.set_title("DRIconf")
+        self.set_border_width(10)
+        self.connect("destroy", lambda dummy: gtk.main_quit())
+        self.connect("delete_event", self.exitHandler)
 
         self.userConfig = [config for config in configList if isUserConfig(config)][0]
         self.screens = [screen for screen in commonui.dpy.screens if screen]
 
         self.vbox = gtk.VBox()
-        self.deviceBox = gtk.combo_box_new_text()
+        self.deviceCombo = gtk.combo_box_new_text()
         for screen in self.screens:
             if screen.glxInfo:
-                self.deviceBox.append_text(_("Screen %d: %s (%s)") % (
+                self.deviceCombo.append_text(_("Screen %d: %s (%s)") % (
                     screen.num, screen.glxInfo.renderer, screen.glxInfo.vendor))
             else:
-                self.deviceBox.append_text(_("Screen %d: %s") % (
+                self.deviceCombo.append_text(_("Screen %d: %s") % (
                     screen.num, screen.driver.name))
-        self.deviceBox.set_active(0)
-        self.deviceBox.connect("changed", self.changeDevice)
-        self.deviceBox.show()
-        self.vbox.pack_start(self.deviceBox, False, False, 5)
+        self.deviceCombo.set_active(0)
+        self.deviceCombo.connect("changed", self.changeDevice)
+        self.deviceCombo.show()
+        self.vbox.pack_start(self.deviceCombo, False, False, 0)
+        self.expander = gtk.Expander(_("Applications"))
+        self.expander.connect("activate", self.expanderChanged)
+        self.expander.show()
+        self.vbox.pack_end(self.expander, False, True, 0)
+        self.expanderVBox = gtk.VBox()
+        self.expanderVBox.show()
+        self.expander.add(self.expanderVBox)
         self.notebook = None
+        self.appCombo = None
+        self.appPage = None
         self.selectScreen(0)
         self.vbox.show()
         self.add(self.vbox)
@@ -322,10 +395,56 @@ class MainWindow (gtk.Window):
             self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
             self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
         self.notebook.show()
-        self.vbox.pack_start(self.notebook, True, True, 0)
+        self.vbox.pack_start(self.notebook, True, True, 10)
+        if self.appCombo:
+            self.expanderVBox.remove(self.appCombo)
+        self.appCombo = gtk.combo_box_new_text()
+        for i in range(1,len(self.deviceConfig.apps)):
+            self.appCombo.append_text(self.deviceConfig.apps[i].name)
+        if len(self.deviceConfig.apps) > 1:
+            self.appCombo.set_active(0)
+            self.expander.set_expanded(True)
+            self.vbox.set_child_packing(self.expander, True, True,
+                                        0, gtk.PACK_END)
+        else:
+            self.expander.set_expanded(False)
+            self.vbox.set_child_packing(self.expander, False, True,
+                                        0, gtk.PACK_END)
+        self.appCombo.connect("changed", self.changeApp)
+        self.appCombo.show()
+        self.expanderVBox.pack_start(self.appCombo, False, False, 10)
+        if len(self.deviceConfig.apps) > 1:
+            self.selectApp(self.deviceConfig.apps[1])
+        else:
+            self.selectApp(None)
+
+    def selectApp (self, app):
+        if self.appPage:
+            self.expanderVBox.remove(self.appPage)
+            self.appPage = None
+        if not app:
+            return
+        app.modified = self.configModified
+        self.appPage = AppPage (self.driver, app)
+        self.appPage.show()
+        self.expanderVBox.pack_start (self.appPage, True, True, 0)
 
     def changeDevice (self, combo):
         self.selectScreen(combo.get_active())
+
+    def changeApp (self, combo):
+        app = self.deviceConfig.apps[combo.get_active()+1]
+        self.selectApp(app)
+
+    def expanderChanged (self, expander):
+        # This signal handler seems to get called before the expander
+        # state is changed. So the logic is reversed.
+        if not self.expander.get_expanded():
+            self.vbox.set_child_packing(self.expander, True, True,
+                                        0, gtk.PACK_END)
+        else:
+            self.vbox.set_child_packing(self.expander, False, True,
+                                        0, gtk.PACK_END)
 
     def configModified (self, node, b=True):
         if b != True:
@@ -349,6 +468,8 @@ class MainWindow (gtk.Window):
     def commit (self):
         for sectPage in self.sectPages:
             sectPage.commit()
+        if self.appPage:
+            self.appPage.commit()
 
     def exitHandler (self, widget, event=None):
         # Always ok to destroy the window
