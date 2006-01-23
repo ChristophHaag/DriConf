@@ -241,6 +241,69 @@ def simplifyConfig(configList, dpy):
     removeRedundantDevices (userConfig, deviceConfigs)
     return deviceConfigs
 
+def lineWrap (string, chars=40):
+    head = ""
+    tail = string
+    while len(tail):
+        if len(tail) <= chars:
+            return head + tail
+        else:
+            i = chars
+            while i >= chars/3:
+                if tail[i] == ' ':
+                    j = i + 1
+                    break
+                elif tail[i] == '-':
+                    i = i + 1
+                    j = i
+                    break
+                i = i - 1
+            if i < chars/3:
+                i = chars
+            head, tail = head + tail[:i] + '\n', tail[j:]
+    return head
+
+class AppDialog (gtk.Dialog):
+    def __init__ (self, title, parent, app=None):
+        gtk.Dialog.__init__(self, title, parent,
+                            gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
+                            ("gtk-ok", gtk.RESPONSE_OK,
+                             "gtk-cancel", gtk.RESPONSE_CANCEL))
+        table = gtk.Table(2, 2)
+        nameLabel = gtk.Label(_("Application Name"))
+        nameLabel.show()
+        table.attach(nameLabel, 0, 1, 0, 1, 0, gtk.EXPAND, 10, 5)
+        self.nameEntry = gtk.Entry()
+        if app:
+            self.nameEntry.set_text(app.name)
+        self.nameEntry.connect("activate",
+                               lambda widget: self.response(gtk.RESPONSE_OK))
+        self.nameEntry.show()
+        table.attach(self.nameEntry, 1, 2, 0, 1,
+                     gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+
+        execLabel = gtk.Label(_("Executable Name"))
+        execLabel.show()
+        table.attach(execLabel, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
+        self.execEntry = gtk.Entry()
+        if app:
+            self.execEntry.set_text(app.executable)
+        self.execEntry.connect("activate",
+                               lambda widget: self.response(gtk.RESPONSE_OK))
+        self.execEntry.show()
+        table.attach(self.execEntry, 1, 2, 1, 2,
+                     gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+        table.show()
+        self.vbox.pack_start(table, True, True, 5)
+        self.show()
+        self.nameEntry.grab_focus()
+
+    def getName (self):
+        return self.nameEntry.get_text()
+
+    def getExecutable (self):
+        return self.execEntry.get_text()
+
 class AppPage (gtk.ScrolledWindow):
     def __init__ (self, driver, app):
         """ Constructor. """
@@ -258,12 +321,15 @@ class AppPage (gtk.ScrolledWindow):
         self.optLines = []
         self.table = gtk.Table(len(self.app.options)+1, 3)
         self.add_with_viewport(self.table)
-        optionTree = gtk.TreeStore(gobject.TYPE_STRING)
+        self.optionTree = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_INT, gobject.TYPE_INT)
         appOpts = self.app.options.copy()
         i = 0
+        sectI = 0
         for sect in self.driver.optSections:
-            sectIter = optionTree.append(None, [sect.getDesc([lang])])
+            sectIter = self.optionTree.append(None, [
+                lineWrap(sect.getDesc([lang])), sectI, -1])
             sectHasOpts = False
+            optI = 0
             for opt in sect.optList:
                 if appOpts.has_key(opt.name):
                     self.optLines.append(
@@ -271,16 +337,25 @@ class AppPage (gtk.ScrolledWindow):
                     i = i + 1
                     del appOpts[opt.name]
                 else:
-                    optionTree.append(sectIter, [opt.getDesc([lang]).text])
+                    self.optionTree.append(sectIter, [
+                        lineWrap(opt.getDesc([lang]).text), sectI, optI])
                     sectHasOpts = True
+                optI = optI + 1
             if not sectHasOpts:
-                optionTree.remove(sectIter)
-        combobox = gtk.ComboBox(optionTree)
-        cell = gtk.CellRendererText()
-        combobox.pack_start(cell, True)
-        combobox.add_attribute(cell, 'text', 0)
-        combobox.show()
-        self.table.attach(combobox, 0, 3, i, i+1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
+                self.optionTree.remove(sectIter)
+            sectI = sectI + 1
+        if len(self.optionTree) > 0:
+            addLabel = commonui.WrappingDummyCheckButton(_("Add setting"),
+                                                         width=200)
+            addLabel.show()
+            self.table.attach(addLabel, 0, 1, i, i+1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
+            addCombo = gtk.ComboBox(self.optionTree)
+            addCombo.connect("changed", self.addOption)
+            cell = gtk.CellRendererText()
+            addCombo.pack_start(cell, True)
+            addCombo.add_attribute(cell, 'text', 0)
+            addCombo.show()
+            self.table.attach(addCombo, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
         self.table.show()
         if len(appOpts) > 0:
             print "FIXME: Option left over: %s. Need to handle unknown options." % repr(appOpts)
@@ -291,6 +366,22 @@ class AppPage (gtk.ScrolledWindow):
     def removeOption (self, optLine, opt):
         del self.app.options[opt.name]
         self.refreshOptions()
+        self.app.modified(self.app)
+
+    def addOption (self, combo):
+        activeIter = combo.get_active_iter()
+        if not activeIter:
+            # Got triggered by the set_active(-1) below.
+            return
+        sectI = self.optionTree.get_value(activeIter, 1)
+        optI  = self.optionTree.get_value(activeIter, 2)
+        if optI < 0:
+            combo.set_active(-1)
+            return
+        opt = self.driver.optSections[sectI].optList[optI]
+        self.app.options[opt.name] = dri.ValueToStr(opt.default, opt.type)
+        self.refreshOptions()
+        self.app.modified(self.app)
     
     def doValidate (self):
         pass
@@ -328,11 +419,26 @@ class MainWindow (gtk.Window):
         self.deviceCombo.connect("changed", self.changeDevice)
         self.deviceCombo.show()
         self.vbox.pack_start(self.deviceCombo, False, False, 0)
-        self.expander = gtk.Expander(_("Applications"))
+        self.expander = gtk.Expander(_("Application settings"))
         self.expander.connect("activate", self.expanderChanged)
         self.expander.show()
         self.vbox.pack_end(self.expander, False, True, 0)
         self.expanderVBox = gtk.VBox()
+        self.appButtonBox = gtk.HBox(spacing=5)
+        removeButton = gtk.Button(stock="gtk-remove")
+        removeButton.connect("clicked", self.removeApp)
+        removeButton.show()
+        self.appButtonBox.pack_end(removeButton, False, False, 0)
+        addButton = gtk.Button(stock="gtk-add")
+        addButton.connect("clicked", self.addApp)
+        addButton.show()
+        self.appButtonBox.pack_end(addButton, False, False, 0)
+        propButton = gtk.Button(stock="gtk-properties")
+        propButton.connect("clicked", self.appProperties)
+        propButton.show()
+        self.appButtonBox.pack_end(propButton, False, False, 0)
+        self.appButtonBox.show()
+        self.expanderVBox.pack_start(self.appButtonBox, False, False, 10)
         self.expanderVBox.show()
         self.expander.add(self.expanderVBox)
         self.notebook = None
@@ -397,7 +503,7 @@ class MainWindow (gtk.Window):
         self.notebook.show()
         self.vbox.pack_start(self.notebook, True, True, 10)
         if self.appCombo:
-            self.expanderVBox.remove(self.appCombo)
+            self.appButtonBox.remove(self.appCombo)
         self.appCombo = gtk.combo_box_new_text()
         for i in range(1,len(self.deviceConfig.apps)):
             self.appCombo.append_text(self.deviceConfig.apps[i].name)
@@ -412,7 +518,7 @@ class MainWindow (gtk.Window):
                                         0, gtk.PACK_END)
         self.appCombo.connect("changed", self.changeApp)
         self.appCombo.show()
-        self.expanderVBox.pack_start(self.appCombo, False, False, 10)
+        self.appButtonBox.pack_start(self.appCombo, True, True, 0)
         if len(self.deviceConfig.apps) > 1:
             self.selectApp(self.deviceConfig.apps[1])
         else:
@@ -433,8 +539,19 @@ class MainWindow (gtk.Window):
         self.selectScreen(combo.get_active())
 
     def changeApp (self, combo):
-        app = self.deviceConfig.apps[combo.get_active()+1]
-        self.selectApp(app)
+        active = combo.get_active()
+        if active >= 0:
+            app = self.deviceConfig.apps[active+1]
+        else:
+            app = None
+        if self.appPage:
+            lastApp = self.appPage.app
+        else:
+            lastApp = None
+        if app != lastApp:
+            if lastApp:
+                self.appPage.commit()
+            self.selectApp(app)
 
     def expanderChanged (self, expander):
         # This signal handler seems to get called before the expander
@@ -445,6 +562,96 @@ class MainWindow (gtk.Window):
         else:
             self.vbox.set_child_packing(self.expander, False, True,
                                         0, gtk.PACK_END)
+
+    def checkAppProperties (self, name, executable, sameApp=None):
+        errorStr = None
+        if name == "" or executable == "":
+            # Error message
+            errorStr = _("You must enter both an application name and "
+                         "an executable name.")
+        else:
+            for app in self.deviceConfig.apps:
+                if app != sameApp and name == app.name:
+                    errorStr = _("There exists an application "
+                                 "configuration with the same name. "
+                                 "Please enter a different name.")
+                    break
+                elif app != sameApp and executable == app.executable:
+                    errorStr = _("There exists an application "
+                                 "configuration for the same "
+                                 "executable. You can't create two "
+                                 "application configurations for the "
+                                 "same executable.")
+                    break
+        if errorStr:
+            dialog = gtk.MessageDialog(
+                self, gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
+                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, errorStr)
+            dialog.run()
+            dialog.destroy()
+            return False
+        return True
+
+    def addApp (self, button):
+        dialog = AppDialog(_("Add Application"), self)
+        done = False
+        while not done:
+            response = dialog.run()
+            if response == gtk.RESPONSE_OK:
+                name = dialog.getName().strip()
+                executable = dialog.getExecutable().strip()
+                if self.checkAppProperties (name, executable):
+                    app = dri.AppConfig(self.deviceConfig, name, executable)
+                    self.deviceConfig.apps.append(app)
+                    self.appCombo.append_text(name)
+                    self.appCombo.set_active(len(self.deviceConfig.apps)-2)
+                    self.configModified (self.deviceConfig)
+                    done = True
+            else:
+                done = True
+        dialog.destroy()
+
+    def appProperties (self, button):
+        if not self.appPage:
+            return
+        dialog = AppDialog(_("Application Properties"), self, self.appPage.app)
+        done = False
+        while not done:
+            response = dialog.run()
+            if response == gtk.RESPONSE_OK:
+                name = dialog.getName().strip()
+                executable = dialog.getExecutable().strip()
+                if self.checkAppProperties (name, executable, self.appPage.app):
+                    i = self.deviceConfig.apps.index(self.appPage.app)
+                    self.appCombo.remove_text(i-1)
+                    self.appCombo.insert_text(i-1, name)
+                    self.appCombo.set_active(i-1)
+                    self.appPage.app.name = name
+                    self.appPage.app.executable = executable
+                    self.configModified (self.appPage.app)
+                    done = True
+            else:
+                done = True
+        dialog.destroy()
+
+    def removeApp (self, button):
+        if not self.appPage:
+            return
+        i = self.deviceConfig.apps.index(self.appPage.app)
+        if i+1 < len(self.deviceConfig.apps):
+            newI = i
+            newApp = self.deviceConfig.apps[i+1]
+        elif i > 1:
+            newI = i-1
+            newApp = self.deviceConfig.apps[i-1]
+        else:
+            newI = 0
+            newApp = None
+        del self.deviceConfig.apps[i]
+        self.selectApp(newApp)
+        self.appCombo.remove_text(i-1)
+        self.appCombo.set_active(newI-1)
+        self.configModified(self.deviceConfig)
 
     def configModified (self, node, b=True):
         if b != True:
