@@ -398,7 +398,7 @@ class AppPage (gtk.ScrolledWindow):
 class MainWindow (gtk.Window):
     def __init__ (self, configList):
         gtk.Window.__init__(self)
-        self.set_title("DRIconf")
+        self.set_title(_("Direct Rendering Preferences"))
         self.set_border_width(10)
         self.connect("destroy", lambda dummy: gtk.main_quit())
         self.connect("delete_event", self.exitHandler)
@@ -407,19 +407,34 @@ class MainWindow (gtk.Window):
         self.screens = [screen for screen in commonui.dpy.screens if screen]
 
         self.vbox = gtk.VBox()
-        self.deviceCombo = gtk.combo_box_new_text()
-        for screen in self.screens:
+        if len(self.screens) > 1:
+            self.deviceCombo = gtk.combo_box_new_text()
+            for screen in self.screens:
+                if screen.glxInfo:
+                    self.deviceCombo.append_text(_("Screen") + " %d: %s (%s)" % (
+                        screen.num, screen.glxInfo.renderer, screen.glxInfo.vendor))
+                else:
+                    self.deviceCombo.append_text(_("Screen") + " %d: %s" % (
+                        screen.num, screen.driver.name))
+            self.deviceCombo.set_active(0)
+            self.deviceCombo.connect("changed", self.changeDevice)
+            self.deviceCombo.show()
+            self.vbox.pack_start(self.deviceCombo, False, False, 0)
+        else:
+            screen = self.screens[0]
             if screen.glxInfo:
-                self.deviceCombo.append_text(_("Screen %d: %s (%s)") % (
-                    screen.num, screen.glxInfo.renderer, screen.glxInfo.vendor))
+                text = _("Screen") + " %d: %s (%s)" % (
+                    screen.num, screen.glxInfo.renderer, screen.glxInfo.vendor)
             else:
-                self.deviceCombo.append_text(_("Screen %d: %s") % (
-                    screen.num, screen.driver.name))
-        self.deviceCombo.set_active(0)
-        self.deviceCombo.connect("changed", self.changeDevice)
-        self.deviceCombo.show()
-        self.vbox.pack_start(self.deviceCombo, False, False, 0)
-        self.expander = gtk.Expander(_("Application settings"))
+                text = _("Screen") + " %d: %s" % (
+                    screen.num, screen.driver.name)
+            deviceLabel = gtk.Label()
+            deviceLabel.set_markup("<b>" + commonui.escapeMarkup(text) + "</b>")
+            deviceLabel.show()
+            self.vbox.pack_start(deviceLabel, False, False, 0)
+        self.expander = gtk.Expander(
+            "<b>" + commonui.escapeMarkup(_("Application settings")) + "</b>")
+        self.expander.set_use_markup(True)
         self.expander.connect("activate", self.expanderChanged)
         self.expander.show()
         self.vbox.pack_end(self.expander, False, True, 0)
@@ -579,7 +594,7 @@ class MainWindow (gtk.Window):
                 elif app != sameApp and executable == app.executable:
                     errorStr = _("There exists an application "
                                  "configuration for the same "
-                                 "executable. You can't create two "
+                                 "executable. You can't create multiple "
                                  "application configurations for the "
                                  "same executable.")
                     break
