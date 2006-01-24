@@ -26,6 +26,10 @@ pygtk.require ("2.0")
 import gtk
 import gobject
 
+if gtk.check_version(2, 4, 0):
+    print "Error: DRIconf requires DRIconf 2.4 or newer."
+    sys.exit(1)
+
 import driconf_commonui
 import driconf_complexui
 import driconf_simpleui
