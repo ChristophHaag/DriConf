@@ -39,6 +39,11 @@ from driconf_simpleui import isSimplified, simplifyConfig
 
 
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == "-e":
+        expert = True
+    else:
+        expert = False
+
     # read configuration information from the drivers
     try:
         commonui.dpy = dri.DisplayInfo ()
@@ -109,44 +114,15 @@ def main():
         if config:
             configList.append (config)
 
-    simplifiedDeviceConfigs = isSimplified(configList, commonui.dpy)
-    if simplifiedDeviceConfigs == None:
-        print "Configuration is NOT simplified."
-        simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
-        if simplifiedDeviceConfigs == None:
-            print "Configuration is still NOT simplified."
-        else:
-            print "Configuration was simplified successfully."
-    else:
-        # Still call simplifyConfig to update the isSimplified
-        # attributes and to remove redundant device configurations.
-        simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
-        print "Configuration is simplified."
-
     # open the main window
-    # initSelection must be called before and after mainWindow.show().
-    # Before makes sure that the initial window size is correct.
-    # After is needed since the selection seems to get lost in
-    # mainWindow.show().
-    if len(sys.argv) >= 2 and sys.argv[1] == "-e":
-        expert = True
-    else:
-        expert = False
     if expert:
-        mainWindow = complexui.MainWindow(configList)
-        commonui.mainWindow = mainWindow
-        mainWindow.set_default_size (750, 375)
-        mainWindow.initSelection()
-        mainWindow.show ()
-        mainWindow.initSelection()
+        complexui.start(configList)
     else:
-        mainWindow = simpleui.MainWindow(configList)
-        commonui.mainWindow = mainWindow
-        mainWindow.show()
+        simpleui.start(configList)
 
     if len(newFiles) == 1:
         dialog = gtk.MessageDialog (
-            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+            commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
             _("Created a new DRI configuration file \"%s\" for you.")
             % newFiles[0])
@@ -154,7 +130,7 @@ def main():
         dialog.destroy()
     elif len(newFiles) > 1:
         dialog = gtk.MessageDialog (
-            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
+            commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
             _("Created new DRI configuration files %s for you.") %
             reduce(lambda a, b: str(a) + ", " + str(b),

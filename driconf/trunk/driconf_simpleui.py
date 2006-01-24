@@ -26,7 +26,9 @@ import gtk
 import gobject
 
 import driconf_commonui
+import driconf_complexui
 commonui = driconf_commonui    # short cut
+complexui = driconf_complexui
 
 from driconf_commonui import _, lang, findInShared, escapeMarkup, WrappingCheckButton, SectionPage, UnknownSectionPage
 
@@ -241,7 +243,7 @@ def simplifyConfig(configList, dpy):
     removeRedundantDevices (userConfig, deviceConfigs)
     return deviceConfigs
 
-def lineWrap (string, chars=40):
+def lineWrap (string, chars=30):
     head = ""
     tail = string
     while len(tail):
@@ -308,7 +310,7 @@ class AppPage (gtk.ScrolledWindow):
     def __init__ (self, driver, app):
         """ Constructor. """
         gtk.ScrolledWindow.__init__ (self)
-        self.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.set_policy (gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         self.driver = driver
         self.app = app
         self.tooltips = gtk.Tooltips()
@@ -399,14 +401,14 @@ class MainWindow (gtk.Window):
     def __init__ (self, configList):
         gtk.Window.__init__(self)
         self.set_title(_("Direct Rendering Preferences"))
+        self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
         self.set_border_width(10)
         self.connect("destroy", lambda dummy: gtk.main_quit())
         self.connect("delete_event", self.exitHandler)
-
+        self.configList = configList # Remember for switching to expert mode
         self.userConfig = [config for config in configList if isUserConfig(config)][0]
         self.screens = [screen for screen in commonui.dpy.screens if screen]
-
-        self.vbox = gtk.VBox()
+        self.vbox = gtk.VBox(spacing=10)
         if len(self.screens) > 1:
             self.deviceCombo = gtk.combo_box_new_text()
             for screen in self.screens:
@@ -432,14 +434,40 @@ class MainWindow (gtk.Window):
             deviceLabel.set_markup("<b>" + commonui.escapeMarkup(text) + "</b>")
             deviceLabel.show()
             self.vbox.pack_start(deviceLabel, False, False, 0)
+        buttonBox = gtk.HButtonBox()
+        buttonBox.set_layout(gtk.BUTTONBOX_END)
+        expertButton = gtk.Button()
+        expertHBox = gtk.HBox()
+        expertImage = commonui.StockImage("gtk-jump-to", gtk.ICON_SIZE_BUTTON)
+        expertImage.show()
+        expertHBox.pack_start(expertImage)
+        expertLabel = gtk.Label(_("Expert Mode"))
+        expertLabel.show()
+        expertHBox.pack_start(expertLabel)
+        expertHBox.show()
+        expertButton.add(expertHBox)
+        expertButton.connect("clicked", self.expertHandler)
+        expertButton.show()
+        buttonBox.add(expertButton)
+        closeButton = gtk.Button(stock="gtk-close")
+        closeButton.connect("clicked", lambda dummy: gtk.main_quit())
+        closeButton.show()
+        buttonBox.add(closeButton)
+        aboutButton = gtk.Button(stock="gtk-about")
+        aboutButton.connect("clicked", self.aboutHandler)
+        aboutButton.show()
+        buttonBox.add(aboutButton)
+        buttonBox.set_child_secondary(aboutButton, True)
+        buttonBox.show()
+        self.vbox.pack_end(buttonBox, False, False, 0)
         self.expander = gtk.Expander(
             "<b>" + commonui.escapeMarkup(_("Application settings")) + "</b>")
         self.expander.set_use_markup(True)
         self.expander.connect("activate", self.expanderChanged)
         self.expander.show()
         self.vbox.pack_end(self.expander, False, True, 0)
-        self.expanderVBox = gtk.VBox()
-        self.appButtonBox = gtk.HBox(spacing=5)
+        self.expanderVBox = gtk.VBox(spacing=10)
+        self.appButtonBox = gtk.HBox()
         removeButton = gtk.Button(stock="gtk-remove")
         removeButton.connect("clicked", self.removeApp)
         removeButton.show()
@@ -453,7 +481,7 @@ class MainWindow (gtk.Window):
         propButton.show()
         self.appButtonBox.pack_end(propButton, False, False, 0)
         self.appButtonBox.show()
-        self.expanderVBox.pack_start(self.appButtonBox, False, False, 10)
+        self.expanderVBox.pack_start(self.appButtonBox, False, False, 0)
         self.expanderVBox.show()
         self.expander.add(self.expanderVBox)
         self.notebook = None
@@ -487,7 +515,6 @@ class MainWindow (gtk.Window):
             self.vbox.remove(self.notebook)
         self.notebook = gtk.Notebook()
         self.notebook.popup_enable()
-        self.notebook.set_scrollable(True)
         self.sectPages = []
         self.sectLabels = []
         unknownPage = UnknownSectionPage (self.driver, self.deviceConfig.apps[0])
@@ -500,6 +527,7 @@ class MainWindow (gtk.Window):
             self.sectLabels.append (unknownLabel)
         for sect in self.driver.optSections:
             sectPage = SectionPage (sect, self.deviceConfig.apps[0], True)
+            sectPage.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
             sectPage.show()
             desc = sect.getDesc([lang])
             if desc:
@@ -516,7 +544,7 @@ class MainWindow (gtk.Window):
             self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
             self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
         self.notebook.show()
-        self.vbox.pack_start(self.notebook, True, True, 10)
+        self.vbox.pack_start(self.notebook, True, True, 0)
         if self.appCombo:
             self.appButtonBox.remove(self.appCombo)
         self.appCombo = gtk.combo_box_new_text()
@@ -696,3 +724,33 @@ class MainWindow (gtk.Window):
     def exitHandler (self, widget, event=None):
         # Always ok to destroy the window
         return False
+
+    def aboutHandler (self, widget):
+        dialog = commonui.AboutDialog()
+        dialog.show()
+        dialog.run()
+        dialog.destroy()
+
+    def expertHandler (self, widget):
+        self.destroy() # triggers main_quit
+        complexui.start(self.configList)
+        gtk.main()
+
+def start (configList):
+    simplifiedDeviceConfigs = isSimplified(configList, commonui.dpy)
+    if simplifiedDeviceConfigs == None:
+        print "Configuration is NOT simplified."
+        simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
+        if simplifiedDeviceConfigs == None:
+            print "Configuration is still NOT simplified."
+        else:
+            print "Configuration was simplified successfully."
+    else:
+        # Still call simplifyConfig to update the isSimplified
+        # attributes and to remove redundant device configurations.
+        simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
+        print "Configuration is simplified."
+    mainWindow = MainWindow(configList)
+    commonui.mainWindow = mainWindow
+    mainWindow.set_default_size (-1, 500)
+    mainWindow.show()
