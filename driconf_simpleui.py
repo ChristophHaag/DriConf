@@ -329,7 +329,6 @@ class AppPage (gtk.ScrolledWindow):
         self.table = gtk.Table(len(self.app.options)+1, 3)
         self.add_with_viewport(self.table)
         self.optionTree = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_INT, gobject.TYPE_INT)
-        appOpts = self.app.options.copy()
         i = 0
         sectI = 0
         for sect in self.driver.optSections:
@@ -338,11 +337,10 @@ class AppPage (gtk.ScrolledWindow):
             sectHasOpts = False
             optI = 0
             for opt in sect.optList:
-                if appOpts.has_key(opt.name):
+                if self.app.options.has_key(opt.name):
                     self.optLines.append(
                         commonui.OptionLine(self, i, opt, True, True))
                     i = i + 1
-                    del appOpts[opt.name]
                 else:
                     self.optionTree.append(sectIter, [
                         lineWrap(opt.getDesc([lang]).text), sectI, optI])
@@ -364,8 +362,6 @@ class AppPage (gtk.ScrolledWindow):
             addCombo.show()
             self.table.attach(addCombo, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
         self.table.show()
-        if len(appOpts) > 0:
-            print "FIXME: Option left over: %s. Need to handle unknown options." % repr(appOpts)
 
     def optionModified (self, optLine):
         self.app.modified(self.app)
@@ -491,6 +487,7 @@ class MainWindow (gtk.Window):
         self.expander.add(self.expanderVBox)
         self.notebook = None
         self.appCombo = None
+        self.appNotebook = None
         self.appPage = None
         self.selectScreen(0)
         self.vbox.show()
@@ -575,15 +572,37 @@ class MainWindow (gtk.Window):
             self.selectApp(None)
 
     def selectApp (self, app):
-        if self.appPage:
+        if self.appNotebook:
+            self.expanderVBox.remove(self.appNotebook)
+            self.appNotebook = None
+            self.appPage = None
+        elif self.appPage:
             self.expanderVBox.remove(self.appPage)
             self.appPage = None
         if not app:
             return
         app.modified = self.configModified
-        self.appPage = AppPage (self.driver, app)
-        self.appPage.show()
-        self.expanderVBox.pack_start (self.appPage, True, True, 0)
+        unknownPage = commonui.UnknownSectionPage (self.driver,
+                                                   app)
+        if len(unknownPage.opts) > 0:
+            self.appNotebook = gtk.Notebook()
+            self.appNotebook.popup_enable()
+            unknownPage.show()
+            unknownLabel = gtk.Label (_("Unknown options"))
+            unknownLabel.show()
+            self.appNotebook.append_page (unknownPage, unknownLabel)
+            self.appPage = AppPage (self.driver, app)
+            self.appPage.show()
+            appPageLabel = gtk.Label (_("Known options"))
+            appPageLabel.show()
+            self.appNotebook.append_page (self.appPage, appPageLabel)
+            self.appNotebook.show()
+            appWidget = self.appNotebook
+        else:
+            self.appPage = AppPage (self.driver, app)
+            self.appPage.show()
+            appWidget = self.appPage
+        self.expanderVBox.pack_start (appWidget, True, True, 0)
 
     def changeDevice (self, combo):
         self.selectScreen(combo.get_active())
