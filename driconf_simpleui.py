@@ -30,10 +30,17 @@ import driconf_complexui
 commonui = driconf_commonui    # short cut
 complexui = driconf_complexui
 
-from driconf_commonui import _, lang, findInShared, escapeMarkup, WrappingCheckButton, SectionPage, UnknownSectionPage
+from driconf_commonui import _, lang
 
 def isUserConfig(config):
     return config.fileName.startswith(os.environ["HOME"])
+
+def getUserConfig(configList):
+    userConfigs = [config for config in configList if isUserConfig(config)]
+    if not userConfigs:
+        return None
+    else:
+        return userConfigs[0]
 
 def genSimpleDeviceConfigs (configList, dpy):
     """ Generate a list of simple device configurations.
@@ -49,10 +56,9 @@ def genSimpleDeviceConfigs (configList, dpy):
     overrides any previous settings.
 
     If there is no user configuration file, an empty list is returned. """
-    userConfigs = [config for config in configList if isUserConfig(config)]
-    if not userConfigs:
+    userConfig = getUserConfig(configList)
+    if not userConfig:
         return []
-    userConfig = userConfigs[0]
     screens = [screen for screen in dpy.screens if screen]
     deviceConfigs = []
     # Create one device configuration for each installed device on this display
@@ -117,7 +123,9 @@ def removeRedundantDevices (config, simpleDeviceConfigs, onlyTest = False):
     returns True iff there are redundant device sections. Otherwise
     False is returned. """
     screens = [device.screen for device in simpleDeviceConfigs]
-    for device in config.devices:
+    # Iterate over a copy of the device list, so that devices can be
+    # removed safely.
+    for device in config.devices[:]:
         if not (hasattr(device, "isSimplified") and device.isSimplified) and \
                device.screen != None and device.driver != None:
             # See if there is a simplified device configuration for
@@ -141,12 +149,12 @@ def isRedundant (configList, dpy, simpleDeviceConfigs = None):
     Returns True iff there is a user configuration file that would
     contain redundant device configurations after appending
     simpleDeviceConfigs. """
-    userConfigs = [config for config in configList if isUserConfig(config)]
-    if not userConfigs:
+    userConfig = getUserConfig(configList)
+    if not userConfig:
         return False
     if simpleDeviceConfigs == None:
         simpleDeviceConfigs = genSimpleDeviceConfigs (configList, dpy)
-    return removeRedundantDevices (userConfigs[0], simpleDeviceConfigs,
+    return removeRedundantDevices (userConfigs, simpleDeviceConfigs,
                                    onlyTest=True)
 
 def isSimplified(configList, dpy, simpleDeviceConfigs = None):
@@ -159,10 +167,10 @@ def isSimplified(configList, dpy, simpleDeviceConfigs = None):
     there is no user configuration file, an empty list is
     returned. Otherwise, if there is a user configuration file that is
     not simplified, this function returns None. """
-    userConfigs = [config for config in configList if isUserConfig(config)]
-    if not userConfigs:
+    userConfig = getUserConfig(configList)
+    if not userConfig:
         return []
-    userDevs = userConfigs[0].devices
+    userDevs = userConfig.devices
     # Find a consistent list of specific device configurations at the
     # end of the user configuration file.
     i = len(userDevs) - 1
@@ -170,26 +178,23 @@ def isSimplified(configList, dpy, simpleDeviceConfigs = None):
         i = i - 1
     i = i + 1
     specificDevs = userDevs[i:]
-    # Make sure there is exactly one for each configurable screen
-    screenDevs = [None for i in range(len(dpy.screens))]
+    # Make sure there is at least one for each configurable screen.
+    # If there are several the last one counts.
+    screens = [screen for screen in dpy.screens if screen]
+    screenDevs = [None for i in range(len(screens))]
     for device in specificDevs:
         screenNum = int(device.screen)
         if screenNum >= len(screenDevs):
             continue
-        if dpy.screens[screenNum] != None and \
-           dpy.screens[screenNum].driver.name == device.driver:
-            if screenDevs[screenNum] != None:
-                return None  # More than one device section for this screen
+        if screens[screenNum].driver.name == device.driver:
             screenDevs[screenNum] = device
-    configurableScreenDevs = [device for i,device in enumerate(screenDevs)
-                              if dpy.screens[i] != None]
-    if [None for device in configurableScreenDevs if device == None]:
+    if [None for device in screenDevs if device == None]:
         return None  # There are unconfigured screens
     if simpleDeviceConfigs == None:
         simpleDeviceConfigs = genSimpleDeviceConfigs (configList, dpy)
     # Compare existing simple device configs with generated ones. If
     # they are equivalent, the configuration file is simplified.
-    for device,simpleDev in zip (configurableScreenDevs,simpleDeviceConfigs):
+    for device,simpleDev in zip (screenDevs,simpleDeviceConfigs):
         # Check that the first executable is None and that each
         # executable is configured exactly once.
         executables = [app.executable for app in device.apps]
@@ -213,7 +218,7 @@ def isSimplified(configList, dpy, simpleDeviceConfigs = None):
                 return None
     # The configuration is simplified. Return the list of simplified device
     # configurations from the user configuration files.
-    return configurableScreenDevs
+    return screenDevs
 
 def simplifyConfig(configList, dpy):
     """ Simplify the user configuration file (if it exists) ...
@@ -227,7 +232,7 @@ def simplifyConfig(configList, dpy):
     existingDeviceConfigs = isSimplified (configList, dpy, newDeviceConfigs)
     if not existingDeviceConfigs and not newDeviceConfigs:
         return []
-    userConfig = [config for config in configList if isUserConfig(config)][0]
+    userConfig = getUserConfig(configList)
     if existingDeviceConfigs:
         # is already simplified, mark existing simplified device
         # configurations as such.
@@ -406,7 +411,7 @@ class MainWindow (gtk.Window):
         self.connect("destroy", lambda dummy: gtk.main_quit())
         self.connect("delete_event", self.exitHandler)
         self.configList = configList # Remember for switching to expert mode
-        self.userConfig = [config for config in configList if isUserConfig(config)][0]
+        self.userConfig = getUserConfig(configList)
         self.screens = [screen for screen in commonui.dpy.screens if screen]
         self.vbox = gtk.VBox(spacing=10)
         if len(self.screens) > 1:
@@ -517,7 +522,8 @@ class MainWindow (gtk.Window):
         self.notebook.popup_enable()
         self.sectPages = []
         self.sectLabels = []
-        unknownPage = UnknownSectionPage (self.driver, self.deviceConfig.apps[0])
+        unknownPage = commonui.UnknownSectionPage (self.driver,
+                                                   self.deviceConfig.apps[0])
         if len(unknownPage.opts) > 0:
             unknownPage.show()
             unknownLabel = gtk.Label (_("Unknown"))
@@ -526,7 +532,8 @@ class MainWindow (gtk.Window):
             self.sectPages.append (unknownPage)
             self.sectLabels.append (unknownLabel)
         for sect in self.driver.optSections:
-            sectPage = SectionPage (sect, self.deviceConfig.apps[0], True)
+            sectPage = commonui.SectionPage (sect, self.deviceConfig.apps[0],
+                                             True)
             sectPage.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
             sectPage.show()
             desc = sect.getDesc([lang])
@@ -706,7 +713,7 @@ class MainWindow (gtk.Window):
             dialog = gtk.MessageDialog (
                 commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                _("Can't open \"%s\" for writing.") % config.fileName)
+                _("Can't open \"%s\" for writing.") % self.userConfig.fileName)
             dialog.run()
             dialog.destroy()
             self.inConfigModified = False
@@ -737,20 +744,53 @@ class MainWindow (gtk.Window):
         gtk.main()
 
 def start (configList):
+    userConfig = getUserConfig(configList)
+    if not userConfig:
+        dialog = gtk.MessageDialog (
+            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            _("The DRI configuration file \"%s\" is broken or could not be "
+              "created.") % os.path.join (os.environ["HOME"], ".drirc") +" "+
+            _("DRIconf will be started in expert mode."))
+        dialog.run()
+        dialog.destroy()
+        complexui.start(configList)
+        return
+    if not userConfig.writable:
+        # Not writable: start expert mode
+        dialog = gtk.MessageDialog (
+            None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
+            _("Your DRI configuration file \"%s\" is not writable.") %
+            userConfig.fileName +" "+
+            _("DRIconf will be started in expert mode."))
+        dialog.run()
+        dialog.destroy()
+        complexui.start(configList)
+        return
     simplifiedDeviceConfigs = isSimplified(configList, commonui.dpy)
     if simplifiedDeviceConfigs == None:
-        print "Configuration is NOT simplified."
         simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
         if simplifiedDeviceConfigs == None:
-            print "Configuration is still NOT simplified."
-        else:
-            print "Configuration was simplified successfully."
+            dialog = gtk.MessageDialog (
+                None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                _("Simplification of your DRI configuration file \"%s\" "
+                  "failed. Please report a bug with the original "
+                  "configuration file attached. The file will be treated "
+                  "as read-only for now.") %
+                userConfig.fileName +" "+
+                _("DRIconf will be started in expert mode."))
+            dialog.run()
+            dialog.destroy()
+            userConfig.writable = False
+            complexui.start(configList)
+            return
     else:
         # Still call simplifyConfig to update the isSimplified
         # attributes and to remove redundant device configurations.
         simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
-        print "Configuration is simplified."
     mainWindow = MainWindow(configList)
     commonui.mainWindow = mainWindow
     mainWindow.set_default_size (-1, 500)
     mainWindow.show()
+    # Save modified simplified configuration before we start
+    if hasattr(userConfig, "isModified") and userConfig.isModified:
+        mainWindow.configModified(userConfig)

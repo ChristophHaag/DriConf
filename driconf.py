@@ -64,6 +64,17 @@ def main():
         dialog.destroy()
         return
 
+    configScreens = [screen for screen in commonui.dpy.screens
+                     if screen != None]
+    if len(configScreens) == 0:
+        dialog = gtk.MessageDialog (
+            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            _("Did not find any configurable direct-rendering capable "
+              "devices.")+" "+_("DRIconf will be started in expert mode."))
+        dialog.run()
+        dialog.destroy()
+        expert = True
+
     # read or create configuration files
     fileNameList = ["/etc/drirc", os.path.join (os.environ["HOME"], ".drirc")]
     configList = []
@@ -75,9 +86,7 @@ def main():
             # Make a default configuration file.
             config = dri.DRIConfig (None, fileName)
             config.writable = True
-            for screen in commonui.dpy.screens:
-                if screen == None:
-                    continue
+            for screen in configScreens:
                 device = dri.DeviceConfig (config, str(screen.num),
                                            screen.driver.name)
                 app = dri.AppConfig (device, "all")
@@ -113,6 +122,15 @@ def main():
             cfile.close()
         if config:
             configList.append (config)
+
+    if len(configList) == 0:
+        dialog = gtk.MessageDialog (
+            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            _("There are no usable DRI configuration files and a new one "
+              "could not be created. Exiting now."))
+        dialog.run()
+        dialog.destroy()
+        return
 
     # open the main window
     if expert:
