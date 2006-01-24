@@ -971,38 +971,7 @@ class MainWindow (gtk.Window):
         self.activateDeviceButtons (app.device)
 
     def aboutHandler (self, widget):
-        version = "0.2.8"
-        translators = _("translator-credits")
-        if translators == "translator-credits":
-            translators = None
-        if gtk.__dict__.has_key("AboutDialog"):
-            dialog = gtk.AboutDialog()
-            dialog.set_name("DRIconf")
-            dialog.set_version(version)
-            dialog.set_copyright(u"Copyright \u00a9 2003-2005  "
-                                 u"Felix K\u00fchling")
-            dialog.set_comments(_("A configuration GUI for DRI drivers"))
-            dialog.set_website(u"http://dri.freedesktop.org/wiki/DriConf")
-            if translators:
-                dialog.set_translator_credits(translators)
-            logoPath = findInShared("drilogo.jpg")
-            if logoPath:
-                logo = gtk.gdk.pixbuf_new_from_file (logoPath)
-                dialog.set_logo(logo)
-        else:
-            text = u"DRIconf %s\n" \
-                   u"%s\n" \
-                   u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n" \
-                   u"\n" \
-                   u"http://dri.freedesktop.org/wiki/DriConf" \
-                   % (version,  _("A configuration GUI for DRI drivers"))
-            if translators:
-                text = text + (u"\n\n%s: %s" % (_("Translated by"),
-                                              _("translator-credits")))
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
-                gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, text)
-            dialog.set_title(_("About DRIconf"))
+        dialog = commonui.AboutDialog()
         dialog.connect("response",
                        lambda dialog, response: dialog.destroy())
         dialog.show()
@@ -1032,3 +1001,15 @@ class MainWindow (gtk.Window):
         dialog.destroy()
         if response == gtk.RESPONSE_YES:
             gtk.main_quit()
+
+def start (configList):
+    # initSelection must be called before and after mainWindow.show().
+    # Before makes sure that the initial window size is correct.
+    # After is needed since the selection seems to get lost in
+    # mainWindow.show().
+    mainWindow = MainWindow(configList)
+    commonui.mainWindow = mainWindow
+    mainWindow.set_default_size (750, 375)
+    mainWindow.initSelection()
+    mainWindow.show ()
+    mainWindow.initSelection()
