@@ -27,7 +27,7 @@ import gtk
 import gobject
 
 if gtk.check_version(2, 4, 0):
-    print "Error: DRIconf requires DRIconf 2.4 or newer."
+    print "Error: DRIconf requires GTK 2.4 or newer."
     sys.exit(1)
 
 import driconf_commonui
