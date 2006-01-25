@@ -73,7 +73,7 @@ def main():
     if len(configScreens) == 0:
         dialog = gtk.MessageDialog (
             None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-            _("Did not find any configurable direct-rendering capable "
+            _("Could not detect any configurable direct-rendering capable "
               "devices.")+" "+_("DRIconf will be started in expert mode."))
         dialog.run()
         dialog.destroy()
