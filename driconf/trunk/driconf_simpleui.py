@@ -418,7 +418,7 @@ class MainWindow (gtk.Window):
                         screen.num, screen.glxInfo.renderer, screen.glxInfo.vendor))
                 else:
                     self.deviceCombo.append_text(_("Screen") + " %d: %s" % (
-                        screen.num, screen.driver.name))
+                        screen.num, screen.driver.name.capitalize()))
             self.deviceCombo.set_active(0)
             self.deviceCombo.connect("changed", self.changeDevice)
             self.deviceCombo.show()
@@ -426,15 +426,19 @@ class MainWindow (gtk.Window):
         else:
             screen = self.screens[0]
             if screen.glxInfo:
-                text = _("Screen") + " %d: %s (%s)" % (
-                    screen.num, screen.glxInfo.renderer, screen.glxInfo.vendor)
+                text = "%s (%s)" % (
+                    screen.glxInfo.renderer, screen.glxInfo.vendor)
             else:
                 text = _("Screen") + " %d: %s" % (
-                    screen.num, screen.driver.name)
+                    screen.num, screen.driver.name.capitalize())
+            deviceHBox = gtk.HBox()
             deviceLabel = gtk.Label()
+            deviceLabel.set_justify(gtk.JUSTIFY_LEFT)
             deviceLabel.set_markup("<b>" + commonui.escapeMarkup(text) + "</b>")
             deviceLabel.show()
-            self.vbox.pack_start(deviceLabel, False, False, 0)
+            deviceHBox.pack_start(deviceLabel, False, False, 0)
+            deviceHBox.show()
+            self.vbox.pack_start(deviceHBox, False, False, 0)
         buttonBox = gtk.HButtonBox()
         buttonBox.set_layout(gtk.BUTTONBOX_END)
         expertButton = gtk.Button()
