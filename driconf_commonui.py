@@ -583,7 +583,8 @@ class UnknownSectionPage(gtk.VBox):
         self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
         for name,val in opts.items():
             self.store.set (self.store.append(),
-                            0, str(name), 1, str(val), 2, True)
+                            0, str(name), 1, str(val),
+                            2, app.device.config.writable)
             self.opts.append (name)
         self.view.show()
         scrolledWindow.add (self.view)
@@ -594,10 +595,12 @@ class UnknownSectionPage(gtk.VBox):
         if not self.driver:
             newButton = gtk.Button (stock="gtk-add")
             newButton.connect ("clicked", self.newSetting)
+            newButton.set_sensitive(app.device.config.writable)
             newButton.show()
             buttonBox.add (newButton)
         deleteButton = gtk.Button (stock="gtk-remove")
         deleteButton.connect ("clicked", self.deleteSelection)
+        deleteButton.set_sensitive(app.device.config.writable)
         deleteButton.show()
         buttonBox.add (deleteButton)
         helpButton = gtk.Button (stock="gtk-help")
