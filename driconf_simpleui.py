@@ -523,7 +523,7 @@ class MainWindow (gtk.Window):
                                                    self.deviceConfig.apps[0])
         if len(unknownPage.opts) > 0:
             unknownPage.show()
-            unknownLabel = gtk.Label (_("Unknown"))
+            unknownLabel = gtk.Label (_("Unknown options"))
             unknownLabel.show()
             self.notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)

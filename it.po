@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-22 23:50-0500\n"
+"POT-Creation-Date: 2006-01-24 23:07-0500\n"
 "PO-Revision-Date: 2006-01-22 23:53-0500\n"
 "Last-Translator: Giampaolo Bozzali <giampaolo.bozzali@gmail.com>\n"
 "Language-Team: \n"
@@ -18,7 +18,7 @@ msgstr ""
 "X-Poedit-Language: Italian\n"
 "X-Poedit-Country: ITALY\n"
 
-#: driconf.py:54
+#: driconf.py:63
 #, python-format
 msgid ""
 "There are errors in a driver's configuration information:\n"
@@ -30,7 +30,16 @@ msgstr ""
 "Questo non dovrebbe accadere. Probabilmente significa che devi aggiornare "
 "DRIconf."
 
-#: driconf.py:97
+#: driconf.py:76
+msgid "Could not detect any configurable direct-rendering capable devices."
+msgstr ""
+
+#: driconf.py:77 driconf_simpleui.py:780 driconf_simpleui.py:790
+#: driconf_simpleui.py:806
+msgid "DRIconf will be started in expert mode."
+msgstr ""
+
+#: driconf.py:115
 #, python-format
 msgid ""
 "Configuration file \"%s\" contains errors:\n"
@@ -43,33 +52,39 @@ msgstr ""
 "Il file non verrà considerato finchè il problema non sarà risolto a mano o "
 "il file sarà rimosso."
 
-#: driconf.py:151
+#: driconf.py:133
+msgid ""
+"There are no usable DRI configuration files and a new one could not be "
+"created. Exiting now."
+msgstr ""
+
+#: driconf.py:149
 #, python-format
 msgid "Created a new DRI configuration file \"%s\" for you."
 msgstr "Creato un nuovo file di configurazione \"%s\"."
 
-#: driconf.py:159
+#: driconf.py:157
 #, python-format
 msgid "Created new DRI configuration files %s for you."
 msgstr "Creati nuovi file di configurazione %s."
 
-#: driconf_commonui.py:315
+#: driconf_commonui.py:318
 msgid "Remove"
 msgstr ""
 
-#: driconf_commonui.py:318
+#: driconf_commonui.py:321
 msgid "Reset to default value"
 msgstr ""
 
-#: driconf_commonui.py:572
+#: driconf_commonui.py:575
 msgid "Option"
 msgstr "Opzioni"
 
-#: driconf_commonui.py:577
+#: driconf_commonui.py:580
 msgid "Value"
 msgstr "Valore"
 
-#: driconf_commonui.py:651
+#: driconf_commonui.py:655
 msgid ""
 "Some settings in this application configuration are unknown to the driver. "
 "Maybe the driver version changed and does not support these options any "
@@ -79,7 +94,7 @@ msgstr ""
 "Potrebbe darsi che una versione più recente del driver non supporti più "
 "queste opzioni. E' più sicuro rimuovere queste impostazioni."
 
-#: driconf_commonui.py:656
+#: driconf_commonui.py:660
 msgid ""
 "The driver for this device could not be determined or does not support "
 "configuration. You can still change the settings but it cannot be verified "
@@ -89,6 +104,23 @@ msgstr ""
 "non permette configurazioni. E' possibile comunque modificare le "
 "impostazioni ma non è possibile verificare se siano supportate e se siano "
 "valide."
+
+#: driconf_commonui.py:696 driconf_commonui.py:714 driconf_commonui.py:725
+msgid "translator-credits"
+msgstr "Giampaolo Bozzali <giampaolo.bozzali@gmail.com>"
+
+#: driconf_commonui.py:703 driconf_commonui.py:722
+#, fuzzy
+msgid "A configuration applet for DRI drivers"
+msgstr "Interfaccia di configurazione per i drivers DRI"
+
+#: driconf_commonui.py:724
+msgid "Translated by"
+msgstr "Tradotto da"
+
+#: driconf_commonui.py:730 driconf_complexui.py:871
+msgid "About DRIconf"
+msgstr "Informazioni su DRIconf"
 
 #: driconf_complexui.py:39
 msgid "Application"
@@ -108,11 +140,11 @@ msgstr ""
 "Ricorda che alcune applicazioni o giochi sono semplicemente uno shell script "
 "che avviano l'eseguibile reale con un nome differente."
 
-#: driconf_complexui.py:73 driconf_simpleui.py:481
+#: driconf_complexui.py:73
 msgid "Unknown"
 msgstr "Sconosciuto"
 
-#: driconf_complexui.py:87 driconf_simpleui.py:494
+#: driconf_complexui.py:87 driconf_simpleui.py:541
 msgid "(no description)"
 msgstr "(nessuna descrizione)"
 
@@ -124,7 +156,7 @@ msgstr ""
 "Inserisci qui il nome dell'applicazione. E' solamente una descrizione. "
 "Ricorda di impostare l'eseguibile dopo."
 
-#: driconf_complexui.py:170 driconf_simpleui.py:273
+#: driconf_complexui.py:170 driconf_simpleui.py:280
 msgid "Application Name"
 msgstr "Nome dell'applicazione"
 
@@ -189,7 +221,7 @@ msgstr "Nuovo Dispositivo"
 msgid "The configuration contains invalid entries. Save anyway?"
 msgstr "La configurazione contiene voci non valide. Salvare comunque?"
 
-#: driconf_complexui.py:691 driconf_simpleui.py:666
+#: driconf_complexui.py:691 driconf_simpleui.py:743
 #, python-format
 msgid "Can't open \"%s\" for writing."
 msgstr "Impossibile aprire \"%s\" in scrittura."
@@ -243,74 +275,90 @@ msgstr "Sposta giù l'elemento selezionato"
 msgid "Properties of selected device or application"
 msgstr "Proprietà del dispositivo selezionato o dell'applicazione"
 
-#: driconf_complexui.py:871 driconf_complexui.py:1005
-msgid "About DRIconf"
-msgstr "Informazioni su DRIconf"
-
 #: driconf_complexui.py:875
 msgid "Exit DRIconf"
 msgstr "Esci da DRIconf"
 
-#: driconf_complexui.py:975 driconf_complexui.py:1001
-msgid "translator-credits"
-msgstr "Giampaolo Bozzali <giampaolo.bozzali@gmail.com>"
-
-#: driconf_complexui.py:984 driconf_complexui.py:998
-msgid "A configuration GUI for DRI drivers"
-msgstr "Interfaccia di configurazione per i drivers DRI"
-
-#: driconf_complexui.py:1000
-msgid "Translated by"
-msgstr "Tradotto da"
-
-#: driconf_complexui.py:1020
+#: driconf_complexui.py:989
 msgid "There are unsaved modifications. Exit anyway?"
 msgstr "Ci sono delle modifiche. Uscire comunque?"
 
-#: driconf_simpleui.py:285
+#: driconf_simpleui.py:292
 msgid "Executable Name"
 msgstr ""
 
-#: driconf_simpleui.py:348
+#: driconf_simpleui.py:353
 msgid "Add setting"
 msgstr ""
 
-#: driconf_simpleui.py:401
+#: driconf_simpleui.py:404
 msgid "Direct Rendering Preferences"
 msgstr ""
 
-#: driconf_simpleui.py:413 driconf_simpleui.py:416
+#: driconf_simpleui.py:417 driconf_simpleui.py:420 driconf_simpleui.py:429
+#: driconf_simpleui.py:432
 #, fuzzy
 msgid "Screen"
 msgstr "Screen %s"
 
-#: driconf_simpleui.py:422
+#: driconf_simpleui.py:445
+msgid "Expert Mode"
+msgstr ""
+
+#: driconf_simpleui.py:465
 #, fuzzy
 msgid "Application settings"
 msgstr "Nome dell'applicazione"
 
-#: driconf_simpleui.py:570
+#: driconf_simpleui.py:526 driconf_simpleui.py:599
+#, fuzzy
+msgid "Unknown options"
+msgstr "Sconosciuto"
+
+#: driconf_simpleui.py:604
+msgid "Known options"
+msgstr ""
+
+#: driconf_simpleui.py:647
 msgid "You must enter both an application name and an executable name."
 msgstr ""
 
-#: driconf_simpleui.py:575
+#: driconf_simpleui.py:652
 msgid ""
 "There exists an application configuration with the same name. Please enter a "
 "different name."
 msgstr ""
 
-#: driconf_simpleui.py:580
+#: driconf_simpleui.py:657
 msgid ""
 "There exists an application configuration for the same executable. You can't "
 "create multiple application configurations for the same executable."
 msgstr ""
 
-#: driconf_simpleui.py:596
+#: driconf_simpleui.py:673
 #, fuzzy
 msgid "Add Application"
 msgstr "Applicazione"
 
-#: driconf_simpleui.py:617
+#: driconf_simpleui.py:694
 #, fuzzy
 msgid "Application Properties"
 msgstr "Nome dell'applicazione"
+
+#: driconf_simpleui.py:778
+#, fuzzy, python-format
+msgid "The DRI configuration file \"%s\" is broken or could not be created."
+msgstr "Creato un nuovo file di configurazione \"%s\"."
+
+#: driconf_simpleui.py:789
+#, fuzzy, python-format
+msgid "Your DRI configuration file \"%s\" is not writable."
+msgstr "Creato un nuovo file di configurazione \"%s\"."
+
+#: driconf_simpleui.py:801
+#, python-format
+msgid ""
+"Simplification of your DRI configuration file \"%s\" failed. Please report a "
+"bug with the original configuration file attached. The file will be treated "
+"as read-only for now."
+msgstr ""
