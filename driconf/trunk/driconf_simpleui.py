@@ -469,18 +469,18 @@ class MainWindow (gtk.Window):
         self.vbox.pack_end(self.expander, False, True, 0)
         self.expanderVBox = gtk.VBox(spacing=10)
         self.appButtonBox = gtk.HBox()
-        removeButton = gtk.Button(stock="gtk-remove")
-        removeButton.connect("clicked", self.removeApp)
-        removeButton.show()
-        self.appButtonBox.pack_end(removeButton, False, False, 0)
+        self.appRemoveButton = gtk.Button(stock="gtk-remove")
+        self.appRemoveButton.connect("clicked", self.removeApp)
+        self.appRemoveButton.show()
+        self.appButtonBox.pack_end(self.appRemoveButton, False, False, 0)
         addButton = gtk.Button(stock="gtk-add")
         addButton.connect("clicked", self.addApp)
         addButton.show()
         self.appButtonBox.pack_end(addButton, False, False, 0)
-        propButton = gtk.Button(stock="gtk-properties")
-        propButton.connect("clicked", self.appProperties)
-        propButton.show()
-        self.appButtonBox.pack_end(propButton, False, False, 0)
+        self.appPropButton = gtk.Button(stock="gtk-properties")
+        self.appPropButton.connect("clicked", self.appProperties)
+        self.appPropButton.show()
+        self.appButtonBox.pack_end(self.appPropButton, False, False, 0)
         self.appButtonBox.show()
         self.expanderVBox.pack_start(self.appButtonBox, False, False, 0)
         self.expanderVBox.show()
@@ -559,10 +559,14 @@ class MainWindow (gtk.Window):
             self.expander.set_expanded(True)
             self.vbox.set_child_packing(self.expander, True, True,
                                         0, gtk.PACK_END)
+            self.appPropButton.set_sensitive(True)
+            self.appRemoveButton.set_sensitive(True)
         else:
             self.expander.set_expanded(False)
             self.vbox.set_child_packing(self.expander, False, True,
                                         0, gtk.PACK_END)
+            self.appPropButton.set_sensitive(False)
+            self.appRemoveButton.set_sensitive(False)
         self.appCombo.connect("changed", self.changeApp)
         self.appCombo.show()
         self.appButtonBox.pack_start(self.appCombo, True, True, 0)
@@ -580,7 +584,11 @@ class MainWindow (gtk.Window):
             self.expanderVBox.remove(self.appPage)
             self.appPage = None
         if not app:
+            self.appPropButton.set_sensitive(False)
+            self.appRemoveButton.set_sensitive(False)
             return
+        self.appPropButton.set_sensitive(True)
+        self.appRemoveButton.set_sensitive(True)
         app.modified = self.configModified
         unknownPage = commonui.UnknownSectionPage (self.driver,
                                                    app)
