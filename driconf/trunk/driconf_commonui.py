@@ -53,8 +53,8 @@ else:
 # encoding is only a dummy. Pango uses UTF-8 everywhere. :)
 del encoding
 
-# global variagle: version
-version = "0.2.8"
+# global variable: version
+version = "0.9.0"
 
 # global variable: dpy
 dpy = None
