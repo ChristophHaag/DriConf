@@ -353,10 +353,10 @@ class GLXInfo:
                 raise DRIError ("glxinfo returned with non-zero exit code.")
         else:
             # Parse
-            self.vendor = re.search ("^OpenGL vendor string: (.*)$", glxInfo,
-                                     re.M).group(1)
-            self.renderer = re.search("^OpenGL renderer string: (.*)$", glxInfo,
-                                      re.M).group(1)
+            vMatch = re.search ("^OpenGL vendor string: (.*)$", glxInfo, re.M)
+            rMatch = re.search("^OpenGL renderer string: (.*)$", glxInfo, re.M)
+            self.vendor = vMatch and vMatch.group(1)
+            self.renderer = rMatch and rMatch.group(1)
             if not self.vendor or not self.renderer:
                 raise DRIError ("unable to parse glxinfo output.")
 
