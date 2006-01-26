@@ -281,6 +281,7 @@ class OptionLine:
         """ Constructor. """
         self.page = page
         self.opt = opt
+        self.index = i
         typeString = opt.type
         if opt.valid:
             typeString = typeString+" ["+ \
@@ -474,8 +475,9 @@ class OptionLine:
 
         This is only interesting if the check button is active. Only
         gtk.Entry widgets should ever give invalid values in practice.
-        Invalid option widgets are highlighted. If the validity changed
-        then have the page check if its validity was changed, too. """
+        Invalid option widgets are highlighted. If the validity
+        changed, reinitialize the widget and have the page check if
+        its validity was changed, too. """
         value = self.getValue()
         if value == None:
             return
@@ -483,6 +485,14 @@ class OptionLine:
         if (valid and not self.isValid) or (not valid and self.isValid):
             self.isValid = valid
             self.highlightInvalid()
+            # Re-init the widget.
+            i = self.index
+            self.page.table.remove(self.widget)
+            self.widget.destroy()
+            self.initWidget(self.opt, dri.StrToValue(value, self.opt.type))
+            self.widget.show()
+            self.page.table.attach (self.widget, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
+            # Update parent page.
             self.page.doValidate()
 
     def highlightInvalid (self):
