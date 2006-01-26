@@ -551,6 +551,7 @@ class MainWindow (gtk.Window):
             style = self.sectLabels[0].get_style()
             self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
             self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
+        self.validate()
         self.notebook.show()
         self.vbox.pack_start(self.notebook, True, True, 0)
         if self.appCombo:
@@ -615,6 +616,36 @@ class MainWindow (gtk.Window):
             self.appPage.show()
             appWidget = self.appPage
         self.expanderVBox.pack_start (appWidget, True, True, 0)
+
+    def validate (self):
+        """ Validate the configuration.
+
+        Labels of invalid section pages are highlighted. Returns whether
+        there were invalid option values. """
+        index = 0
+        allValid = True
+        for sectPage in self.sectPages:
+            valid = sectPage.validate()
+            if not valid:
+                # strange, active and normal appear to be swapped :-/
+                self.sectLabels[index].modify_fg (
+                    gtk.STATE_NORMAL, gtk.gdk.Color (65535, 0, 0))
+                self.sectLabels[index].modify_fg (
+                    gtk.STATE_ACTIVE, gtk.gdk.Color (65535, 0, 0))
+            else:
+                self.sectLabels[index].modify_fg (
+                    gtk.STATE_NORMAL, self.default_normal_fg)
+                self.sectLabels[index].modify_fg (
+                    gtk.STATE_ACTIVE, self.default_active_fg)
+            allValid = allValid and valid
+            index = index+1
+        return allValid        
+
+    def commit (self):
+        for sectPage in self.sectPages:
+            sectPage.commit()
+        if self.appPage:
+            self.appPage.commit()
 
     def changeDevice (self, combo):
         self.selectScreen(combo.get_active())
@@ -734,6 +765,21 @@ class MainWindow (gtk.Window):
         self.appCombo.set_active(newI-1)
         self.configModified(self.deviceConfig)
 
+    def exitHandler (self, widget, event=None):
+        # Always ok to destroy the window
+        return False
+
+    def aboutHandler (self, widget):
+        dialog = commonui.AboutDialog()
+        dialog.show()
+        dialog.run()
+        dialog.destroy()
+
+    def expertHandler (self, widget):
+        self.destroy() # triggers main_quit
+        complexui.start(self.configList)
+        gtk.main()
+
     def configModified (self, node, b=True):
         if b != True:
             return
@@ -753,26 +799,8 @@ class MainWindow (gtk.Window):
         file.write (str(self.userConfig))
         file.close()
 
-    def commit (self):
-        for sectPage in self.sectPages:
-            sectPage.commit()
-        if self.appPage:
-            self.appPage.commit()
-
-    def exitHandler (self, widget, event=None):
-        # Always ok to destroy the window
-        return False
-
-    def aboutHandler (self, widget):
-        dialog = commonui.AboutDialog()
-        dialog.show()
-        dialog.run()
-        dialog.destroy()
-
-    def expertHandler (self, widget):
-        self.destroy() # triggers main_quit
-        complexui.start(self.configList)
-        gtk.main()
+    def validateDriverPanel (self):
+        self.validate()
 
 def start (configList):
     userConfig = getUserConfig(configList)
