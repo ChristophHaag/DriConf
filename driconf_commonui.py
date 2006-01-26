@@ -577,7 +577,7 @@ class UnknownSectionPage(gtk.VBox):
         if driver and len(opts) == 0:
             return
         # list all remaining options here
-        self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN)
+        self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, gobject.TYPE_BOOLEAN)
         self.view = gtk.TreeView (self.store)
         self.view.set_rules_hint (True)
         optionRenderer = gtk.CellRendererText()
@@ -588,13 +588,14 @@ class UnknownSectionPage(gtk.VBox):
         valueRenderer = gtk.CellRendererText()
         valueRenderer.connect ("edited", self.editedSignal, 1)
         column = gtk.TreeViewColumn (_("Value"), valueRenderer,
-                                     text=1, editable=2)
+                                     text=1, editable=3)
         self.view.append_column (column)
         self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
         for name,val in opts.items():
             self.store.set (self.store.append(),
                             0, str(name), 1, str(val),
-                            2, app.device.config.writable)
+                            2, app.device.config.writable and not self.driver,
+                            3, app.device.config.writable)
             self.opts.append (name)
         self.view.show()
         scrolledWindow.add (self.view)
