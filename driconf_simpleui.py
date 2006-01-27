@@ -277,6 +277,7 @@ class AppDialog (gtk.Dialog):
                             gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
                             ("gtk-ok", gtk.RESPONSE_OK,
                              "gtk-cancel", gtk.RESPONSE_CANCEL))
+        self.set_resizable(False)
         table = gtk.Table(3, 2)
         nameLabel = gtk.Label(_("Application Name"))
         nameLabel.show()
@@ -302,10 +303,13 @@ class AppDialog (gtk.Dialog):
         table.attach(self.execEntry, 1, 2, 1, 2,
                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
         hBox = gtk.HBox(spacing=10)
+        infoImageVBox = gtk.VBox()
         infoImage = commonui.StockImage(gtk.STOCK_DIALOG_INFO,
                                         gtk.ICON_SIZE_DIALOG)
         infoImage.show()
-        hBox.pack_start(infoImage, False, False, 0)
+        infoImageVBox.pack_start(infoImage, False, False, 0)
+        infoImageVBox.show()
+        hBox.pack_start(infoImageVBox, False, False, 0)
         infoLabel = gtk.Label(_(
             "The executable name is important for identifying the "
             "application. If you get it wrong, your settings will not "
