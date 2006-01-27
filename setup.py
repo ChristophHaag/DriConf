@@ -7,12 +7,13 @@ for lang in langs:
                           ["%s/LC_MESSAGES/driconf.mo" % lang]))
 
 setup(name="driconf",
-      version="0.2.8",
-      description="A configuration GUI for DRI drivers",
+      version="0.9.0",
+      description="A configuration applet for DRI drivers",
       author="Felix Kuehling",
       author_email="fxkuehl@gmx.de",
       url="http://dri.freedesktop.org/wiki/DriConf",
-      py_modules=["dri", "driconf"],
+      py_modules=["dri", "driconf", "driconf_commonui", "driconf_complexui",
+                  "driconf_simpleui"],
       scripts=["driconf"],
       data_files=[("share/driconf", ["card.png", "screen.png", "screencard.png",
                                      "drilogo.jpg"])] + translations)
@@ -55,8 +56,12 @@ try:
     pygtk.require ("2.0")
     import gtk
 except:
-    print "\n*** Warning: importing gtk version 2.0 doesn't work."
+    print "\n*** Warning: importing GTK version 2 doesn't work."
     errors = 1
+else:
+    if gtk.check_version(2, 4, 0):
+        print "\n*** Warning: DRIconf requires GTK 2.4 or newer."
+        errors = 1
 try:
     import xml.parsers.expat
 except:
@@ -66,4 +71,4 @@ except:
     errors = 1
 
 if errors:
-    print "*** Warning: driconf will probably not work for the above reason(s)."
+    print "*** Warning: DRIconf will probably not work for the above reason(s)."

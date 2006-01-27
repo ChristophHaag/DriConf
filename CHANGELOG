@@ -1,3 +1,21 @@
+driconf-0.9.0: Thu Jan 26 22:39:20 EST 2006
+
+- This version introduces a completely redesigned user interface. If
+  the old user interface looked more like the GNOME configuration
+  editor then the new one is more like a configuration applet. The old
+  user interface is still available as "expert mode".
+- Now requires pygtk 2.4 or newer.
+- Translations need updates!
+
+Changes in the old user interface (expert mode):
+- New and Delete buttons in Unknown tabs renamed to Add and Remove.
+- Only allow adding and renaming of unknown options if there is no
+  driver information available.
+- Automatically turn entries into appropriate widgets when invalid
+  values are replaced with valid ones by the user.
+- Fixed: prevent editing/adding/removing of unknown options in
+  read-only files.
+
 driconf-0.2.7: Thu Aug 11 18:47:39 EDT 2005
 
 - Italian translation by Giampaolo Bozzali.
