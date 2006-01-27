@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: driconf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-26 20:48-0500\n"
-"PO-Revision-Date: 2006-01-26 20:48-0500\n"
+"POT-Creation-Date: 2006-01-26 21:38-0500\n"
+"PO-Revision-Date: 2006-01-26 21:39-0500\n"
 "Last-Translator: Felix Kuehling <fxkuehl@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -33,8 +33,8 @@ msgid "Could not detect any configurable direct-rendering capable devices."
 msgstr ""
 "Es wurden keine konfigurierbaren, direct-rendering-fähigen Geräte erkannt."
 
-#: driconf.py:76 driconf_simpleui.py:815 driconf_simpleui.py:826
-#: driconf_simpleui.py:839
+#: driconf.py:76 driconf_simpleui.py:834 driconf_simpleui.py:845
+#: driconf_simpleui.py:858
 msgid "DRIconf will be started in expert mode."
 msgstr "DRIconf wird im Expertenmodus gestartet."
 
@@ -146,7 +146,7 @@ msgstr ""
 msgid "Unknown"
 msgstr "Unbekannt"
 
-#: driconf_complexui.py:87 driconf_simpleui.py:548
+#: driconf_complexui.py:87 driconf_simpleui.py:567
 msgid "(no description)"
 msgstr "(keine Beschreibung)"
 
@@ -223,7 +223,7 @@ msgstr "Neues Gerät"
 msgid "The configuration contains invalid entries. Save anyway?"
 msgstr "Die Konfiguration enthält ungültige Einträge. Trotzdem speichern?"
 
-#: driconf_complexui.py:691 driconf_simpleui.py:796
+#: driconf_complexui.py:691 driconf_simpleui.py:815
 #, python-format
 msgid "Can't open \"%s\" for writing."
 msgstr "Kann \"%s\" nicht zum Schreiben öffnen."
@@ -290,41 +290,54 @@ msgstr "Einige Änderungen wurden noch nicht gespeichert. Trotzdem beenden?"
 msgid "Executable Name"
 msgstr "Name der ausführbaren Datei"
 
-#: driconf_simpleui.py:354
+#: driconf_simpleui.py:310
+msgid ""
+"The executable name is important for identifying the application. If you get "
+"it wrong, your settings will not apply. Beware that some applications are "
+"started by a shell script, that has a different name than the real "
+"executable."
+msgstr ""
+"Der Name der ausführbaren Datei ist wichtig zur Erkennung der Anwendung. "
+"Wenn Sie hier einen Fehler machen, werden Ihre Einstellungen von der "
+"Anwendung nicht berücksichtigt. Beachten Sie, dass einige Anwendungen von "
+"einem Shellskript gestartet werden, das einen anderen Namen hat, als die "
+"ausführbare Datei."
+
+#: driconf_simpleui.py:373
 msgid "Add setting"
 msgstr "Einstellung hinzufügen"
 
-#: driconf_simpleui.py:405
+#: driconf_simpleui.py:424
 msgid "Direct Rendering Preferences"
 msgstr "Direct Rendering Einstellungen"
 
-#: driconf_simpleui.py:418 driconf_simpleui.py:421 driconf_simpleui.py:433
+#: driconf_simpleui.py:437 driconf_simpleui.py:440 driconf_simpleui.py:452
 msgid "Screen"
 msgstr "Bildschirm"
 
-#: driconf_simpleui.py:450
+#: driconf_simpleui.py:469
 msgid "Expert Mode"
 msgstr "Expertenmodus"
 
-#: driconf_simpleui.py:470
+#: driconf_simpleui.py:489
 msgid "Application settings"
 msgstr "Anwendungseinstellungen"
 
-#: driconf_simpleui.py:533 driconf_simpleui.py:607
+#: driconf_simpleui.py:552 driconf_simpleui.py:626
 msgid "Unknown options"
 msgstr "Unbekannte Optionen"
 
-#: driconf_simpleui.py:612
+#: driconf_simpleui.py:631
 msgid "Known options"
 msgstr "Bekannte Optionen"
 
-#: driconf_simpleui.py:685
+#: driconf_simpleui.py:704
 msgid "You must enter both an application name and an executable name."
 msgstr ""
 "Sie müssen sowohl einen Anwendungsnamen als auch den Namen der ausführbaren "
 "Datei angeben."
 
-#: driconf_simpleui.py:690
+#: driconf_simpleui.py:709
 msgid ""
 "There exists an application configuration with the same name. Please enter a "
 "different name."
@@ -332,7 +345,7 @@ msgstr ""
 "Es existiert bereits eine Anwendungskonfiguration mit dem selben Namen. "
 "Bitte geben Sie einen anderen Namen ein."
 
-#: driconf_simpleui.py:695
+#: driconf_simpleui.py:714
 msgid ""
 "There exists an application configuration for the same executable. You can't "
 "create multiple application configurations for the same executable."
@@ -341,27 +354,27 @@ msgstr ""
 "Datei. Sie können nicht mehrere Konfigurationen für die selbe ausführbare "
 "Datei erstellen."
 
-#: driconf_simpleui.py:711
+#: driconf_simpleui.py:730
 msgid "Add Application"
 msgstr "Anwendung Hinzufügen"
 
-#: driconf_simpleui.py:732
+#: driconf_simpleui.py:751
 msgid "Application Properties"
 msgstr "Anwendungseigenschaften"
 
-#: driconf_simpleui.py:813
+#: driconf_simpleui.py:832
 #, python-format
 msgid "The DRI configuration file \"%s\" is broken or could not be created."
 msgstr ""
 "Die DRI Konfigurationsdatei \"%s\" ist beschädigt oder konnte nicht angelegt "
 "werden."
 
-#: driconf_simpleui.py:824
+#: driconf_simpleui.py:843
 #, python-format
 msgid "Your DRI configuration file \"%s\" is not writable."
 msgstr "Ihre DRI Konfigurationsdatei \"%s\" ist schreibgeschützt."
 
-#: driconf_simpleui.py:835
+#: driconf_simpleui.py:854
 #, python-format
 msgid ""
 "Normalization of your DRI configuration file \"%s\" failed. Please report a "
