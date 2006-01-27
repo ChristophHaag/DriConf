@@ -75,10 +75,10 @@ value.
 
 [modification: January 26, 2006]
 
-The last sentence is moot because the user can't create new device
-configurations. Device configurations for existing hardware are
-created automatically or read from the configuration file for all
-detected devices.
+The case of creating new device configurations can only occur at
+startup when device configurations for all detected screens are
+created or read from the configuration file. The user cannot create
+new device configurations.
 
 [end modification]
 
