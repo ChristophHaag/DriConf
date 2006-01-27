@@ -42,8 +42,8 @@ def getUserConfig(configList):
     else:
         return userConfigs[0]
 
-def genSimpleDeviceConfigs (configList, dpy):
-    """ Generate a list of simple device configurations.
+def genNormalDeviceConfigs (configList, dpy):
+    """ Generate a list of normalized device configurations.
 
     One device configuration for each installed device. Each contains
     a default application configuration that explicitly sets all
@@ -72,7 +72,7 @@ def genSimpleDeviceConfigs (configList, dpy):
         for sect in driver.optSections:
             for opt in sect.options.values():
                 defaultApp.options[opt.name] = dri.ValueToStr(opt.default, opt.type)
-        deviceConfig.isSimplified = True
+        deviceConfig.isNormalized = True
         deviceConfigs.append(deviceConfig)
     for config in configList:
         configIsUser = isUserConfig(config)
@@ -115,27 +115,27 @@ def genSimpleDeviceConfigs (configList, dpy):
                             curApp.options[opt] = value
     return deviceConfigs
 
-def removeRedundantDevices (config, simpleDeviceConfigs, onlyTest = False):
+def removeRedundantDevices (config, normalDeviceConfigs, onlyTest = False):
     """ Remove device configurations that are redundant ...
 
-    ... after appending simplified device configurations. If onlyTest
+    ... after appending normalized device configurations. If onlyTest
     is True, the configuration file is not modified and this function
     returns True iff there are redundant device sections. Otherwise
     False is returned. """
-    screens = [device.screen for device in simpleDeviceConfigs]
+    screens = [device.screen for device in normalDeviceConfigs]
     # Iterate over a copy of the device list, so that devices can be
     # removed safely.
     for device in config.devices[:]:
-        if not (hasattr(device, "isSimplified") and device.isSimplified) and \
+        if not (hasattr(device, "isNormalized") and device.isNormalized) and \
                device.screen != None and device.driver != None:
-            # See if there is a simplified device configuration for
+            # See if there is a normalized device configuration for
             # this device. In that case this section is redundant.
             try:
                 i = screens.index(device.screen)
             except ValueError:
                 pass
             else:
-                if simpleDeviceConfigs[i].driver == device.driver:
+                if normalDeviceConfigs[i].driver == device.driver:
                     if onlyTest:
                         return True
                     # Remove redundant device section
@@ -143,30 +143,30 @@ def removeRedundantDevices (config, simpleDeviceConfigs, onlyTest = False):
                     config.isModified = True
     return False
 
-def isRedundant (configList, dpy, simpleDeviceConfigs = None):
+def isRedundant (configList, dpy, normalDeviceConfigs = None):
     """ Check if the user configuration is redundant.
 
     Returns True iff there is a user configuration file that would
     contain redundant device configurations after appending
-    simpleDeviceConfigs. """
+    normalDeviceConfigs. """
     userConfig = getUserConfig(configList)
     if not userConfig:
         return False
-    if simpleDeviceConfigs == None:
-        simpleDeviceConfigs = genSimpleDeviceConfigs (configList, dpy)
-    return removeRedundantDevices (userConfigs, simpleDeviceConfigs,
+    if normalDeviceConfigs == None:
+        normalDeviceConfigs = genNormalDeviceConfigs (configList, dpy)
+    return removeRedundantDevices (userConfigs, normalDeviceConfigs,
                                    onlyTest=True)
 
-def isSimplified(configList, dpy, simpleDeviceConfigs = None):
-    """ Check if the user configuration file is simplified ...
+def isNormalized(configList, dpy, normalDeviceConfigs = None):
+    """ Check if the user configuration file is normalized ...
 
     ... in a set of configuration files, that is if the user
     configuration file would be the same (except for names) after
-    simplification. If the user configuration file is simplified, a
-    list of existing simple device configurations is returned. If
+    normalization. If the user configuration file is normalized, a
+    list of existing normalized device configurations is returned. If
     there is no user configuration file, an empty list is
     returned. Otherwise, if there is a user configuration file that is
-    not simplified, this function returns None. """
+    not normalized, this function returns None."""
     userConfig = getUserConfig(configList)
     if not userConfig:
         return []
@@ -190,11 +190,12 @@ def isSimplified(configList, dpy, simpleDeviceConfigs = None):
             screenDevs[screenNum] = device
     if [None for device in screenDevs if device == None]:
         return None  # There are unconfigured screens
-    if simpleDeviceConfigs == None:
-        simpleDeviceConfigs = genSimpleDeviceConfigs (configList, dpy)
-    # Compare existing simple device configs with generated ones. If
-    # they are equivalent, the configuration file is simplified.
-    for device,simpleDev in zip (screenDevs,simpleDeviceConfigs):
+    if normalDeviceConfigs == None:
+        normalDeviceConfigs = genNormalDeviceConfigs (configList, dpy)
+    # Compare existing normalized device configs with generated
+    # ones. If they are equivalent, the configuration file is
+    # normalized.
+    for device,normalDev in zip (screenDevs,normalDeviceConfigs):
         # Check that the first executable is None and that each
         # executable is configured exactly once.
         executables = [app.executable for app in device.apps]
@@ -204,40 +205,40 @@ def isSimplified(configList, dpy, simpleDeviceConfigs = None):
         if [None for exe in executables if exe == None]:
             return None
         executables.sort()
-        simpleExes = [app.executable for app in simpleDev.apps]
-        del simpleExes[0]
-        simpleExes.sort()
-        if simpleExes != executables:
+        normalExes = [app.executable for app in normalDev.apps]
+        del normalExes[0]
+        normalExes.sort()
+        if normalExes != executables:
             return None
         # Now check that each application contains the same option settings
-        # as the generated simplified configuration
-        for simpleApp in simpleDev.apps:
+        # as the generated normalized configuration
+        for normalApp in normalDev.apps:
             app = [dApp for dApp in device.apps
-                   if dApp.executable == simpleApp.executable][0]
-            if app.options != simpleApp.options:
+                   if dApp.executable == normalApp.executable][0]
+            if app.options != normalApp.options:
                 return None
-    # The configuration is simplified. Return the list of simplified device
+    # The configuration is normalized. Return the list of normalized device
     # configurations from the user configuration files.
     return screenDevs
 
-def simplifyConfig(configList, dpy):
-    """ Simplify the user configuration file (if it exists) ...
+def normalizeConfig(configList, dpy):
+    """ Normalize the user configuration file (if it exists) ...
 
-    ... by appending simplified device configurations for each
+    ... by appending normalized device configurations for each
     installed device and removing redundant device configurations. If
-    the user configuration file is already simplified, only existing
-    simplified device configurations are marked as such and redundant
+    the user configuration file is already normalized, only existing
+    normalized device configurations are marked as such and redundant
     device configurations are removed. """
-    newDeviceConfigs = genSimpleDeviceConfigs (configList, dpy)
-    existingDeviceConfigs = isSimplified (configList, dpy, newDeviceConfigs)
+    newDeviceConfigs = genNormalDeviceConfigs (configList, dpy)
+    existingDeviceConfigs = isNormalized (configList, dpy, newDeviceConfigs)
     if not existingDeviceConfigs and not newDeviceConfigs:
         return []
     userConfig = getUserConfig(configList)
     if existingDeviceConfigs:
-        # is already simplified, mark existing simplified device
+        # is already normalized, mark existing normalized device
         # configurations as such.
         for deviceConfig in existingDeviceConfigs:
-            deviceConfig.isSimplified = True
+            deviceConfig.isNormalized = True
         deviceConfigs = existingDeviceConfigs
     elif newDeviceConfigs:
         userConfig.devices.extend(newDeviceConfigs)
@@ -500,7 +501,7 @@ class MainWindow (gtk.Window):
     def selectScreen (self, n):
         self.curScreen = self.screens[n]
         # Find that device's configuration in the user config. Search
-        # from the end, because that's where the simplified configs are.
+        # from the end, because that's where the normalized configs are.
         self.deviceConfig = None
         i = len(self.userConfig.devices)-1
         while i >= 0 and self.userConfig.devices[i].screen != None and \
@@ -511,7 +512,9 @@ class MainWindow (gtk.Window):
                 self.driver = self.curScreen.driver
                 break
             i = i - 1
+        # Sanity checks. These should all be true after normalization.
         assert(self.deviceConfig)
+        assert(self.deviceConfig.isNormalized)
         assert(len(self.deviceConfig.apps) > 0 and
                self.deviceConfig.apps[0].executable == None)
         # Register modified callback
@@ -825,31 +828,24 @@ def start (configList):
         dialog.destroy()
         complexui.start(configList)
         return
-    simplifiedDeviceConfigs = isSimplified(configList, commonui.dpy)
-    if simplifiedDeviceConfigs == None:
-        simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
-        if simplifiedDeviceConfigs == None:
-            dialog = gtk.MessageDialog (
-                None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                _("Simplification of your DRI configuration file \"%s\" "
-                  "failed. Please report a bug with the original "
-                  "configuration file attached. The file will be treated "
-                  "as read-only for now.") %
-                userConfig.fileName +" "+
-                _("DRIconf will be started in expert mode."))
-            dialog.run()
-            dialog.destroy()
-            userConfig.writable = False
-            complexui.start(configList)
-            return
-    else:
-        # Still call simplifyConfig to update the isSimplified
-        # attributes and to remove redundant device configurations.
-        simplifiedDeviceConfigs = simplifyConfig(configList, commonui.dpy)
+    normalizedDeviceConfigs = normalizeConfig(configList, commonui.dpy)
+    if True or normalizedDeviceConfigs == None:
+        dialog = gtk.MessageDialog (
+            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            _("Normalization of your DRI configuration file \"%s\" failed. "
+              "Please report a bug with the original configuration file "
+              "attached. The file will be treated as read-only for now.") %
+            userConfig.fileName +" "+
+            _("DRIconf will be started in expert mode."))
+        dialog.run()
+        dialog.destroy()
+        userConfig.writable = False
+        complexui.start(configList)
+        return
     mainWindow = MainWindow(configList)
     commonui.mainWindow = mainWindow
     mainWindow.set_default_size (-1, 500)
     mainWindow.show()
-    # Save modified simplified configuration before we start
+    # Save modified normalized configuration before we start
     if hasattr(userConfig, "isModified") and userConfig.isModified:
         mainWindow.configModified(userConfig)

@@ -39,7 +39,6 @@ complexui = driconf_complexui
 simpleui = driconf_simpleui
 
 from driconf_commonui import _
-from driconf_simpleui import isSimplified, simplifyConfig
 
 
 def main():
