@@ -668,10 +668,10 @@ class UnknownSectionPage(gtk.VBox):
 
     def help (self, widget):
         if self.driver:
-            msg = _("Some settings in this application configuration are "
-                    "unknown to the driver. Maybe the driver version changed "
-                    "and does not support these options any more. It is "
-                    "probably safe to delete these settings.")
+            msg = _("This tab shows settings that are no longer supported "
+                    "by the 3D driver. Unless you're using the same "
+                    "configuration file on another computer with a different "
+                    "driver version, it is safe to remove these settings.")
         else:
             msg = _("The driver for this device could not be determined or "
                     "does not support configuration. You can still change "
