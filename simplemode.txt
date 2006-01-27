@@ -1,6 +1,12 @@
 Design of a simplified and more intuitive user interface for DRIconf
 ====================================================================
 
+September 2005, with small modifications in January 2006
+
+Felix Kuehling
+
+
+
 1. The Problem
 
 The current user interface of DRIconf reflects the structure of the
@@ -66,6 +72,15 @@ immediate effect on the user.¹ However, system wide settings should be
 honored as default values by the user interface when creating new
 device configurations or when resetting options to their default
 value.
+
+[modification: January 26, 2006]
+
+The last sentence is moot because the user can't create new device
+configurations. Device configurations for existing hardware are
+created automatically or read from the configuration file for all
+detected devices.
+
+[end modification]
 
 ¹) With the exception of new options that did not exist the last time
 DRIconf wrote the user configuration file.
