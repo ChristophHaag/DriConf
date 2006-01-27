@@ -560,6 +560,8 @@ class UnknownSectionPage(gtk.VBox):
         scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.app = app
         self.driver = driver
+        self.nameEditable = app.device.config.writable and not driver
+        self.valueEditable = app.device.config.writable
         # copy options (dict function does not exist in Python 2.1 :( )
         opts = {}
         for name,val in app.options.items():
@@ -594,8 +596,7 @@ class UnknownSectionPage(gtk.VBox):
         for name,val in opts.items():
             self.store.set (self.store.append(),
                             0, str(name), 1, str(val),
-                            2, app.device.config.writable and not self.driver,
-                            3, app.device.config.writable)
+                            2, self.nameEditable, 3, self.valueEditable)
             self.opts.append (name)
         self.view.show()
         scrolledWindow.add (self.view)
@@ -661,7 +662,8 @@ class UnknownSectionPage(gtk.VBox):
             name = "option%d" % i
         self.app.options[name] = val
         self.opts.append (name)
-        self.store.set (self.store.append(), 0, str(name), 1, str(val), 2, True)
+        self.store.set (self.store.append(), 0, str(name), 1, str(val),
+                        2, self.nameEditable, 3, self.valueEditable)
         self.app.modified(self.app)
 
     def help (self, widget):
@@ -690,7 +692,8 @@ class UnknownSectionPage(gtk.VBox):
             if self.app.options[name] == newVal:
                 return
             self.app.options[name] = newVal
-            self.store.set (cursor, 0, str(name), 1, str(newVal), 2, True)
+            self.store.set (cursor, 0, str(name), 1, str(newVal),
+                            2, self.nameEditable, 3, self.valueEditable)
         else:
             if name == newVal or self.app.options.has_key(newVal) or \
                    self.driverOpts.has_key(newVal):
@@ -699,7 +702,8 @@ class UnknownSectionPage(gtk.VBox):
             name = newVal
             self.opts[row] = name
             self.app.options[name] = val
-            self.store.set (cursor, 0, str(name), 1, str(val), 2, True)
+            self.store.set (cursor, 0, str(name), 1, str(val),
+                            2, self.nameEditable, 3, self.valueEditable)
         self.app.modified(self.app)
 
 if gtk.__dict__.has_key("AboutDialog"):
