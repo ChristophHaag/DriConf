@@ -277,7 +277,7 @@ class AppDialog (gtk.Dialog):
                             gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
                             ("gtk-ok", gtk.RESPONSE_OK,
                              "gtk-cancel", gtk.RESPONSE_CANCEL))
-        table = gtk.Table(2, 2)
+        table = gtk.Table(3, 2)
         nameLabel = gtk.Label(_("Application Name"))
         nameLabel.show()
         table.attach(nameLabel, 0, 1, 0, 1, 0, gtk.EXPAND, 10, 5)
@@ -301,6 +301,25 @@ class AppDialog (gtk.Dialog):
         self.execEntry.show()
         table.attach(self.execEntry, 1, 2, 1, 2,
                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+        hBox = gtk.HBox(spacing=10)
+        infoImage = commonui.StockImage(gtk.STOCK_DIALOG_INFO,
+                                        gtk.ICON_SIZE_DIALOG)
+        infoImage.show()
+        hBox.pack_start(infoImage, False, False, 0)
+        infoLabel = gtk.Label(_(
+            "The executable name is important for identifying the "
+            "application. If you get it wrong, your settings will not "
+            "apply. Beware that some applications are started by a "
+            "shell script, that has a different name than the real "
+            "executable."))
+        # TODO: Add a small database of known applications with their
+        # executable names that can be picked from a menu.
+        infoLabel.set_line_wrap (True)
+        infoLabel.show()
+        hBox.pack_start(infoLabel, False, False, 0)
+        hBox.show()
+        table.attach (hBox, 0, 2, 2, 3,
+                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
         table.show()
         self.vbox.pack_start(table, True, True, 5)
         self.show()
@@ -829,7 +848,7 @@ def start (configList):
         complexui.start(configList)
         return
     normalizedDeviceConfigs = normalizeConfig(configList, commonui.dpy)
-    if True or normalizedDeviceConfigs == None:
+    if normalizedDeviceConfigs == None:
         dialog = gtk.MessageDialog (
             None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
             _("Normalization of your DRI configuration file \"%s\" failed. "
