@@ -701,7 +701,7 @@ class MainWindow (gtk.Window):
             self.vbox.set_child_packing(self.expander, False, True,
                                         0, gtk.PACK_END)
 
-    def checkAppProperties (self, name, executable, sameApp=None):
+    def checkAppProperties (self, dialog, name, executable, sameApp=None):
         errorStr = None
         if name == "" or executable == "":
             # Error message
@@ -723,7 +723,7 @@ class MainWindow (gtk.Window):
                     break
         if errorStr:
             dialog = gtk.MessageDialog(
-                self, gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
+                dialog, gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, errorStr)
             dialog.run()
             dialog.destroy()
@@ -738,7 +738,7 @@ class MainWindow (gtk.Window):
             if response == gtk.RESPONSE_OK:
                 name = dialog.getName().strip()
                 executable = dialog.getExecutable().strip()
-                if self.checkAppProperties (name, executable):
+                if self.checkAppProperties (dialog, name, executable):
                     app = dri.AppConfig(self.deviceConfig, name, executable)
                     self.deviceConfig.apps.append(app)
                     self.appCombo.append_text(name)
@@ -759,7 +759,8 @@ class MainWindow (gtk.Window):
             if response == gtk.RESPONSE_OK:
                 name = dialog.getName().strip()
                 executable = dialog.getExecutable().strip()
-                if self.checkAppProperties (name, executable, self.appPage.app):
+                if self.checkAppProperties (dialog, name, executable,
+                                            self.appPage.app):
                     i = self.deviceConfig.apps.index(self.appPage.app)
                     self.appCombo.remove_text(i-1)
                     self.appCombo.insert_text(i-1, name)
