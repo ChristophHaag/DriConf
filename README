@@ -128,10 +128,10 @@ the selected application. Click on the button on the right hand
 side. You will see a menu that presents all the options of the 3D
 driver. Pick one option. This will add the option to that area and
 allow you to change it. The settings you make here will override the
-default settings for the device that you chose above. You can add more
-settings in the same way. Remove settings that you don't want any more
-by clicking on the "Remove" button on the right hand side of an
-option.
+default settings for the device in the selected application. You can
+add more settings in the same way. Remove settings that you don't want
+any more by clicking on the "Remove" button on the right hand side of
+an option.
 
 You can remove all settings for an application by selecting the big
 "Remove" button above the Application settings. If you change your
@@ -152,10 +152,10 @@ standard mode using the "Expert Mode" button at the bottom of the
 window or by starting DRIconf with the "-e" option.
 
 In expert mode the configuration file structure is represented by a
-small tree on the left hand side of the window. The tree has one node
-for each 3D graphics device you may have, usually only one
-though. Below that node there are application nodes. If none is
-selected, select one now.
+tree on the left hand side of the window. The tree has one node for
+each 3D graphics device you may have, usually only one though. Below
+that node there are application nodes. If none is selected, select one
+now.
 
 The right pane of the window shows the available options of the 3D
 driver. Options are organized in several tabs of a notebook. Left of
@@ -165,7 +165,7 @@ active will be written to the configuration file. With the button on
 the right of each option you can always restore the respective default
 value for reference.
 
-In expert mode changed don't take effect immediately. When you're done
+In expert mode changes don't take effect immediately. When you're done
 changing options, click on the "Save" button in the button bar at the
 top of the DRIconf window to save and apply the settings.
 
