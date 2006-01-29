@@ -27,8 +27,10 @@ import gobject
 
 import driconf_commonui
 import driconf_complexui
+import driconf_appdb
 commonui = driconf_commonui    # short cut
 complexui = driconf_complexui
+appdb = driconf_appdb
 
 from driconf_commonui import _, lang
 
@@ -464,6 +466,7 @@ class MainWindow (gtk.Window):
             deviceHBox.show()
             self.vbox.pack_start(deviceHBox, False, False, 0)
         buttonBox = gtk.HButtonBox()
+        buttonBox.set_spacing(10)
         buttonBox.set_layout(gtk.BUTTONBOX_END)
         expertButton = gtk.Button()
         expertHBox = gtk.HBox()
@@ -501,10 +504,6 @@ class MainWindow (gtk.Window):
         self.appRemoveButton.connect("clicked", self.removeApp)
         self.appRemoveButton.show()
         self.appButtonBox.pack_end(self.appRemoveButton, False, False, 0)
-        addButton = gtk.Button(stock="gtk-add")
-        addButton.connect("clicked", self.addApp)
-        addButton.show()
-        self.appButtonBox.pack_end(addButton, False, False, 0)
         self.appPropButton = gtk.Button(stock="gtk-properties")
         self.appPropButton.connect("clicked", self.appProperties)
         self.appPropButton.show()
@@ -582,9 +581,21 @@ class MainWindow (gtk.Window):
         self.vbox.pack_start(self.notebook, True, True, 0)
         if self.appCombo:
             self.appButtonBox.remove(self.appCombo)
-        self.appCombo = gtk.combo_box_new_text()
+        self.appTree = appdb.createTreeStore()
+        self.appTree.prepend(None, ["- - - - - - - - - - - - - - - -", "", appdb.SEPARATOR])
         for i in range(1,len(self.deviceConfig.apps)):
-            self.appCombo.append_text(self.deviceConfig.apps[i].name)
+            self.appTree.insert(None, i-1, [self.deviceConfig.apps[i].name,
+                                            self.deviceConfig.apps[i].executable,
+                                            i])
+        self.appTree.append(None,
+                            [_("Other application ..."), "", appdb.CUSTOM_APP])
+        self.appCombo = gtk.ComboBox(self.appTree)
+        if hasattr(self.appCombo, "set_row_separator_func"):
+            # Available as of gtk 2.6
+            self.appCombo.set_row_separator_func(appdb.isSeparator)
+        cell = gtk.CellRendererText()
+        self.appCombo.pack_start(cell, True)
+        self.appCombo.add_attribute(cell, 'text', 0)
         if len(self.deviceConfig.apps) > 1:
             self.appCombo.set_active(0)
             self.expander.set_expanded(True)
@@ -677,19 +688,41 @@ class MainWindow (gtk.Window):
         self.selectScreen(combo.get_active())
 
     def changeApp (self, combo):
-        active = combo.get_active()
-        if active >= 0:
-            app = self.deviceConfig.apps[active+1]
+        it = combo.get_active_iter()
+        if it != None:
+            name, executable, index = self.appTree.get(
+                it, appdb.COL_NAME, appdb.COL_EXEC, appdb.COL_INDEX)
         else:
-            app = None
-        if self.appPage:
-            lastApp = self.appPage.app
-        else:
-            lastApp = None
-        if app != lastApp:
-            if lastApp:
+            index = 0
+        if index > 0:
+            # Select an existing application
+            app = self.deviceConfig.apps[index]
+            if self.appPage:
+                lastApp = self.appPage.app
+            else:
+                lastApp = None
+            if app != lastApp:
+                if lastApp:
+                    self.appPage.commit()
+                self.selectApp(app)
+        elif index == 0:
+            # Deselect application
+            if self.appPage:
                 self.appPage.commit()
-            self.selectApp(app)
+            self.selectApp(None)
+        elif index == appdb.PREDEF_APP:
+            # Add new pre-defined application
+            self.addPredefApp(name, executable)
+        else:
+            # Keep (restore) selection
+            if self.appPage:
+                i = self.deviceConfig.apps.index(self.appPage.app)-1
+            else:
+                i = -1
+            self.appCombo.set_active(i)
+            if index == appdb.CUSTOM_APP:
+                # Add a user-defined application
+                self.addUserdefApp()
 
     def expanderChanged (self, expander):
         # This signal handler seems to get called before the expander
@@ -730,7 +763,15 @@ class MainWindow (gtk.Window):
             return False
         return True
 
-    def addApp (self, button):
+    def doAddApp (self, name, executable):
+        app = dri.AppConfig(self.deviceConfig, name, executable)
+        self.deviceConfig.apps.append(app)
+        i = len(self.deviceConfig.apps)-1
+        self.appTree.insert(None, i-1, [name, executable, i])
+        self.appCombo.set_active(i-1)
+        self.configModified (self.deviceConfig)
+
+    def addUserdefApp (self):
         dialog = AppDialog(_("Add Application"), self)
         done = False
         while not done:
@@ -739,15 +780,30 @@ class MainWindow (gtk.Window):
                 name = dialog.getName().strip()
                 executable = dialog.getExecutable().strip()
                 if self.checkAppProperties (dialog, name, executable):
-                    app = dri.AppConfig(self.deviceConfig, name, executable)
-                    self.deviceConfig.apps.append(app)
-                    self.appCombo.append_text(name)
-                    self.appCombo.set_active(len(self.deviceConfig.apps)-2)
-                    self.configModified (self.deviceConfig)
+                    self.doAddApp(name, executable)
                     done = True
             else:
                 done = True
         dialog.destroy()
+
+    def addPredefApp (self, name, executable):
+        # Check for existing apps with same name or executable
+        i = 0
+        for app in self.deviceConfig.apps:
+            if app.name == name or app.executable == executable:
+                # Select that app instead of creating a new one
+                if self.appPage:
+                    lastApp = self.appPage.app
+                else:
+                    lastApp = None
+                if app != lastApp:
+                    if lastApp:
+                        self.appPage.commit()
+                    self.selectApp(app)
+                self.appCombo.set_active(i)
+                return
+            i = i + 1
+        self.doAddApp (name, executable)
 
     def appProperties (self, button):
         if not self.appPage:
@@ -762,9 +818,14 @@ class MainWindow (gtk.Window):
                 if self.checkAppProperties (dialog, name, executable,
                                             self.appPage.app):
                     i = self.deviceConfig.apps.index(self.appPage.app)
-                    self.appCombo.remove_text(i-1)
-                    self.appCombo.insert_text(i-1, name)
-                    self.appCombo.set_active(i-1)
+                    it = self.appTree.get_iter((i-1,))
+                    self.appTree.set(it,
+                                     appdb.COL_NAME, name,
+                                     appdb.COL_EXEC, executable,
+                                     appdb.COL_INDEX, i)
+                    #self.appCombo.remove_text(i-1)
+                    #self.appCombo.insert_text(i-1, name)
+                    #self.appCombo.set_active(i-1)
                     self.appPage.app.name = name
                     self.appPage.app.executable = executable
                     self.configModified (self.appPage.app)
@@ -777,6 +838,7 @@ class MainWindow (gtk.Window):
         if not self.appPage:
             return
         i = self.deviceConfig.apps.index(self.appPage.app)
+        it = self.appTree.get_iter((i-1,))
         if i+1 < len(self.deviceConfig.apps):
             newI = i
             newApp = self.deviceConfig.apps[i+1]
@@ -788,7 +850,15 @@ class MainWindow (gtk.Window):
             newApp = None
         del self.deviceConfig.apps[i]
         self.selectApp(newApp)
-        self.appCombo.remove_text(i-1)
+        # Adjust indices of all subsequent rows
+        jt = self.appTree.iter_next(it)
+        while jt != None:
+            j = self.appTree.get_value(jt, appdb.COL_INDEX)
+            if j <= 0:
+                break
+            self.appTree.set_value(jt, appdb.COL_INDEX, j-1)
+            jt = self.appTree.iter_next(jt)
+        self.appTree.remove(it)
         self.appCombo.set_active(newI-1)
         self.configModified(self.deviceConfig)
 

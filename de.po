@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: driconf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-26 21:38-0500\n"
-"PO-Revision-Date: 2006-01-26 21:39-0500\n"
+"POT-Creation-Date: 2006-01-29 00:35-0500\n"
+"PO-Revision-Date: 2006-01-29 00:37-0500\n"
 "Last-Translator: Felix Kuehling <fxkuehl@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -33,8 +33,8 @@ msgid "Could not detect any configurable direct-rendering capable devices."
 msgstr ""
 "Es wurden keine konfigurierbaren, direct-rendering-fähigen Geräte erkannt."
 
-#: driconf.py:76 driconf_simpleui.py:834 driconf_simpleui.py:845
-#: driconf_simpleui.py:858
+#: driconf.py:76 driconf_simpleui.py:909 driconf_simpleui.py:920
+#: driconf_simpleui.py:933
 msgid "DRIconf will be started in expert mode."
 msgstr "DRIconf wird im Expertenmodus gestartet."
 
@@ -69,6 +69,46 @@ msgstr "Eine neue Konfigurationsdatei \"%s\" wurde für Sie angelegt."
 #, python-format
 msgid "Created new DRI configuration files %s for you."
 msgstr "Neue Konfigurationsdateien %s wurden für Sie angelegt."
+
+#: driconf_appdb.py:58
+msgid "Arcade"
+msgstr "Arkade"
+
+#: driconf_appdb.py:59
+msgid "Simulation"
+msgstr "Simulation"
+
+#: driconf_appdb.py:60
+msgid "Ego-Shooter"
+msgstr "Ego-Shooter"
+
+#: driconf_appdb.py:61
+msgid "Strategy"
+msgstr "Strategie"
+
+#: driconf_appdb.py:62
+msgid "Role Playing and Adventure"
+msgstr "Rollenspiele und Abenteuer"
+
+#: driconf_appdb.py:84
+msgid "Games"
+msgstr "Spiele"
+
+#: driconf_appdb.py:85
+msgid "Science and Engineering"
+msgstr "Wissenschaft und Technik"
+
+#: driconf_appdb.py:86
+msgid "Modeling and Rendering"
+msgstr "Modellierung und Rendering"
+
+#: driconf_appdb.py:87
+msgid "Multimedia"
+msgstr "Multimedia"
+
+#: driconf_appdb.py:88
+msgid "Benchmarks"
+msgstr "Benchmarks"
 
 #: driconf_commonui.py:319
 msgid "Remove"
@@ -146,7 +186,7 @@ msgstr ""
 msgid "Unknown"
 msgstr "Unbekannt"
 
-#: driconf_complexui.py:87 driconf_simpleui.py:567
+#: driconf_complexui.py:87 driconf_simpleui.py:570
 msgid "(no description)"
 msgstr "(keine Beschreibung)"
 
@@ -159,7 +199,7 @@ msgstr ""
 "Beschreibung. Denken Sie anschließend daran, das ausführbare Programm "
 "festzulegen."
 
-#: driconf_complexui.py:170 driconf_simpleui.py:281
+#: driconf_complexui.py:170 driconf_simpleui.py:284
 msgid "Application Name"
 msgstr "Name der Anwendung"
 
@@ -223,7 +263,7 @@ msgstr "Neues Gerät"
 msgid "The configuration contains invalid entries. Save anyway?"
 msgstr "Die Konfiguration enthält ungültige Einträge. Trotzdem speichern?"
 
-#: driconf_complexui.py:691 driconf_simpleui.py:815
+#: driconf_complexui.py:691 driconf_simpleui.py:890
 #, python-format
 msgid "Can't open \"%s\" for writing."
 msgstr "Kann \"%s\" nicht zum Schreiben öffnen."
@@ -286,11 +326,11 @@ msgstr "DRIconf beenden"
 msgid "There are unsaved modifications. Exit anyway?"
 msgstr "Einige Änderungen wurden noch nicht gespeichert. Trotzdem beenden?"
 
-#: driconf_simpleui.py:293
+#: driconf_simpleui.py:296
 msgid "Executable Name"
 msgstr "Name der ausführbaren Datei"
 
-#: driconf_simpleui.py:310
+#: driconf_simpleui.py:316
 msgid ""
 "The executable name is important for identifying the application. If you get "
 "it wrong, your settings will not apply. Beware that some applications are "
@@ -303,41 +343,45 @@ msgstr ""
 "einem Shellskript gestartet werden, das einen anderen Namen hat, als die "
 "ausführbare Datei."
 
-#: driconf_simpleui.py:373
+#: driconf_simpleui.py:379
 msgid "Add setting"
 msgstr "Einstellung hinzufügen"
 
-#: driconf_simpleui.py:424
+#: driconf_simpleui.py:430
 msgid "Direct Rendering Preferences"
 msgstr "Direct Rendering Einstellungen"
 
-#: driconf_simpleui.py:437 driconf_simpleui.py:440 driconf_simpleui.py:452
+#: driconf_simpleui.py:443 driconf_simpleui.py:446 driconf_simpleui.py:458
 msgid "Screen"
 msgstr "Bildschirm"
 
-#: driconf_simpleui.py:469
+#: driconf_simpleui.py:476
 msgid "Expert Mode"
 msgstr "Expertenmodus"
 
-#: driconf_simpleui.py:489
+#: driconf_simpleui.py:496
 msgid "Application settings"
 msgstr "Anwendungseinstellungen"
 
-#: driconf_simpleui.py:552 driconf_simpleui.py:626
+#: driconf_simpleui.py:555 driconf_simpleui.py:641
 msgid "Unknown options"
 msgstr "Unbekannte Optionen"
 
-#: driconf_simpleui.py:631
+#: driconf_simpleui.py:591
+msgid "Other application ..."
+msgstr "Andere Anwendung ..."
+
+#: driconf_simpleui.py:646
 msgid "Known options"
 msgstr "Bekannte Optionen"
 
-#: driconf_simpleui.py:704
+#: driconf_simpleui.py:741
 msgid "You must enter both an application name and an executable name."
 msgstr ""
 "Sie müssen sowohl einen Anwendungsnamen als auch den Namen der ausführbaren "
 "Datei angeben."
 
-#: driconf_simpleui.py:709
+#: driconf_simpleui.py:746
 msgid ""
 "There exists an application configuration with the same name. Please enter a "
 "different name."
@@ -345,7 +389,7 @@ msgstr ""
 "Es existiert bereits eine Anwendungskonfiguration mit dem selben Namen. "
 "Bitte geben Sie einen anderen Namen ein."
 
-#: driconf_simpleui.py:714
+#: driconf_simpleui.py:751
 msgid ""
 "There exists an application configuration for the same executable. You can't "
 "create multiple application configurations for the same executable."
@@ -354,27 +398,27 @@ msgstr ""
 "Datei. Sie können nicht mehrere Konfigurationen für die selbe ausführbare "
 "Datei erstellen."
 
-#: driconf_simpleui.py:730
+#: driconf_simpleui.py:775
 msgid "Add Application"
 msgstr "Anwendung Hinzufügen"
 
-#: driconf_simpleui.py:751
+#: driconf_simpleui.py:811
 msgid "Application Properties"
 msgstr "Anwendungseigenschaften"
 
-#: driconf_simpleui.py:832
+#: driconf_simpleui.py:907
 #, python-format
 msgid "The DRI configuration file \"%s\" is broken or could not be created."
 msgstr ""
 "Die DRI Konfigurationsdatei \"%s\" ist beschädigt oder konnte nicht angelegt "
 "werden."
 
-#: driconf_simpleui.py:843
+#: driconf_simpleui.py:918
 #, python-format
 msgid "Your DRI configuration file \"%s\" is not writable."
 msgstr "Ihre DRI Konfigurationsdatei \"%s\" ist schreibgeschützt."
 
-#: driconf_simpleui.py:854
+#: driconf_simpleui.py:929
 #, python-format
 msgid ""
 "Normalization of your DRI configuration file \"%s\" failed. Please report a "
