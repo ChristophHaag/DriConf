@@ -36,7 +36,7 @@ POS=de.po es.po it.po ru.po
 #
 # Don't change anything below, unless you know what you're doing.
 #
-PYS=driconf.py driconf_commonui.py driconf_complexui.py driconf_simpleui.py
+PYS=driconf.py driconf_appdb.py driconf_commonui.py driconf_complexui.py driconf_simpleui.py
 LANGS=$(POS:%.po=%)
 MOS=$(POS:%.po=%/LC_MESSAGES/driconf.mo)
 POT=driconf.pot
