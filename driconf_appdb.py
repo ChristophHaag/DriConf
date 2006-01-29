@@ -83,7 +83,7 @@ Benchmarks = {
 AppDB = {
     _("Games") : Games,
     _("Science and Engineering") : ScienceEng,
-    _("Modeling and Rendering") : ModelRender,
+    _("Modelling and Rendering") : ModelRender,
     _("Multimedia") : Media,
     _("Benchmarks") : Benchmarks
 }
