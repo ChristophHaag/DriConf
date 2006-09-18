@@ -1,0 +1,380 @@
+# Translation of driconf-0.9.0 to Dutch.
+# Benno Schulenberg <benno@nietvergeten.nl>, 2006.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: driconfr 0.9.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-09-17 21:00-0400\n"
+"PO-Revision-Date: 2006-09-17 21:09-0400\n"
+"Last-Translator: Benno Schulenberg <benno@nietvergeten.nl>\n"
+"Language-Team: Dutch <vertaling@vrijschrift.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#: driconf.py:62
+#, python-format
+msgid ""
+"There are errors in a driver's configuration information:\n"
+"%s\n"
+"This should not happen. It probably means that you have to update DRIconf."
+msgstr ""
+"Er zitten fouten in de configuratiegegevens van een stuurprogramma:\n"
+"%s\n"
+"Dit zou niet mogen gebeuren.  Waarschijnlijk hebt u een nieuwere versie van "
+"DRIconf nodig."
+
+#: driconf.py:75
+msgid "Could not detect any configurable direct-rendering capable devices."
+msgstr "Er zijn geen configureerbare DRI-apparaten gevonden."
+
+#: driconf.py:76 driconf_simpleui.py:839 driconf_simpleui.py:850
+#: driconf_simpleui.py:863
+msgid "DRIconf will be started in expert mode."
+msgstr "DRIconf wordt in expertmodus gestart."
+
+#: driconf.py:114
+#, python-format
+msgid ""
+"Configuration file \"%s\" contains errors:\n"
+"%s\n"
+"I will leave the file alone until you fix the problem manually or remove the "
+"file."
+msgstr ""
+"Het configuratiebestand \"%s\" bevat fouten:\n"
+"%s\n"
+"Het bestand wordt genegeerd totdat u de fouten repareert of het bestand "
+"verwijdert."
+
+#: driconf.py:132
+msgid ""
+"There are no usable DRI configuration files and a new one could not be "
+"created. Exiting now."
+msgstr ""
+"Er zijn geen bruikbare DRI-configuratiebestanden gevonden, en een nieuw "
+"bestand kon niet aangemaakt worden.  Het programma wordt nu afgesloten."
+
+#: driconf.py:148
+#, python-format
+msgid "Created a new DRI configuration file \"%s\" for you."
+msgstr "Een nieuw configuratiebestand \"%s\" werd voor u aangemaakt."
+
+#: driconf.py:156
+#, python-format
+msgid "Created new DRI configuration files %s for you."
+msgstr "Nieuwe configuratiebestanden \"%s\" werden voor u aangemaakt."
+
+#: driconf_commonui.py:319
+msgid "Remove"
+msgstr "Verwijderen"
+
+#: driconf_commonui.py:322
+msgid "Reset to default value"
+msgstr "Op standaardwaarde terugzetten"
+
+#: driconf_commonui.py:587
+msgid "Option"
+msgstr "Optie"
+
+#: driconf_commonui.py:592
+msgid "Value"
+msgstr "Waarde"
+
+#: driconf_commonui.py:671
+msgid ""
+"This tab shows settings that are no longer supported by the 3D driver. "
+"Unless you're using the same configuration file on another computer with a "
+"different driver version, it is safe to remove these settings."
+msgstr ""
+"Deze tab toont instellingen die het 3D-stuurprogramma niet langer kent.  U "
+"kunt deze instellingen simpelweg verwijderen, tenzij u ditzelfde "
+"configuratiebestand op een andere computer met een andere versie van het "
+"stuurprogramma gebruikt."
+
+#: driconf_commonui.py:676
+msgid ""
+"The driver for this device could not be determined or does not support "
+"configuration. You can still change the settings but it cannot be verified "
+"whether they are supported and valid."
+msgstr ""
+"Het stuurprogramma voor dit apparaat kan niet bepaald worden of is niet "
+"configureerbaar.  U kunt desondanks de instellingen bewerken, maar het is "
+"niet mogelijk te controleren of het stuurprogramma ze ondersteunt en of de "
+"waardes geldig zijn."
+
+#: driconf_commonui.py:714 driconf_commonui.py:732 driconf_commonui.py:743
+msgid "translator-credits"
+msgstr "Benno Schulenberg <bensberg@justemail.net>"
+
+#: driconf_commonui.py:721 driconf_commonui.py:740
+msgid "A configuration applet for DRI drivers"
+msgstr "Configuratiegereedschap voor DRI-stuurprogramma's"
+
+#: driconf_commonui.py:742
+msgid "Translated by"
+msgstr "Vertaald door"
+
+#: driconf_commonui.py:748 driconf_complexui.py:871
+msgid "About DRIconf"
+msgstr "Over DRIconf"
+
+#: driconf_complexui.py:39
+msgid "Application"
+msgstr "Applicatie"
+
+#: driconf_complexui.py:46
+msgid "Apply only to this executable"
+msgstr "Alleen op dit uitvoerbare programma toepassen"
+
+#: driconf_complexui.py:49
+msgid ""
+"Leave this disabled to configure all applications.\n"
+"Beware that some applications or games are just a shell script that starts a "
+"real executable with a different name."
+msgstr ""
+"Als dit uitstaat, gelden de instellingen voor alle applicaties.\n"
+"Wees erop bedacht dat sommige applicaties slechts een shellscript zijn en "
+"dat het uiteindelijk gestarte programma een andere naam heeft."
+
+#: driconf_complexui.py:73
+msgid "Unknown"
+msgstr "Onbekend"
+
+#: driconf_complexui.py:87 driconf_simpleui.py:571
+msgid "(no description)"
+msgstr "(geen omschrijving)"
+
+#: driconf_complexui.py:163
+msgid ""
+"Enter the name of the application below. This just serves as a description "
+"for you. Don't forget to set the executable afterwards."
+msgstr ""
+"Geef hieronder een naam voor de applicatie op.  Dit dient slechts als een "
+"omschrijving voor uzelf.  Vergeet niet verderop de naam van het uitvoerbare "
+"programma vast te leggen."
+
+#: driconf_complexui.py:170 driconf_simpleui.py:282
+msgid "Application Name"
+msgstr "Naam van applicatie"
+
+#: driconf_complexui.py:205
+msgid "Describe the device that you would like to configure."
+msgstr "Het te configureren apparaat."
+
+#: driconf_complexui.py:210
+msgid "Screen Number"
+msgstr "Schermnummer"
+
+#: driconf_complexui.py:221
+msgid "Driver Name"
+msgstr "Stuurprogrammanaam"
+
+#: driconf_complexui.py:344
+#, python-format
+msgid "%s on screen %s"
+msgstr "%s op scherm %s"
+
+#: driconf_complexui.py:348
+#, python-format
+msgid "Screen %s"
+msgstr "Scherm %s"
+
+#: driconf_complexui.py:354
+msgid "Unspecified device"
+msgstr "Ongespecificeerd apparaat"
+
+#: driconf_complexui.py:578
+#, python-format
+msgid "Parsing the driver's configuration information: %s"
+msgstr "Tijdens het ontleden van stuurprogramma-configuratiegegevens: %s"
+
+#: driconf_complexui.py:616
+#, python-format
+msgid "Really delete application \"%s\"?"
+msgstr "Configuratie voor applicatie \"%s\" echt wissen?"
+
+#: driconf_complexui.py:622
+msgid "Really delete device and all applications in it?"
+msgstr ""
+"Dit apparaat en alle bijbehorende configuratiegegevens echt verwijderen?"
+
+#: driconf_complexui.py:643
+msgid "Rename Application"
+msgstr "Applicatie hernoemen"
+
+#: driconf_complexui.py:646
+msgid "Device Properties"
+msgstr "Apparaateigenschappen"
+
+#: driconf_complexui.py:653
+msgid "New Application"
+msgstr "Nieuwe applicatie"
+
+#: driconf_complexui.py:656
+msgid "New Device"
+msgstr "Nieuw apparaat"
+
+#: driconf_complexui.py:680
+msgid "The configuration contains invalid entries. Save anyway?"
+msgstr "De configuratie bevat ongeldige gegevens.  Toch opslaan?"
+
+#: driconf_complexui.py:691 driconf_simpleui.py:820
+#, python-format
+msgid "Can't open \"%s\" for writing."
+msgstr "Kan niet naar \"%s\" schrijven."
+
+#: driconf_complexui.py:710
+#, python-format
+msgid "Really reload \"%s\" from disk?"
+msgstr "Bestand \"%s\" echt opnieuw laden?"
+
+#: driconf_complexui.py:721
+#, python-format
+msgid "Couldn't open \"%s\" for reading. The file was not reloaded."
+msgstr "Kan \"%s\" niet lezen.  Het bestand is niet opnieuw geladen."
+
+#: driconf_complexui.py:733
+#, python-format
+msgid ""
+"Configuration file \"%s\" contains errors:\n"
+"%s\n"
+"The file was not reloaded."
+msgstr ""
+"Configuratiebestand \"%s\" bevat fouten:\n"
+"%s\n"
+"Het bestand is niet opnieuw geladen."
+
+#: driconf_complexui.py:842
+msgid "Save selected configuration file"
+msgstr "Geselecteerd configuratiebestand opslaan"
+
+#: driconf_complexui.py:845
+msgid "Reload selected configuration file"
+msgstr "Geselecteerd configuratiebestand opnieuw laden"
+
+#: driconf_complexui.py:849
+msgid "Create a new device or application"
+msgstr "Nieuw apparaat of applicatie toevoegen"
+
+#: driconf_complexui.py:852
+msgid "Remove selected device or application"
+msgstr "Geselecteerd apparaat of applicatie verwijderen"
+
+#: driconf_complexui.py:855
+msgid "Move selected item up"
+msgstr "Geselecteerd item naar boven verplaatsen"
+
+#: driconf_complexui.py:858
+msgid "Move selected item down"
+msgstr "Geselecteerd item naar beneden verplaatsen"
+
+#: driconf_complexui.py:861
+msgid "Properties of selected device or application"
+msgstr "Eigenschappen van geselecteerd apparaat of applicatie"
+
+#: driconf_complexui.py:875
+msgid "Exit DRIconf"
+msgstr "DRIconf afsluiten"
+
+#: driconf_complexui.py:989
+msgid "There are unsaved modifications. Exit anyway?"
+msgstr "Sommige wijzigingen zijn nog niet opgeslagen.  Toch afsluiten?"
+
+#: driconf_simpleui.py:294
+msgid "Executable Name"
+msgstr "Naam van uitvoerbare programma"
+
+#: driconf_simpleui.py:314
+msgid ""
+"The executable name is important for identifying the application. If you get "
+"it wrong, your settings will not apply. Beware that some applications are "
+"started by a shell script, that has a different name than the real "
+"executable."
+msgstr ""
+"De naam van het uitvoerbare programma is belangrijk voor het herkennen van "
+"de applicatie.  Als u een verkeerde naam opgeeft, worden uw applicatie-"
+"instellingen niet toegepast.  Wees erop bedacht dat sommige applicaties door "
+"een script gestart worden en dat het uiteindelijk uitgevoerde programma een "
+"andere naam heeft."
+
+#: driconf_simpleui.py:377
+msgid "Add setting"
+msgstr "Instelling toevoegen"
+
+#: driconf_simpleui.py:428
+msgid "Direct Rendering Preferences"
+msgstr "Instellingen voor Direct Rendering"
+
+#: driconf_simpleui.py:441 driconf_simpleui.py:444 driconf_simpleui.py:456
+msgid "Screen"
+msgstr "Scherm"
+
+#: driconf_simpleui.py:473
+msgid "Expert Mode"
+msgstr "Expertmodus"
+
+#: driconf_simpleui.py:493
+msgid "Application settings"
+msgstr "Applicatie-instellingen"
+
+#: driconf_simpleui.py:556 driconf_simpleui.py:630
+msgid "Unknown options"
+msgstr "Onbekende opties"
+
+#: driconf_simpleui.py:635
+msgid "Known options"
+msgstr "Bekende opties"
+
+#: driconf_simpleui.py:708
+msgid "You must enter both an application name and an executable name."
+msgstr ""
+"U dient zowel een applicatienaam als de naam van het uitvoerbare programma "
+"op te geven."
+
+#: driconf_simpleui.py:713
+msgid ""
+"There exists an application configuration with the same name. Please enter a "
+"different name."
+msgstr ""
+"Er bestaat al een applicatieconfiguratie met deze naam.  Geef alstublieft "
+"een andere naam op."
+
+#: driconf_simpleui.py:718
+msgid ""
+"There exists an application configuration for the same executable. You can't "
+"create multiple application configurations for the same executable."
+msgstr ""
+"Er bestaat al een applicatieconfiguratie voor dat programma.  U kunt niet "
+"meerdere configuraties voor hetzelfde programma aanmaken."
+
+#: driconf_simpleui.py:734
+msgid "Add Application"
+msgstr "Applicatie toevoegen"
+
+#: driconf_simpleui.py:755
+msgid "Application Properties"
+msgstr "Applicatie-eigenschappen"
+
+#: driconf_simpleui.py:837
+#, python-format
+msgid "The DRI configuration file \"%s\" is broken or could not be created."
+msgstr ""
+"DRI-configuratiebestand \"%s\" is beschadigd of kan niet aangemaakt worden."
+
+#: driconf_simpleui.py:848
+#, python-format
+msgid "Your DRI configuration file \"%s\" is not writable."
+msgstr "DRI-configuratiebestand \"%s\" is niet schrijfbaar."
+
+#: driconf_simpleui.py:859
+#, python-format
+msgid ""
+"Normalization of your DRI configuration file \"%s\" failed. Please report a "
+"bug with the original configuration file attached. The file will be treated "
+"as read-only for now."
+msgstr ""
+"Normalisering van DRI-configuratiebestand \"%s\" is mislukt.  Stuur "
+"alstublieft een foutrapportage op inclusief het configuratiebestand.  Dit "
+"bestand wordt zolang als alleen-lezen behandeld."
