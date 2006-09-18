@@ -160,8 +160,8 @@ class NameDialog (gtk.Dialog):
         self.connect ("response", self.responseSignal)
         table = gtk.Table(2, 2)
         commentLabel = gtk.Label (_(
-            "Enter the name of the application below. This serves just a "
-            "descriptivion for you. Don't forget to set the executable "
+            "Enter the name of the application below. This just serves as "
+            "a description for you. Don't forget to set the executable "
             "afterwards."))
         commentLabel.set_line_wrap (True)
         commentLabel.show()

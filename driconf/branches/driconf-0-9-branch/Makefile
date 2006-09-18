@@ -31,7 +31,7 @@
 # - documentation of the gettext python package
 
 # The set of supported languages. Add languages as needed.
-POS=de.po es.po it.po ru.po
+POS=de.po es.po it.po ru.po nl.po
 
 #
 # Don't change anything below, unless you know what you're doing.
