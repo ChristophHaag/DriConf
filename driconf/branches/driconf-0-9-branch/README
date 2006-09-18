@@ -80,7 +80,7 @@ If everything goes well you should see something like this:
 After successful installation you can run driconf from the shell. The
 release includes an example driconf.desktop file. You can copy that to
 /usr/share/applications/driconf.desktop to add driconf to your desktop's
-applications menu.
+settings menu.
 
 I hope you find the user interface intuitive and instructive. Feedback
 is welcome on dri-users@lists.sourceforge.net. If you need help
