@@ -1,10 +1,11 @@
 include CHANGELOG COPYING TODO
 include simplemode.txt
-include driconf setup.cfg
-include card.png screen.png screencard.png drilogo.jpg
+include driconf setup.cfg driconf.desktop
+include card.png screen.png screencard.png drilogo.jpg driconf-icon.png
 include Makefile
 include *.po
 recursive-include de *.mo
 recursive-include es *.mo
 recursive-include it *.mo
 recursive-include ru *.mo
+resursive-include nl *.mo
