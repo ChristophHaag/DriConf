@@ -716,7 +716,7 @@ if gtk.__dict__.has_key("AboutDialog"):
                 translators = None
             self.set_name("DRIconf")
             self.set_version(version)
-            self.set_copyright(u"Copyright \u00a9 2003-2005  "
+            self.set_copyright(u"Copyright \u00a9 2003-2006  "
                                u"Felix K\u00fchling")
             self.set_comments(_("A configuration applet for DRI drivers"))
             self.set_website(u"http://dri.freedesktop.org/wiki/DriConf")
