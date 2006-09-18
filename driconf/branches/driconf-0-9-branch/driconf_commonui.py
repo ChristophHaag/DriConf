@@ -54,7 +54,7 @@ else:
 del encoding
 
 # global variable: version
-version = "0.9.0"
+version = "0.9.1"
 
 # global variable: dpy
 dpy = None
