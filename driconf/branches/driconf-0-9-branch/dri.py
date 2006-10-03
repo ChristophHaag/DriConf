@@ -21,6 +21,7 @@
 import os
 import string
 import re
+import locale
 import xml.parsers.expat
 
 class Error (Exception):
@@ -328,6 +329,29 @@ class DriverInfo:
                 return optSection.options[name]
         return None
 
+def _GLXInfoToUnicode(string):
+    """ Smart way to convert strings to unicode.
+
+    This should give the expected result in most cases that are interesting
+    for glxinfo output.
+    """
+    # Try a number of popular encodings starting with the locale's default.
+    # Try utf-8 before latin1, since latin1 will almost always succeed
+    # but not necessarily be correct.
+    lang,defenc = locale.getlocale(locale.LC_MESSAGES)
+    if not defenc:
+        encodings = ('utf-8', 'iso8859-1')
+    else:
+        encodings = (defenc, 'utf-8', 'iso8859-1')
+    for encoding in encodings:
+        try:
+            return unicode(string, encoding, 'strict')
+        except ValueError:
+            continue
+    # If we get here, all encodings failed. Use ascii with replacement
+    # of illegal characters as a failsafe fallback.
+    return unicode(string, 'ascii', 'replace')
+
 class GLXInfo:
     def __init__ (self, screen, dpy):
         if dpy == None:
@@ -359,6 +383,9 @@ class GLXInfo:
             self.renderer = rMatch and rMatch.group(1)
             if not self.vendor or not self.renderer:
                 raise DRIError ("unable to parse glxinfo output.")
+            # Make sure we end up with valid unicode
+            self.vendor = _GLXInfoToUnicode(self.vendor)
+            self.renderer = _GLXInfoToUnicode(self.renderer)
 
 class ScreenInfo:
     """ References a DriverInfo object with the real config info. """
