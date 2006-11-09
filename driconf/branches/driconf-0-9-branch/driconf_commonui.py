@@ -352,6 +352,12 @@ class OptionLine:
         if type == "bool":
             self.widget = gtk.ToggleButton ()
             self.widget.set_use_stock (True)
+            # Make sure the button doesn't change size when toggled
+            self.widget.set_label ("gtk-yes")
+            wYes = self.widget.size_request()[0]
+            self.widget.set_label ("gtk-no")
+            wNo = self.widget.size_request()[0]
+            self.widget.set_size_request (max(wYes, wNo), -1)
             if value:
                 self.widget.set_label ("gtk-yes")
             else:
