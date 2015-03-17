@@ -23,17 +23,19 @@ import locale
 import gettext
 import math
 import dri
-import pygtk
-pygtk.require ("2.0")
-import gtk
-import gobject
+import gi
+from functools import reduce
+#pyGtk.require ("2.0")
+from gi.repository import Gtk
+from gi.repository import GObject
 
 # Install translations. Search in the current directory first (for
 # easy testing). Then search in the default location and in
 # /usr/local/share/locale. If all this fails fall back to the null
 # translation.
 try:
-    _ = gettext.translation ("driconf", ".").ugettext
+    #_ = gettext.translation ("driconf", ".").ugettext
+    _ = gettext.install("driconf")
 except IOError:
     try:
         _ = gettext.translation ("driconf").ugettext
@@ -76,7 +78,7 @@ def findInShared (name):
     # try name in the current directory
     if os.path.isfile (name):
         return name
-    print "Warning: could not find %s." % name
+    print("Warning: could not find %s." % name)
     # nothing found
     return None
 
@@ -99,19 +101,19 @@ def fileIsWritable(filename):
 def escapeMarkup (text):
     return text.replace ("<", "&lt;").replace (">", "&gt;")
 
-class StockImage (gtk.Image):
+class StockImage (Gtk.Image):
     """ A stock image. """
     def __init__ (self, stock, size):
         """ Constructor. """
-        gtk.Image.__init__ (self)
+        GObject.GObject.__init__ (self)
         self.set_from_stock (stock, size)
 
-class WrappingLabel (gtk.Label):
+class WrappingLabel (Gtk.Label):
     """ Line wrapping label with a highlight method """
-    def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=True,
+    def __init__ (self, label, justify=Gtk.Justification.LEFT, wrap=True,
                   width=-1, height=-1):
         self.text = escapeMarkup (label)
-        gtk.Label.__init__ (self, label)
+        GObject.GObject.__init__ (self, label)
         self.set_justify (justify)
         self.set_line_wrap (wrap)
         self.set_size_request (width, height)
@@ -124,12 +126,12 @@ class WrappingLabel (gtk.Label):
         else:
             self.set_markup (self.text)
 
-class WrappingDummyCheckButton (gtk.HBox):
+class WrappingDummyCheckButton (Gtk.HBox):
     """ Dummy Check button with a line wrapping label. """
-    def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=True,
+    def __init__ (self, label, justify=Gtk.Justification.LEFT, wrap=True,
                   width=-1, height=-1):
         """ Constructor. """
-        gtk.HBox.__init__ (self)
+        GObject.GObject.__init__ (self)
         self.text = escapeMarkup (label)
         self.label = WrappingLabel (label, justify, wrap, width, height)
         self.label.show()
@@ -146,13 +148,13 @@ class WrappingDummyCheckButton (gtk.HBox):
         distinguish between simple and complex mode. """
         return True
 
-class WrappingCheckButton (gtk.CheckButton):
+class WrappingCheckButton (Gtk.CheckButton):
     """ Check button with a line wrapping label. """
-    def __init__ (self, label, justify=gtk.JUSTIFY_LEFT, wrap=True,
+    def __init__ (self, label, justify=Gtk.Justification.LEFT, wrap=True,
                   width=-1, height=-1):
         """ Constructor. """
-        gtk.CheckButton.__init__ (self)
-        checkHBox = gtk.HBox()
+        GObject.GObject.__init__ (self)
+        checkHBox = Gtk.HBox()
         self.text = escapeMarkup (label)
         self.label = WrappingLabel (label, justify, wrap, width, height)
         self.label.show()
@@ -164,16 +166,16 @@ class WrappingCheckButton (gtk.CheckButton):
         """ Highlight the label. """
         self.label.highlight (flag)
 
-class WrappingOptionMenu (gtk.Button):
-    """ Something that looks similar to a gtk.OptionMenu ...
+class WrappingOptionMenu (Gtk.Button):
+    """ Something that looks similar to a Gtk.OptionMenu ...
 
     but can wrap the text and has a simpler interface. It acts as a
     bidirectional map from option descriptions (opt) to values (val)
     at the same time. """
-    def __init__ (self, optValList, callback, justify=gtk.JUSTIFY_LEFT,
+    def __init__ (self, optValList, callback, justify=Gtk.Justification.LEFT,
                   wrap=True, width=-1, height=-1):
         """ Constructor. """
-        gtk.Button.__init__ (self)
+        GObject.GObject.__init__ (self)
         self.callback = callback
         self.optDict = {}
         self.valDict = {}
@@ -182,10 +184,10 @@ class WrappingOptionMenu (gtk.Button):
             self.valDict[val] = opt
         firstOpt,firstVal = optValList[len(optValList)-1]
         self.value = firstVal
-        hbox = gtk.HBox()
-        arrow = gtk.Arrow (gtk.ARROW_DOWN, gtk.SHADOW_OUT)
+        hbox = Gtk.HBox()
+        arrow = Gtk.Arrow (Gtk.ArrowType.DOWN, Gtk.ShadowType.OUT)
         arrow.show()
-        self.label = gtk.Label(firstOpt)
+        self.label = Gtk.Label(label=firstOpt)
         self.label.set_justify (justify)
         self.label.set_line_wrap (wrap)
         self.label.set_size_request (width, height)
@@ -194,9 +196,9 @@ class WrappingOptionMenu (gtk.Button):
         hbox.pack_start (arrow, False, False, 0)
         hbox.show()
         self.add (hbox)
-        self.menu = gtk.Menu()
+        self.menu = Gtk.Menu()
         for opt,val in optValList:
-            item = gtk.MenuItem (opt)
+            item = Gtk.MenuItem (opt)
             item.connect("activate", self.menuSelect, opt)
             item.show()
             self.menu.append (item)
@@ -218,7 +220,7 @@ class WrappingOptionMenu (gtk.Button):
 
     def buttonPress (self, widget, event):
         """ Popup the menu. """
-        if event.type == gtk.gdk.BUTTON_PRESS:
+        if event.type == Gdk.EventType.BUTTON_PRESS:
             self.menu.popup(None, None, None, event.button, event.time)
             return True
         else:
@@ -229,14 +231,14 @@ class WrappingOptionMenu (gtk.Button):
         self.setOpt (opt)
         self.callback (self)
 
-class SlideSpinner (gtk.VBox):
+class SlideSpinner (Gtk.VBox):
     """ A spin button with a slider below.
 
     This is used for representing int and float options with a single
     range. The slider is only displayed on float options or on integer
     options with a large range (>= 20, arbitrary threshold). """
     def __init__ (self, callback, lower, upper, integer):
-        gtk.VBox.__init__ (self)
+        GObject.GObject.__init__ (self)
         diff = upper - lower
         self.isInteger = integer
         if integer:
@@ -250,13 +252,13 @@ class SlideSpinner (gtk.VBox):
             if self.digits < 0:
                 self.digits = 0
         self.callback = callback
-        self.adjustment = gtk.Adjustment (lower, lower, upper, step, page)
-        self.spinner = gtk.SpinButton (self.adjustment, step, self.digits)
+        self.adjustment = Gtk.Adjustment (lower, lower, upper, step, page)
+        self.spinner = Gtk.SpinButton (self.adjustment, step, self.digits)
         self.spinner.set_numeric (True)
         self.spinner.show()
         self.pack_start (self.spinner, False, False, 0)
         if not integer or diff >= 20:
-            self.slider = gtk.HScale (self.adjustment)
+            self.slider = Gtk.HScale (self.adjustment)
             self.slider.set_size_request (200, -1)
             self.slider.set_draw_value (False)
             self.slider.show()
@@ -285,35 +287,35 @@ class OptionLine:
         typeString = opt.type
         if opt.valid:
             typeString = typeString+" ["+ \
-                         reduce(lambda x,y: x+','+y, map(str,opt.valid))+"]"
+                         reduce(lambda x,y: x+','+y, list(map(str,opt.valid)))+"]"
         # a check button with an option description
         desc = opt.getDesc([lang])
         if desc != None:
             desc = desc.text
         else:
-            desc = u"(no description available)"
+            desc = "(no description available)"
         if simple:
             self.label = WrappingDummyCheckButton (desc, width=200)
         else:
             self.label = WrappingCheckButton (desc, width=200)
-            self.label.set_active (page.app.options.has_key (opt.name))
+            self.label.set_active (opt.name in page.app.options)
             self.label.set_sensitive (page.app.device.config.writable)
             self.label.connect ("clicked", self.checkOpt)
         tooltipString = str(opt)
         page.tooltips.set_tip (self.label, tooltipString)
         self.label.show()
         page.table.attach (self.label, 0, 1, i, i+1,
-                           gtk.EXPAND|gtk.FILL, 0, 5, 5)
+                           Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 0, 5, 5)
         # a button to reset the option to its default value
         sensitive = self.label.get_active() and page.app.device.config.writable
-        self.resetButton = gtk.Button ()
+        self.resetButton = Gtk.Button ()
         if removable:
-            pixmap = StockImage ("gtk-remove", gtk.ICON_SIZE_SMALL_TOOLBAR)
+            pixmap = StockImage ("gtk-remove", Gtk.IconSize.SMALL_TOOLBAR)
         else:
-            pixmap = StockImage ("gtk-undo", gtk.ICON_SIZE_SMALL_TOOLBAR)
+            pixmap = StockImage ("gtk-undo", Gtk.IconSize.SMALL_TOOLBAR)
         pixmap.show()
         self.resetButton.add (pixmap)
-        self.resetButton.set_relief (gtk.RELIEF_NONE)
+        self.resetButton.set_relief (Gtk.ReliefStyle.NONE)
         self.resetButton.set_sensitive (sensitive)
         if removable:
             page.tooltips.set_tip(self.resetButton, _("Remove"))
@@ -325,7 +327,7 @@ class OptionLine:
         page.table.attach (self.resetButton, 2, 3, i, i+1, 0, 0, 5, 5)
 
         # get the option value, if it's invalid leave it as a string
-        if page.app.options.has_key (opt.name):
+        if opt.name in page.app.options:
             self.isValid = opt.validate (page.app.options[opt.name])
             try:
                 value = dri.StrToValue (page.app.options[opt.name], opt.type)
@@ -339,7 +341,7 @@ class OptionLine:
         # the widget for editing the option value
         self.initWidget (opt, value)
         self.widget.set_sensitive (sensitive)
-        page.table.attach (self.widget, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
+        page.table.attach (self.widget, 1, 2, i, i+1, Gtk.AttachOptions.FILL, 0, 5, 5)
 
     def initWidget (self, opt, value):
         """ Initialize the option widget.
@@ -350,7 +352,7 @@ class OptionLine:
         if not self.isValid:
             type = "invalid"
         if type == "bool":
-            self.widget = gtk.ToggleButton ()
+            self.widget = Gtk.ToggleButton ()
             self.widget.set_use_stock (True)
             if value:
                 self.widget.set_label ("gtk-yes")
@@ -368,14 +370,14 @@ class OptionLine:
             self.widget.setValue (value)
         elif type == "enum" or \
              (type != "invalid" and opt.valid and
-              reduce (lambda x,y: x and y, map(dri.Range.empty, opt.valid))):
+              reduce (lambda x,y: x and y, list(map(dri.Range.empty, opt.valid)))):
             desc = opt.getDesc([lang])
             optValList = []
             for r in opt.valid:
                 if type == "enum":
                     for v in range (r.start, r.end+1):
                         vString = dri.ValueToStr(v, type)
-                        if type == "enum" and desc and desc.enums.has_key(v):
+                        if type == "enum" and desc and v in desc.enums:
                             string = desc.enums[v]
                         else:
                             string = vString
@@ -387,7 +389,7 @@ class OptionLine:
                                               width=180)
             self.widget.setValue(str(value))
         else:
-            self.widget = gtk.Entry ()
+            self.widget = Gtk.Entry ()
             if type == "invalid":
                 self.widget.set_text (value)
             else:
@@ -398,13 +400,13 @@ class OptionLine:
 
     def updateWidget (self, value, valid):
         """ Update the option widget to a new value. """
-        if self.widget.__class__ == gtk.ToggleButton:
+        if self.widget.__class__ == Gtk.ToggleButton:
             self.widget.set_active (value)
         elif self.widget.__class__ == SlideSpinner:
             self.widget.setValue (value)
         elif self.widget.__class__ == WrappingOptionMenu:
             self.widget.setValue(str(value))
-        elif self.widget.__class__ == gtk.Entry:
+        elif self.widget.__class__ == Gtk.Entry:
             if self.opt.type == "bool" and valid:
                 if value:
                     newText = "true"
@@ -423,7 +425,7 @@ class OptionLine:
         Returns None if the widget is not activated. """
         if not self.label.get_active():
             return None
-        elif self.widget.__class__ == gtk.ToggleButton:
+        elif self.widget.__class__ == Gtk.ToggleButton:
             if self.widget.get_active():
                 return "true"
             else:
@@ -432,7 +434,7 @@ class OptionLine:
             return str(self.widget.getValue())
         elif self.widget.__class__ == WrappingOptionMenu:
             return self.widget.getValue()
-        elif self.widget.__class__ == gtk.Entry:
+        elif self.widget.__class__ == Gtk.Entry:
             return self.widget.get_text()
         else:
             return None
@@ -452,7 +454,7 @@ class OptionLine:
 
     def activateSignal (self, widget, dummy=None):
         """ Handler for 'widget was activated by the user'. """
-        if self.widget.__class__ == gtk.ToggleButton:
+        if self.widget.__class__ == Gtk.ToggleButton:
             value = self.widget.get_active()
             if value:
                 self.widget.set_label ("gtk-yes")
@@ -474,7 +476,7 @@ class OptionLine:
         """ Validate the current value from the option widget.
 
         This is only interesting if the check button is active. Only
-        gtk.Entry widgets should ever give invalid values in practice.
+        Gtk.Entry widgets should ever give invalid values in practice.
         Invalid option widgets are highlighted. If the validity
         changed, reinitialize the widget and have the page check if
         its validity was changed, too. """
@@ -491,7 +493,7 @@ class OptionLine:
             self.widget.destroy()
             self.initWidget(self.opt, dri.StrToValue(value, self.opt.type))
             self.widget.show()
-            self.page.table.attach (self.widget, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
+            self.page.table.attach (self.widget, 1, 2, i, i+1, Gtk.AttachOptions.FILL, 0, 5, 5)
             # Update parent page.
             self.page.doValidate()
 
@@ -501,17 +503,17 @@ class OptionLine:
     def validate (self):
         return self.isValid or not self.label.get_active()
 
-class SectionPage (gtk.ScrolledWindow):
+class SectionPage (Gtk.ScrolledWindow):
     """ One page in the DriverPanel with one OptionLine per option. """
     def __init__ (self, optSection, app, simple):
         """ Constructor. """
-        gtk.ScrolledWindow.__init__ (self)
-        self.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        GObject.GObject.__init__ (self)
+        self.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.optSection = optSection
         self.app = app
         self.simple = simple
-        self.tooltips = gtk.Tooltips()
-        self.table = gtk.Table (len(optSection.optList), 3)
+        self.tooltips = Gtk.Tooltips()
+        self.table = Gtk.Table (len(optSection.optList), 3)
         self.optLines = []
         for i in range (len(optSection.optList)):
             self.optLines.append (OptionLine (self, i, optSection.optList[i], simple))
@@ -546,25 +548,25 @@ class SectionPage (gtk.ScrolledWindow):
         for optLine in self.optLines:
             name = optLine.opt.name
             value = optLine.getValue()
-            if value == None and self.app.options.has_key(name):
+            if value == None and name in self.app.options:
                 del self.app.options[name]
             elif value != None:
                 self.app.options[name] = value
 
-class UnknownSectionPage(gtk.VBox):
+class UnknownSectionPage(Gtk.VBox):
     """ Special section page for options unknown to the driver. """
     def __init__ (self, driver, app):
         """ Constructor. """
-        gtk.VBox.__init__ (self)
-        scrolledWindow = gtk.ScrolledWindow ()
-        scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        GObject.GObject.__init__ (self)
+        scrolledWindow = Gtk.ScrolledWindow ()
+        scrolledWindow.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.app = app
         self.driver = driver
         self.nameEditable = app.device.config.writable and not driver
         self.valueEditable = app.device.config.writable
         # copy options (dict function does not exist in Python 2.1 :( )
         opts = {}
-        for name,val in app.options.items():
+        for name,val in list(app.options.items()):
             opts[name] = val
         # remove all options known to the driver
         self.driverOpts = {}
@@ -572,28 +574,28 @@ class UnknownSectionPage(gtk.VBox):
             for sect in driver.optSections:
                 for opt in sect.optList:
                     self.driverOpts[opt.name] = opt
-                    if opts.has_key (opt.name):
+                    if opt.name in opts:
                         del opts[opt.name]
         # short cut
         self.opts = []
         if driver and len(opts) == 0:
             return
         # list all remaining options here
-        self.store = gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN, gobject.TYPE_BOOLEAN)
-        self.view = gtk.TreeView (self.store)
+        self.store = Gtk.ListStore (GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_BOOLEAN, GObject.TYPE_BOOLEAN)
+        self.view = Gtk.TreeView (self.store)
         self.view.set_rules_hint (True)
-        optionRenderer = gtk.CellRendererText()
+        optionRenderer = Gtk.CellRendererText()
         optionRenderer.connect ("edited", self.editedSignal, 0)
-        column = gtk.TreeViewColumn (_("Option"), optionRenderer,
+        column = Gtk.TreeViewColumn (_("Option"), optionRenderer,
                                      text=0, editable=2)
         self.view.append_column (column)
-        valueRenderer = gtk.CellRendererText()
+        valueRenderer = Gtk.CellRendererText()
         valueRenderer.connect ("edited", self.editedSignal, 1)
-        column = gtk.TreeViewColumn (_("Value"), valueRenderer,
+        column = Gtk.TreeViewColumn (_("Value"), valueRenderer,
                                      text=1, editable=3)
         self.view.append_column (column)
-        self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
-        for name,val in opts.items():
+        self.view.get_selection().set_mode (Gtk.SelectionMode.MULTIPLE)
+        for name,val in list(opts.items()):
             self.store.set (self.store.append(),
                             0, str(name), 1, str(val),
                             2, self.nameEditable, 3, self.valueEditable)
@@ -602,20 +604,20 @@ class UnknownSectionPage(gtk.VBox):
         scrolledWindow.add (self.view)
         scrolledWindow.show()
         self.pack_start (scrolledWindow, True, True, 0)
-        buttonBox = gtk.HButtonBox()
-        buttonBox.set_layout (gtk.BUTTONBOX_END)
+        buttonBox = Gtk.HButtonBox()
+        buttonBox.set_layout (Gtk.ButtonBoxStyle.END)
         if not self.driver:
-            newButton = gtk.Button (stock="gtk-add")
+            newButton = Gtk.Button (stock="gtk-add")
             newButton.connect ("clicked", self.newSetting)
             newButton.set_sensitive(app.device.config.writable)
             newButton.show()
             buttonBox.add (newButton)
-        deleteButton = gtk.Button (stock="gtk-remove")
+        deleteButton = Gtk.Button (stock="gtk-remove")
         deleteButton.connect ("clicked", self.deleteSelection)
         deleteButton.set_sensitive(app.device.config.writable)
         deleteButton.show()
         buttonBox.add (deleteButton)
-        helpButton = gtk.Button (stock="gtk-help")
+        helpButton = Gtk.Button (stock="gtk-help")
         helpButton.connect ("clicked", self.help)
         helpButton.show()
         buttonBox.add (helpButton)
@@ -633,7 +635,7 @@ class UnknownSectionPage(gtk.VBox):
 
     def deleteSelection (self, widget):
         """ Delete the selected items from the list and app config. """
-        # Damn it! gtk.TreeSelection.get_selected_rows doesn't exist.
+        # Damn it! Gtk.TreeSelection.get_selected_rows doesn't exist.
         # So we iterate over the whole list store and delete all selected
         # items.
         cur = self.store.get_iter_first()
@@ -656,8 +658,8 @@ class UnknownSectionPage(gtk.VBox):
         name = "option"
         val = ""
         i = 0
-        while self.app.options.has_key(name) or \
-                  self.driverOpts.has_key(name):
+        while name in self.app.options or \
+                  name in self.driverOpts:
             i = i + 1
             name = "option%d" % i
         self.app.options[name] = val
@@ -677,9 +679,9 @@ class UnknownSectionPage(gtk.VBox):
                     "does not support configuration. You can still change "
                     "the settings but it cannot be verified whether they are "
                     "supported and valid.")
-        dialog = gtk.MessageDialog (
-            mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, msg)
+        dialog = Gtk.MessageDialog (
+            mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+            Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE, msg)
         dialog.connect ("response", lambda d,r: d.destroy())
         dialog.show()
 
@@ -695,8 +697,8 @@ class UnknownSectionPage(gtk.VBox):
             self.store.set (cursor, 0, str(name), 1, str(newVal),
                             2, self.nameEditable, 3, self.valueEditable)
         else:
-            if name == newVal or self.app.options.has_key(newVal) or \
-                   self.driverOpts.has_key(newVal):
+            if name == newVal or newVal in self.app.options or \
+                   newVal in self.driverOpts:
                 return
             val = self.app.options.pop(name)
             name = newVal
@@ -706,43 +708,43 @@ class UnknownSectionPage(gtk.VBox):
                             2, self.nameEditable, 3, self.valueEditable)
         self.app.modified(self.app)
 
-if gtk.__dict__.has_key("AboutDialog"):
+if "AboutDialog" in Gtk.__dict__:
     # About Dialog was added in gtk 2.6.
-    class AboutDialog (gtk.AboutDialog):
+    class AboutDialog (Gtk.AboutDialog):
         def __init__ (self):
-            gtk.AboutDialog.__init__(self)
+            GObject.GObject.__init__(self)
             translators = _("translator-credits")
             if translators == "translator-credits":
                 translators = None
             self.set_name("DRIconf")
             self.set_version(version)
-            self.set_copyright(u"Copyright \u00a9 2003-2005  "
-                               u"Felix K\u00fchling")
+            self.set_copyright("Copyright \u00a9 2003-2005  "
+                               "Felix K\u00fchling")
             self.set_comments(_("A configuration applet for DRI drivers"))
-            self.set_website(u"http://dri.freedesktop.org/wiki/DriConf")
+            self.set_website("http://dri.freedesktop.org/wiki/DriConf")
             if translators:
                 self.set_translator_credits(translators)
             logoPath = findInShared("drilogo.jpg")
             if logoPath:
-                logo = gtk.gdk.pixbuf_new_from_file (logoPath)
+                logo = GdkPixbuf.Pixbuf.new_from_file (logoPath)
                 self.set_logo(logo)
 else:
-    class AboutDialog (gtk.MessageDialog):
+    class AboutDialog (Gtk.MessageDialog):
         def __init__ (self):
             translators = _("translator-credits")
             if translators == "translator-credits":
                 translators = None
-            text = u"DRIconf %s\n" \
-                   u"%s\n" \
-                   u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n" \
-                   u"\n" \
-                   u"http://dri.freedesktop.org/wiki/DriConf" \
+            text = "DRIconf %s\n" \
+                   "%s\n" \
+                   "Copyright \u00a9 2003-2005  Felix K\u00fchling\n" \
+                   "\n" \
+                   "http://dri.freedesktop.org/wiki/DriConf" \
                    % (version,  _("A configuration applet for DRI drivers"))
             if translators:
-                text = text + (u"\n\n%s: %s" % (_("Translated by"),
+                text = text + ("\n\n%s: %s" % (_("Translated by"),
                                               _("translator-credits")))
-            gtk.MessageDialog.__init__(
+            GObject.GObject.__init__(
                 self, mainWindow,
-                gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
-                gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, text)
+                Gtk.DialogFlags.DESTROY_WITH_PARENT|Gtk.DialogFlags.MODAL,
+                Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE, text)
             self.set_title(_("About DRIconf"))

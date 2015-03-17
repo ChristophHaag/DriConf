@@ -19,10 +19,10 @@
 # Contact: http://fxk.de.vu/
 
 import types
-import pygtk
-pygtk.require ("2.0")
-import gtk
-import gobject
+import gi
+pyGtk.require ("2.0")
+from gi.repository import Gtk
+from gi.repository import GObject
 
 import driconf_commonui
 
@@ -104,11 +104,11 @@ COL_TYPE = 2
 COL_INDEX = 2
 
 def addToTreeStore (treestore, parent, dictionary):
-    keys = dictionary.keys()
+    keys = list(dictionary.keys())
     keys.sort()
     for key in keys:
         value = dictionary[key]
-        if type(value) is types.DictType:
+        if type(value) is dict:
             if value:
                 node = treestore.append(parent, [key, "", PREDEF_CATEGORY])
                 addToTreeStore(treestore, node, value)
@@ -116,8 +116,8 @@ def addToTreeStore (treestore, parent, dictionary):
             node = treestore.append(parent, [key, value, PREDEF_APP])
 
 def createTreeStore ():
-    treestore = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING,
-                              gobject.TYPE_INT)
+    treestore = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING,
+                              GObject.TYPE_INT)
     addToTreeStore (treestore, None, AppDB)
     return treestore
 

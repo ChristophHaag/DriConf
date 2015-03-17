@@ -20,10 +20,10 @@
 
 import os
 import dri
-import pygtk
-pygtk.require ("2.0")
-import gtk
-import gobject
+import gi
+pyGtk.require ("2.0")
+from gi.repository import Gtk
+from gi.repository import GObject
 
 import driconf_commonui
 import driconf_complexui
@@ -72,7 +72,7 @@ def genNormalDeviceConfigs (configList, dpy):
         defaultApp = dri.AppConfig(deviceConfig, "Default")
         deviceConfig.apps.append(defaultApp)
         for sect in driver.optSections:
-            for opt in sect.options.values():
+            for opt in list(sect.options.values()):
                 defaultApp.options[opt.name] = dri.ValueToStr(opt.default, opt.type)
         deviceConfig.isNormalized = True
         deviceConfigs.append(deviceConfig)
@@ -104,7 +104,7 @@ def genNormalDeviceConfigs (configList, dpy):
                     # Update all option settings. Non-existing options
                     # or invalid values are only considered in
                     # redundant device sections.
-                    for opt,value in app.options.items():
+                    for opt,value in list(app.options.items()):
                         isValid = False
                         if configIsUser and \
                                device.screen != None and device.driver != None:
@@ -273,46 +273,46 @@ def lineWrap (string, chars=30):
             head, tail = head + tail[:i] + '\n', tail[j:]
     return head
 
-class AppDialog (gtk.Dialog):
+class AppDialog (Gtk.Dialog):
     def __init__ (self, title, parent, app=None):
-        gtk.Dialog.__init__(self, title, parent,
-                            gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
-                            ("gtk-ok", gtk.RESPONSE_OK,
-                             "gtk-cancel", gtk.RESPONSE_CANCEL))
+        GObject.GObject.__init__(self, title, parent,
+                            Gtk.DialogFlags.MODAL|Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                            ("gtk-ok", Gtk.ResponseType.OK,
+                             "gtk-cancel", Gtk.ResponseType.CANCEL))
         self.set_resizable(False)
-        table = gtk.Table(3, 2)
-        nameLabel = gtk.Label(_("Application Name"))
+        table = Gtk.Table(3, 2)
+        nameLabel = Gtk.Label(label=_("Application Name"))
         nameLabel.show()
-        table.attach(nameLabel, 0, 1, 0, 1, 0, gtk.EXPAND, 10, 5)
-        self.nameEntry = gtk.Entry()
+        table.attach(nameLabel, 0, 1, 0, 1, 0, Gtk.AttachOptions.EXPAND, 10, 5)
+        self.nameEntry = Gtk.Entry()
         if app:
             self.nameEntry.set_text(app.name)
         self.nameEntry.connect("activate",
-                               lambda widget: self.response(gtk.RESPONSE_OK))
+                               lambda widget: self.response(Gtk.ResponseType.OK))
         self.nameEntry.show()
         table.attach(self.nameEntry, 1, 2, 0, 1,
-                     gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+                     Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
 
-        execLabel = gtk.Label(_("Executable Name"))
+        execLabel = Gtk.Label(label=_("Executable Name"))
         execLabel.show()
-        table.attach(execLabel, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
-        self.execEntry = gtk.Entry()
+        table.attach(execLabel, 0, 1, 1, 2, 0, Gtk.AttachOptions.EXPAND, 10, 5)
+        self.execEntry = Gtk.Entry()
         if app:
             self.execEntry.set_text(app.executable)
         self.execEntry.connect("activate",
-                               lambda widget: self.response(gtk.RESPONSE_OK))
+                               lambda widget: self.response(Gtk.ResponseType.OK))
         self.execEntry.show()
         table.attach(self.execEntry, 1, 2, 1, 2,
-                     gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
-        hBox = gtk.HBox(spacing=10)
-        infoImageVBox = gtk.VBox()
-        infoImage = commonui.StockImage(gtk.STOCK_DIALOG_INFO,
-                                        gtk.ICON_SIZE_DIALOG)
+                     Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
+        hBox = Gtk.HBox(spacing=10)
+        infoImageVBox = Gtk.VBox()
+        infoImage = commonui.StockImage(Gtk.STOCK_DIALOG_INFO,
+                                        Gtk.IconSize.DIALOG)
         infoImage.show()
         infoImageVBox.pack_start(infoImage, False, False, 0)
         infoImageVBox.show()
         hBox.pack_start(infoImageVBox, False, False, 0)
-        infoLabel = gtk.Label(_(
+        infoLabel = Gtk.Label(_(
             "The executable name is important for identifying the "
             "application. If you get it wrong, your settings will not "
             "apply. Beware that some applications are started by a "
@@ -325,7 +325,7 @@ class AppDialog (gtk.Dialog):
         hBox.pack_start(infoLabel, False, False, 0)
         hBox.show()
         table.attach (hBox, 0, 2, 2, 3,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+                      Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
         table.show()
         self.vbox.pack_start(table, True, True, 5)
         self.show()
@@ -337,14 +337,14 @@ class AppDialog (gtk.Dialog):
     def getExecutable (self):
         return self.execEntry.get_text()
 
-class AppPage (gtk.ScrolledWindow):
+class AppPage (Gtk.ScrolledWindow):
     def __init__ (self, driver, app):
         """ Constructor. """
-        gtk.ScrolledWindow.__init__ (self)
-        self.set_policy (gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        GObject.GObject.__init__ (self)
+        self.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.driver = driver
         self.app = app
-        self.tooltips = gtk.Tooltips()
+        self.tooltips = Gtk.Tooltips()
         self.table = None
         self.refreshOptions()
 
@@ -352,9 +352,9 @@ class AppPage (gtk.ScrolledWindow):
         if self.table:
             self.remove(self.get_child())
         self.optLines = []
-        self.table = gtk.Table(len(self.app.options)+1, 3)
+        self.table = Gtk.Table(len(self.app.options)+1, 3)
         self.add_with_viewport(self.table)
-        self.optionTree = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_INT, gobject.TYPE_INT)
+        self.optionTree = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_INT, GObject.TYPE_INT)
         i = 0
         sectI = 0
         for sect in self.driver.optSections:
@@ -363,7 +363,7 @@ class AppPage (gtk.ScrolledWindow):
             sectHasOpts = False
             optI = 0
             for opt in sect.optList:
-                if self.app.options.has_key(opt.name):
+                if opt.name in self.app.options:
                     self.optLines.append(
                         commonui.OptionLine(self, i, opt, True, True))
                     i = i + 1
@@ -379,14 +379,14 @@ class AppPage (gtk.ScrolledWindow):
             addLabel = commonui.WrappingDummyCheckButton(_("Add setting"),
                                                          width=200)
             addLabel.show()
-            self.table.attach(addLabel, 0, 1, i, i+1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
-            addCombo = gtk.ComboBox(self.optionTree)
+            self.table.attach(addLabel, 0, 1, i, i+1, Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 0, 5, 5)
+            addCombo = Gtk.ComboBox(self.optionTree)
             addCombo.connect("changed", self.addOption)
-            cell = gtk.CellRendererText()
+            cell = Gtk.CellRendererText()
             addCombo.pack_start(cell, True)
             addCombo.add_attribute(cell, 'text', 0)
             addCombo.show()
-            self.table.attach(addCombo, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
+            self.table.attach(addCombo, 1, 2, i, i+1, Gtk.AttachOptions.FILL, 0, 5, 5)
         self.table.show()
 
     def optionModified (self, optLine):
@@ -419,25 +419,25 @@ class AppPage (gtk.ScrolledWindow):
         for optLine in self.optLines:
             name = optLine.opt.name
             value = optLine.getValue()
-            if value == None and self.app.options.has_key(name):
+            if value == None and name in self.app.options:
                 del self.app.options[name]
             elif value != None:
                 self.app.options[name] = value
 
-class MainWindow (gtk.Window):
+class MainWindow (Gtk.Window):
     def __init__ (self, configList):
-        gtk.Window.__init__(self)
+        GObject.GObject.__init__(self)
         self.set_title(_("Direct Rendering Preferences"))
-        self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
+        self.set_type_hint(Gdk.WindowTypeHint.DIALOG)
         self.set_border_width(10)
-        self.connect("destroy", lambda dummy: gtk.main_quit())
+        self.connect("destroy", lambda dummy: Gtk.main_quit())
         self.connect("delete_event", self.exitHandler)
         self.configList = configList # Remember for switching to expert mode
         self.userConfig = getUserConfig(configList)
         self.screens = [screen for screen in commonui.dpy.screens if screen]
-        self.vbox = gtk.VBox(spacing=10)
+        self.vbox = Gtk.VBox(spacing=10)
         if len(self.screens) > 1:
-            self.deviceCombo = gtk.combo_box_new_text()
+            self.deviceCombo = Gtk.ComboBoxText()
             for screen in self.screens:
                 if screen.glxInfo:
                     self.deviceCombo.append_text(_("Screen") + " %d: %s (%s)" % (
@@ -457,54 +457,54 @@ class MainWindow (gtk.Window):
             else:
                 text = _("Screen") + " %d: %s" % (
                     screen.num, screen.driver.name.capitalize())
-            deviceHBox = gtk.HBox()
-            deviceLabel = gtk.Label()
-            deviceLabel.set_justify(gtk.JUSTIFY_LEFT)
+            deviceHBox = Gtk.HBox()
+            deviceLabel = Gtk.Label()
+            deviceLabel.set_justify(Gtk.Justification.LEFT)
             deviceLabel.set_markup("<b>" + commonui.escapeMarkup(text) + "</b>")
             deviceLabel.show()
             deviceHBox.pack_start(deviceLabel, False, False, 0)
             deviceHBox.show()
             self.vbox.pack_start(deviceHBox, False, False, 0)
-        buttonBox = gtk.HButtonBox()
+        buttonBox = Gtk.HButtonBox()
         buttonBox.set_spacing(10)
-        buttonBox.set_layout(gtk.BUTTONBOX_END)
-        expertButton = gtk.Button()
-        expertHBox = gtk.HBox()
-        expertImage = commonui.StockImage("gtk-jump-to", gtk.ICON_SIZE_BUTTON)
+        buttonBox.set_layout(Gtk.ButtonBoxStyle.END)
+        expertButton = Gtk.Button()
+        expertHBox = Gtk.HBox()
+        expertImage = commonui.StockImage("gtk-jump-to", Gtk.IconSize.BUTTON)
         expertImage.show()
-        expertHBox.pack_start(expertImage)
-        expertLabel = gtk.Label(_("Expert Mode"))
+        expertHBox.pack_start(expertImage, True, True, 0)
+        expertLabel = Gtk.Label(label=_("Expert Mode"))
         expertLabel.show()
-        expertHBox.pack_start(expertLabel)
+        expertHBox.pack_start(expertLabel, True, True, 0)
         expertHBox.show()
         expertButton.add(expertHBox)
         expertButton.connect("clicked", self.expertHandler)
         expertButton.show()
         buttonBox.add(expertButton)
-        closeButton = gtk.Button(stock="gtk-close")
-        closeButton.connect("clicked", lambda dummy: gtk.main_quit())
+        closeButton = Gtk.Button(stock="gtk-close")
+        closeButton.connect("clicked", lambda dummy: Gtk.main_quit())
         closeButton.show()
         buttonBox.add(closeButton)
-        aboutButton = gtk.Button(stock="gtk-about")
+        aboutButton = Gtk.Button(stock="gtk-about")
         aboutButton.connect("clicked", self.aboutHandler)
         aboutButton.show()
         buttonBox.add(aboutButton)
         buttonBox.set_child_secondary(aboutButton, True)
         buttonBox.show()
         self.vbox.pack_end(buttonBox, False, False, 0)
-        self.expander = gtk.Expander(
+        self.expander = Gtk.Expander(
             "<b>" + commonui.escapeMarkup(_("Application settings")) + "</b>")
         self.expander.set_use_markup(True)
         self.expander.connect("activate", self.expanderChanged)
         self.expander.show()
         self.vbox.pack_end(self.expander, False, True, 0)
-        self.expanderVBox = gtk.VBox(spacing=10)
-        self.appButtonBox = gtk.HBox()
-        self.appRemoveButton = gtk.Button(stock="gtk-remove")
+        self.expanderVBox = Gtk.VBox(spacing=10)
+        self.appButtonBox = Gtk.HBox()
+        self.appRemoveButton = Gtk.Button(stock="gtk-remove")
         self.appRemoveButton.connect("clicked", self.removeApp)
         self.appRemoveButton.show()
         self.appButtonBox.pack_end(self.appRemoveButton, False, False, 0)
-        self.appPropButton = gtk.Button(stock="gtk-properties")
+        self.appPropButton = Gtk.Button(stock="gtk-properties")
         self.appPropButton.connect("clicked", self.appProperties)
         self.appPropButton.show()
         self.appButtonBox.pack_end(self.appPropButton, False, False, 0)
@@ -544,7 +544,7 @@ class MainWindow (gtk.Window):
         # Build UI for the screen configuration
         if self.notebook:
             self.vbox.remove(self.notebook)
-        self.notebook = gtk.Notebook()
+        self.notebook = Gtk.Notebook()
         self.notebook.popup_enable()
         self.sectPages = []
         self.sectLabels = []
@@ -552,7 +552,7 @@ class MainWindow (gtk.Window):
                                                    self.deviceConfig.apps[0])
         if len(unknownPage.opts) > 0:
             unknownPage.show()
-            unknownLabel = gtk.Label (_("Unknown options"))
+            unknownLabel = Gtk.Label(label=_("Unknown options"))
             unknownLabel.show()
             self.notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)
@@ -560,22 +560,22 @@ class MainWindow (gtk.Window):
         for sect in self.driver.optSections:
             sectPage = commonui.SectionPage (sect, self.deviceConfig.apps[0],
                                              True)
-            sectPage.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+            sectPage.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
             sectPage.show()
             desc = sect.getDesc([lang])
             if desc:
-                sectLabel = gtk.Label (desc)
+                sectLabel = Gtk.Label(label=desc)
                 sectLabel.set_line_wrap (True)
             else:
-                sectLabel = gtk.Label (_("(no description)"))
+                sectLabel = Gtk.Label(label=_("(no description)"))
             sectLabel.show()
             self.notebook.append_page (sectPage, sectLabel)
             self.sectPages.append (sectPage)
             self.sectLabels.append (sectLabel)
         if len(self.sectLabels) > 0:
             style = self.sectLabels[0].get_style()
-            self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
-            self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
+            self.default_normal_fg = style.fg[Gtk.StateType.NORMAL].copy()
+            self.default_active_fg = style.fg[Gtk.StateType.ACTIVE].copy()
         self.validate()
         self.notebook.show()
         self.vbox.pack_start(self.notebook, True, True, 0)
@@ -589,24 +589,24 @@ class MainWindow (gtk.Window):
                                             i])
         self.appTree.append(None,
                             [_("Other application ..."), "", appdb.CUSTOM_APP])
-        self.appCombo = gtk.ComboBox(self.appTree)
+        self.appCombo = Gtk.ComboBox(self.appTree)
         if hasattr(self.appCombo, "set_row_separator_func"):
             # Available as of gtk 2.6
             self.appCombo.set_row_separator_func(appdb.isSeparator)
-        cell = gtk.CellRendererText()
+        cell = Gtk.CellRendererText()
         self.appCombo.pack_start(cell, True)
         self.appCombo.add_attribute(cell, 'text', 0)
         if len(self.deviceConfig.apps) > 1:
             self.appCombo.set_active(0)
             self.expander.set_expanded(True)
             self.vbox.set_child_packing(self.expander, True, True,
-                                        0, gtk.PACK_END)
+                                        0, Gtk.PACK_END)
             self.appPropButton.set_sensitive(True)
             self.appRemoveButton.set_sensitive(True)
         else:
             self.expander.set_expanded(False)
             self.vbox.set_child_packing(self.expander, False, True,
-                                        0, gtk.PACK_END)
+                                        0, Gtk.PACK_END)
             self.appPropButton.set_sensitive(False)
             self.appRemoveButton.set_sensitive(False)
         self.appCombo.connect("changed", self.changeApp)
@@ -635,15 +635,15 @@ class MainWindow (gtk.Window):
         unknownPage = commonui.UnknownSectionPage (self.driver,
                                                    app)
         if len(unknownPage.opts) > 0:
-            self.appNotebook = gtk.Notebook()
+            self.appNotebook = Gtk.Notebook()
             self.appNotebook.popup_enable()
             unknownPage.show()
-            unknownLabel = gtk.Label (_("Unknown options"))
+            unknownLabel = Gtk.Label(label=_("Unknown options"))
             unknownLabel.show()
             self.appNotebook.append_page (unknownPage, unknownLabel)
             self.appPage = AppPage (self.driver, app)
             self.appPage.show()
-            appPageLabel = gtk.Label (_("Known options"))
+            appPageLabel = Gtk.Label(label=_("Known options"))
             appPageLabel.show()
             self.appNotebook.append_page (self.appPage, appPageLabel)
             self.appNotebook.show()
@@ -666,14 +666,14 @@ class MainWindow (gtk.Window):
             if not valid:
                 # strange, active and normal appear to be swapped :-/
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_NORMAL, gtk.gdk.Color (65535, 0, 0))
+                    Gtk.StateType.NORMAL, Gdk.Color (65535, 0, 0))
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_ACTIVE, gtk.gdk.Color (65535, 0, 0))
+                    Gtk.StateType.ACTIVE, Gdk.Color (65535, 0, 0))
             else:
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_NORMAL, self.default_normal_fg)
+                    Gtk.StateType.NORMAL, self.default_normal_fg)
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_ACTIVE, self.default_active_fg)
+                    Gtk.StateType.ACTIVE, self.default_active_fg)
             allValid = allValid and valid
             index = index+1
         return allValid        
@@ -729,10 +729,10 @@ class MainWindow (gtk.Window):
         # state is changed. So the logic is reversed.
         if not self.expander.get_expanded():
             self.vbox.set_child_packing(self.expander, True, True,
-                                        0, gtk.PACK_END)
+                                        0, Gtk.PACK_END)
         else:
             self.vbox.set_child_packing(self.expander, False, True,
-                                        0, gtk.PACK_END)
+                                        0, Gtk.PACK_END)
 
     def checkAppProperties (self, dialog, name, executable, sameApp=None):
         errorStr = None
@@ -755,9 +755,9 @@ class MainWindow (gtk.Window):
                                  "same executable.")
                     break
         if errorStr:
-            dialog = gtk.MessageDialog(
-                dialog, gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, errorStr)
+            dialog = Gtk.MessageDialog(
+                dialog, Gtk.DialogFlags.MODAL|Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, errorStr)
             dialog.run()
             dialog.destroy()
             return False
@@ -776,7 +776,7 @@ class MainWindow (gtk.Window):
         done = False
         while not done:
             response = dialog.run()
-            if response == gtk.RESPONSE_OK:
+            if response == Gtk.ResponseType.OK:
                 name = dialog.getName().strip()
                 executable = dialog.getExecutable().strip()
                 if self.checkAppProperties (dialog, name, executable):
@@ -812,7 +812,7 @@ class MainWindow (gtk.Window):
         done = False
         while not done:
             response = dialog.run()
-            if response == gtk.RESPONSE_OK:
+            if response == Gtk.ResponseType.OK:
                 name = dialog.getName().strip()
                 executable = dialog.getExecutable().strip()
                 if self.checkAppProperties (dialog, name, executable,
@@ -875,7 +875,7 @@ class MainWindow (gtk.Window):
     def expertHandler (self, widget):
         self.destroy() # triggers main_quit
         complexui.start(self.configList)
-        gtk.main()
+        Gtk.main()
 
     def configModified (self, node, b=True):
         if b != True:
@@ -884,9 +884,9 @@ class MainWindow (gtk.Window):
         try:
             file = open (self.userConfig.fileName, "w")
         except IOError:
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                 _("Can't open \"%s\" for writing.") % self.userConfig.fileName)
             dialog.run()
             dialog.destroy()
@@ -902,8 +902,8 @@ class MainWindow (gtk.Window):
 def start (configList):
     userConfig = getUserConfig(configList)
     if not userConfig:
-        dialog = gtk.MessageDialog (
-            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+        dialog = Gtk.MessageDialog (
+            None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
             _("The DRI configuration file \"%s\" is broken or could not be "
               "created.") % os.path.join (os.environ["HOME"], ".drirc") +" "+
             _("DRIconf will be started in expert mode."))
@@ -913,8 +913,8 @@ def start (configList):
         return
     if not userConfig.writable:
         # Not writable: start expert mode
-        dialog = gtk.MessageDialog (
-            None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
+        dialog = Gtk.MessageDialog (
+            None, 0, Gtk.MessageType.WARNING, Gtk.ButtonsType.OK,
             _("Your DRI configuration file \"%s\" is not writable.") %
             userConfig.fileName +" "+
             _("DRIconf will be started in expert mode."))
@@ -924,8 +924,8 @@ def start (configList):
         return
     normalizedDeviceConfigs = normalizeConfig(configList, commonui.dpy)
     if normalizedDeviceConfigs == None:
-        dialog = gtk.MessageDialog (
-            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+        dialog = Gtk.MessageDialog (
+            None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
             _("Normalization of your DRI configuration file \"%s\" failed. "
               "Please report a bug with the original configuration file "
               "attached. The file will be treated as read-only for now.") %

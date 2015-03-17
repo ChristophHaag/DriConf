@@ -22,6 +22,7 @@ import os
 import string
 import re
 import xml.parsers.expat
+from functools import reduce
 
 class Error (Exception):
     """ Base class for DRIError and XMLError """
@@ -93,12 +94,12 @@ def GetDesc (desc, preferredLangs):
     If that doesn't work either, return any description.
     If there are no descriptions at all, return None. """
     for lang in preferredLangs:
-        if desc.has_key (lang):
+        if lang in desc:
             return desc[lang]
-    if desc.has_key ("en"):
+    if "en" in desc:
         return desc["en"]
-    if len(desc.values()) > 0:
-        return desc.values()[0]
+    if len(list(desc.values())) > 0:
+        return list(desc.values())[0]
     return None
 
 class Range:
@@ -137,7 +138,7 @@ class OptDesc:
     def __str__ (self):
         result = '<description lang="' + self.lang + '" text="' + self.text + \
                  '">\n'
-        for value in sort(self.enums.keys()):
+        for value in sort(list(self.enums.keys())):
             result = result + '<enum value="' + str(value) + '" text="' + \
                      self.enums[value] + '" />\n'
         result = result + '</description>'
@@ -178,7 +179,7 @@ class OptInfo:
                  '" default="' + ValueToStr(self.default, self.type) + '" '
         if self.valid:
             return result + 'valid="' + \
-                   reduce(lambda x,y: x+','+y, map(str,self.valid)) + \
+                   reduce(lambda x,y: x+','+y, list(map(str,self.valid))) + \
                    '" />'
         else:
             return result + '/>'
@@ -213,7 +214,7 @@ class OptSection:
 
     def __str__ (self):
         result = '    <section>\n'
-        for opt in self.options.values ():
+        for opt in list(self.options.values ()):
             result = result + '        ' + str(opt) + '\n'
         result = result + '    </section>'
         return result
@@ -221,8 +222,8 @@ class OptSection:
     def validate (self, valDict):
         """ Validate a dictionary of option values agains this OptSection. """
         allValid = 1
-        for name,opt in self.options.items():
-            if valDict.has_key (name):
+        for name,opt in list(self.options.items()):
+            if name in valDict:
                 allValid = allValid and opt.validate (valDict[name])
         return allValid
 
@@ -239,10 +240,10 @@ class DriverInfo:
         elif name == "option":
             if self.curOptSection == None:
                 raise XMLError ("option outside a section")
-            if not attr.has_key ("name") or not attr.has_key ("type") or \
-               not attr.has_key ("default"):
+            if "name" not in attr or "type" not in attr or \
+               "default" not in attr:
                 raise XMLError ("mandatory option attribute missing")
-            if attr.has_key ("valid"):
+            if "valid" in attr:
                 self.curOption = OptInfo (attr["name"], attr["type"],
                                           attr["default"], attr["valid"])
             else:
@@ -251,7 +252,7 @@ class DriverInfo:
             self.curOptSection.options[attr["name"]] = self.curOption
             self.curOptSection.optList.append (self.curOption)
         elif name == "description":
-            if not attr.has_key ("lang") or not attr.has_key ("text"):
+            if "lang" not in attr or "text" not in attr:
                 raise XMLError ("description attribute missing")
             if self.curOption != None:
                 self.curOptDesc = OptDesc(attr["lang"], attr["text"])
@@ -261,7 +262,7 @@ class DriverInfo:
             else:
                 raise XMLError ("description outside an option or section")
         elif name == "enum":
-            if not attr.has_key ("value") or not attr.has_key ("text"):
+            if "value" not in attr or "text" not in attr:
                 raise XMLError ("enum attribute missing")
             if self.curOptDesc != None:
                 value = attr["value"]
@@ -302,7 +303,7 @@ class DriverInfo:
 
         try:
             p.Parse (driInfo)
-        except xml.parsers.expat.ExpatError, problem:
+        except xml.parsers.expat.ExpatError as problem:
             raise XMLError ("ExpatError: " + str(problem))
 
     def __str__ (self):
@@ -324,14 +325,14 @@ class DriverInfo:
 
         If no such option exists in any section, None is returned. """
         for optSection in self.optSections:
-            if optSection.options.has_key(name):
+            if name in optSection.options:
                 return optSection.options[name]
         return None
 
 class GLXInfo:
     def __init__ (self, screen, dpy):
         if dpy == None:
-            if os.environ.has_key("DISPLAY"):
+            if "DISPLAY" in os.environ:
                 dpy = os.environ["DISPLAY"]
             else:
                 dpy = ":0"
@@ -373,7 +374,7 @@ class ScreenInfo:
         driverName = XDriInfo ("driver " + str(screen), dpy)
         try:
             self.driver = GetDriver (driverName, 0)
-        except XMLError, problem:
+        except XMLError as problem:
             raise XMLError (str(problem) + " (driver " + driverName + ")")
         else:
             try:
@@ -411,7 +412,7 @@ class DisplayInfo:
             screen = ScreenInfo (i, self.dpy)
         except DRIError:
             screen = None
-        except XMLError, problem:
+        except XMLError as problem:
             self.screens[i] = None
             raise XMLError (str(problem) + " (screen " + str(i) + ")")
         self.screens[i] = screen
@@ -424,11 +425,11 @@ def GetDriver (name, catch=1):
 
     Raises a XMLError if the DRI driver's configuration information is
     invalid. """
-    if DisplayInfo.drivers.has_key (name):
+    if name in DisplayInfo.drivers:
         return DisplayInfo.drivers[name]
     try:
         driver = DriverInfo (name)
-    except DRIError, problem:
+    except DRIError as problem:
         if catch:
             driver = None
         else:
@@ -453,7 +454,7 @@ class AppConfig:
             result = result + ' executable="' + self.executable + '">\n'
         else:
             result = result + '>\n'
-        for n, v in self.options.items ():
+        for n, v in list(self.options.items ()):
             result = result + '            <option name="' + n + \
                      '" value="' + v + '" />\n'
         result = result + '        </application>'
@@ -504,11 +505,11 @@ class DRIConfig:
     def startElement (self, name, attr):
         """ Handle start_element events from XML parser. """
         if name == "device":
-            if attr.has_key ("screen") and attr.has_key ("driver"):
+            if "screen" in attr and "driver" in attr:
                 self.curDevice = DeviceConfig (self, attr["screen"], attr["driver"])
-            elif attr.has_key ("screen"):
+            elif "screen" in attr:
                 self.curDevice = DeviceConfig (self, screen = attr["screen"])
-            elif attr.has_key ("driver"):
+            elif "driver" in attr:
                 self.curDevice = DeviceConfig (self, driver = attr["driver"])
             else:
                 self.curDevice = DeviceConfig (self)
@@ -516,9 +517,9 @@ class DRIConfig:
         elif name == "application":
             if self.curDevice == None:
                 raise XMLError ("application outside a device")
-            if not attr.has_key ("name"):
+            if "name" not in attr:
                 raise XMLError ("mandatory application attribute missing")
-            if attr.has_key ("executable"):
+            if "executable" in attr:
                 self.curApp = AppConfig (self.curDevice, attr["name"],
                                          attr["executable"])
             else:
@@ -527,7 +528,7 @@ class DRIConfig:
         elif name == "option":
             if self.curApp == None:
                 raise XMLError ("option outside an application")
-            if not attr.has_key ("name") or not attr.has_key ("value"):
+            if "name" not in attr or "value" not in attr:
                 raise XMLError ("option attribute missing")
             self.curApp.options[attr["name"]] = attr["value"]
 
@@ -550,7 +551,7 @@ class DRIConfig:
             p.EndElementHandler = self.endElement
             try:
                 p.ParseFile (file)
-            except xml.parsers.expat.ExpatError, problem:
+            except xml.parsers.expat.ExpatError as problem:
                 raise XMLError ("ExpatError: " + str(problem))
         else:
             self.fileName = fileName

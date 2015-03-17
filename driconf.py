@@ -21,13 +21,14 @@
 import sys
 import os
 import dri
-import pygtk
-pygtk.require ("2.0")
-import gtk
-import gobject
+import gi
+from functools import reduce
+#pyGtk.require ("2.0")
+from gi.repository import Gtk
+from gi.repository import GObject
 
-if gtk.check_version(2, 4, 0):
-    print "Error: DRIconf requires GTK 2.4 or newer."
+if Gtk.check_version(3, 0, 0):
+    print("Error: DRIconf requires GTK 2.4 or newer.")
     sys.exit(1)
 
 import driconf_commonui
@@ -50,15 +51,15 @@ def main():
     # read configuration information from the drivers
     try:
         commonui.dpy = dri.DisplayInfo ()
-    except dri.DRIError, problem:
-        dialog = gtk.MessageDialog (None, 0, gtk.MESSAGE_ERROR,
-                                    gtk.BUTTONS_OK, str(problem))
+    except dri.DRIError as problem:
+        dialog = Gtk.MessageDialog (None, 0, Gtk.MessageType.ERROR,
+                                    Gtk.ButtonsType.OK, str(problem))
         dialog.run()
         dialog.destroy()
         return
-    except dri.XMLError, problem:
-        dialog = gtk.MessageDialog (
-            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+    except dri.XMLError as problem:
+        dialog = Gtk.MessageDialog (
+            None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
             _("There are errors in a driver's configuration information:\n"
               "%s\n"
               "This should not happen. It probably means that you have to "
@@ -70,8 +71,8 @@ def main():
     configScreens = [screen for screen in commonui.dpy.screens
                      if screen != None]
     if len(configScreens) == 0:
-        dialog = gtk.MessageDialog (
-            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+        dialog = Gtk.MessageDialog (
+            None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
             _("Could not detect any configurable direct-rendering capable "
               "devices.")+" "+_("DRIconf will be started in expert mode."))
         dialog.run()
@@ -108,9 +109,9 @@ def main():
             # Try to parse the configuration file.
             try:
                 config = dri.DRIConfig (cfile)
-            except dri.XMLError, problem:
-                dialog = gtk.MessageDialog (
-                    None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
+            except dri.XMLError as problem:
+                dialog = Gtk.MessageDialog (
+                    None, 0, Gtk.MessageType.WARNING, Gtk.ButtonsType.OK,
                     _("Configuration file \"%s\" contains errors:\n"
                       "%s\n"
                       "I will leave the file alone until you fix the problem "
@@ -127,8 +128,8 @@ def main():
             configList.append (config)
 
     if len(configList) == 0:
-        dialog = gtk.MessageDialog (
-            None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+        dialog = Gtk.MessageDialog (
+            None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
             _("There are no usable DRI configuration files and a new one "
               "could not be created. Exiting now."))
         dialog.run()
@@ -142,22 +143,22 @@ def main():
         simpleui.start(configList)
 
     if len(newFiles) == 1:
-        dialog = gtk.MessageDialog (
-            commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
+        dialog = Gtk.MessageDialog (
+            commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+            Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
             _("Created a new DRI configuration file \"%s\" for you.")
             % newFiles[0])
         dialog.run()
         dialog.destroy()
     elif len(newFiles) > 1:
-        dialog = gtk.MessageDialog (
-            commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
+        dialog = Gtk.MessageDialog (
+            commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+            Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
             _("Created new DRI configuration files %s for you.") %
             reduce(lambda a, b: str(a) + ", " + str(b),
-                   map (lambda a: "\"%s\"" % str(a), newFiles)))
+                   ["\"%s\"" % str(a) for a in newFiles]))
         dialog.run()
         dialog.destroy()
 
     # run
-    gtk.main()
+    Gtk.main()

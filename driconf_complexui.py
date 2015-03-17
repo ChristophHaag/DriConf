@@ -19,30 +19,30 @@
 # Contact: http://fxk.de.vu/
 
 import dri
-import pygtk
-pygtk.require ("2.0")
-import gtk
-import gobject
+import gi
+#pyGtk.require ("2.0")
+from gi.repository import Gtk
+from gi.repository import GObject
 
 import driconf_commonui
 commonui = driconf_commonui    # short cut
 
 from driconf_commonui import _, lang, findInShared, escapeMarkup, WrappingCheckButton, SectionPage, UnknownSectionPage
 
-class DriverPanel (gtk.Frame):
+class DriverPanel (Gtk.Frame):
     """ Panel for driver settings for a specific application. """
     def __init__ (self, driver, app):
         """ Constructor. """
-        gtk.Frame.__init__ (self)
-        frameLabel = gtk.Label()
+        GObject.GObject.__init__ (self)
+        frameLabel = Gtk.Label()
         frameLabel.set_markup ("<b>" + escapeMarkup(
             _("Application")+": "+app.name) + "</b>")
         frameLabel.show()
         self.set_label_widget (frameLabel)
         self.driver = driver
         self.app = app
-        tooltips = gtk.Tooltips()
-        table = gtk.Table(2, 2)
+        tooltips = Gtk.Tooltips()
+        table = Gtk.Table(2, 2)
         self.execCheck = WrappingCheckButton (_("Apply only to this executable"))
         self.execCheck.set_sensitive (app.device.config.writable)
         tooltips.set_tip (self.execCheck, _(
@@ -51,7 +51,7 @@ class DriverPanel (gtk.Frame):
             "that starts a real executable with a different name."))
         self.execCheck.show()
         table.attach (self.execCheck, 0, 1, 0, 1, 0, 0, 5, 5)
-        self.execEntry = gtk.Entry()
+        self.execEntry = Gtk.Entry()
         if app.executable != None:
             self.execCheck.set_active (True)
             self.execEntry.set_text (app.executable)
@@ -61,8 +61,8 @@ class DriverPanel (gtk.Frame):
         self.execCheck.connect ("toggled", self.execToggled)
         self.execEntry.connect ("changed", self.execChanged)
         table.attach (self.execEntry, 1, 2, 0, 1,
-                      gtk.EXPAND|gtk.FILL, 0, 5, 5)
-        notebook = gtk.Notebook()
+                      Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 0, 5, 5)
+        notebook = Gtk.Notebook()
         notebook.popup_enable()
         notebook.set_scrollable (True)
         self.sectPages = []
@@ -70,7 +70,7 @@ class DriverPanel (gtk.Frame):
         unknownPage = UnknownSectionPage (driver, app)
         if not driver or len(unknownPage.opts) > 0:
             unknownPage.show()
-            unknownLabel = gtk.Label (_("Unknown"))
+            unknownLabel = Gtk.Label(label=_("Unknown"))
             unknownLabel.show()
             notebook.append_page (unknownPage, unknownLabel)
             self.sectPages.append (unknownPage)
@@ -81,22 +81,22 @@ class DriverPanel (gtk.Frame):
                 sectPage.show()
                 desc = sect.getDesc([lang])
                 if desc:
-                    sectLabel = gtk.Label (desc)
+                    sectLabel = Gtk.Label(label=desc)
                     sectLabel.set_line_wrap (True)
                 else:
-                    sectLabel = gtk.Label (_("(no description)"))
+                    sectLabel = Gtk.Label(label=_("(no description)"))
                 sectLabel.show()
                 notebook.append_page (sectPage, sectLabel)
                 self.sectPages.append (sectPage)
                 self.sectLabels.append (sectLabel)
         if len(self.sectLabels) > 0:
             style = self.sectLabels[0].get_style()
-            self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
-            self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
+            self.default_normal_fg = style.fg[Gtk.StateType.NORMAL].copy()
+            self.default_active_fg = style.fg[Gtk.StateType.ACTIVE].copy()
         self.validate()
         notebook.show()
         table.attach (notebook, 0, 2, 1, 2,
-                      gtk.FILL, gtk.EXPAND|gtk.FILL, 5, 5)
+                      Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 5, 5)
         table.show()
         self.add (table)
 
@@ -119,14 +119,14 @@ class DriverPanel (gtk.Frame):
             if not valid:
                 # strange, active and normal appear to be swapped :-/
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_NORMAL, gtk.gdk.Color (65535, 0, 0))
+                    Gtk.StateType.NORMAL, Gdk.Color (65535, 0, 0))
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_ACTIVE, gtk.gdk.Color (65535, 0, 0))
+                    Gtk.StateType.ACTIVE, Gdk.Color (65535, 0, 0))
             else:
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_NORMAL, self.default_normal_fg)
+                    Gtk.StateType.NORMAL, self.default_normal_fg)
                 self.sectLabels[index].modify_fg (
-                    gtk.STATE_ACTIVE, self.default_active_fg)
+                    Gtk.StateType.ACTIVE, self.default_active_fg)
             allValid = allValid and valid
             index = index+1
         return allValid
@@ -148,85 +148,85 @@ class DriverPanel (gtk.Frame):
         """ Change the application name. """
         self.set_label ("Application: " + self.app.name)
 
-class NameDialog (gtk.Dialog):
+class NameDialog (Gtk.Dialog):
     """ Dialog for setting the name of an application. """
     def __init__ (self, title, callback, name, data):
-        gtk.Dialog.__init__ (self, title, commonui.mainWindow,
-                             gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
-                             (gtk.STOCK_OK, gtk.RESPONSE_OK,
-                              gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+        GObject.GObject.__init__ (self, title, commonui.mainWindow,
+                             Gtk.DialogFlags.DESTROY_WITH_PARENT|Gtk.DialogFlags.MODAL,
+                             (Gtk.STOCK_OK, Gtk.ResponseType.OK,
+                              Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL))
         self.callback = callback
         self.data = data
         self.connect ("response", self.responseSignal)
-        table = gtk.Table(2, 2)
-        commentLabel = gtk.Label (_(
+        table = Gtk.Table(2, 2)
+        commentLabel = Gtk.Label(label=_(
             "Enter the name of the application below. This serves just a "
             "descriptivion for you. Don't forget to set the executable "
             "afterwards."))
         commentLabel.set_line_wrap (True)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
-        label = gtk.Label (_("Application Name"))
+                      Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
+        label = Gtk.Label(label=_("Application Name"))
         label.show()
-        table.attach (label, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
-        self.entry = gtk.Entry()
+        table.attach (label, 0, 1, 1, 2, 0, Gtk.AttachOptions.EXPAND, 10, 5)
+        self.entry = Gtk.Entry()
         self.entry.set_text (name)
         self.entry.select_region (0, len(name))
         self.entry.connect ("activate", self.activateSignal)
         self.entry.show()
         table.attach (self.entry, 1, 2, 1, 2,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+                      Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
         table.show()
         self.vbox.pack_start (table, True, True, 5)
         self.show()
         self.entry.grab_focus()
 
     def activateSignal (self, widget):
-        self.response (gtk.RESPONSE_OK)
+        self.response (Gtk.ResponseType.OK)
 
     def responseSignal (self, dialog, response):
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             self.callback (self.entry.get_text(), self.data)
         self.destroy()
 
-class DeviceDialog (gtk.Dialog):
+class DeviceDialog (Gtk.Dialog):
     """ Dialog for choosing driver and screen of a device. """
     def __init__ (self, title, callback, data):
-        gtk.Dialog.__init__ (self, title, commonui.mainWindow,
-                             gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
-                             (gtk.STOCK_OK, gtk.RESPONSE_OK,
-                              gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+        GObject.GObject.__init__ (self, title, commonui.mainWindow,
+                             Gtk.DialogFlags.DESTROY_WITH_PARENT|Gtk.DialogFlags.MODAL,
+                             (Gtk.STOCK_OK, Gtk.ResponseType.OK,
+                              Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL))
         self.callback = callback
         self.data = data
         self.connect ("response", self.responseSignal)
-        table = gtk.Table (2, 3)
-        commentLabel = gtk.Label (_(
+        table = Gtk.Table (2, 3)
+        commentLabel = Gtk.Label(label=_(
             "Describe the device that you would like to configure."))
         commentLabel.set_line_wrap (True)
         commentLabel.show()
         table.attach (commentLabel, 0, 2, 0, 1,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
-        screenLabel = gtk.Label (_("Screen Number"))
+                      Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
+        screenLabel = Gtk.Label(label=_("Screen Number"))
         screenLabel.show()
-        table.attach (screenLabel, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
-        self.screenCombo = gtk.Combo()
+        table.attach (screenLabel, 0, 1, 1, 2, 0, Gtk.AttachOptions.EXPAND, 10, 5)
+        self.screenCombo = Gtk.Combo()
         self.screenCombo.set_popdown_strings (
-            [""]+map(str,range(len(commonui.dpy.screens))))
+            [""]+list(map(str,list(range(len(commonui.dpy.screens))))))
         self.screenCombo.entry.connect ("activate", self.screenSignal)
         self.screenCombo.list.connect ("select_child", self.screenSignal)
         self.screenCombo.show()
         table.attach (self.screenCombo, 1, 2, 1, 2,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
-        driverLabel = gtk.Label (_("Driver Name"))
+                      Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
+        driverLabel = Gtk.Label(label=_("Driver Name"))
         driverLabel.show()
-        table.attach (driverLabel, 0, 1, 2, 3, 0, gtk.EXPAND, 10, 5)
-        self.driverCombo = gtk.Combo()
+        table.attach (driverLabel, 0, 1, 2, 3, 0, Gtk.AttachOptions.EXPAND, 10, 5)
+        self.driverCombo = Gtk.Combo()
         self.driverCombo.set_popdown_strings (
-            [""]+[str(driver.name) for driver in dri.DisplayInfo.drivers.values()])
+            [""]+[str(driver.name) for driver in list(dri.DisplayInfo.drivers.values())])
         self.driverCombo.show()
         table.attach (self.driverCombo, 1, 2, 2, 3,
-                      gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
+                      Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, Gtk.AttachOptions.EXPAND, 10, 5)
         if data and data.__class__ == dri.DeviceConfig:
             if data.screen:
                 self.screenCombo.entry.set_text (data.screen)
@@ -249,15 +249,15 @@ class DeviceDialog (gtk.Dialog):
                 self.driverCombo.entry.set_text (str(driver.name))
 
     def responseSignal (self, dialog, response):
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             self.callback (self.screenCombo.entry.get_text(),
                            self.driverCombo.entry.get_text(), self.data)
         self.destroy()
 
-class ConfigTreeModel (gtk.GenericTreeModel):
+class ConfigTreeModel (Gtk.GenericTreeModel):
     # constructur
     def __init__ (self, configList):
-        gtk.GenericTreeModel.__init__ (self)
+        GObject.GObject.__init__ (self)
         self.configList = []
         for config in configList:
             self.addNode (config)
@@ -265,20 +265,20 @@ class ConfigTreeModel (gtk.GenericTreeModel):
     def iconFromShared (self, name, size, missing):
         path = findInShared (name)
         if path:
-            icon = gtk.gdk.pixbuf_new_from_file (path)
-            return icon.scale_simple (size, size, gtk.gdk.INTERP_BILINEAR)
+            icon = GdkPixbuf.Pixbuf.new_from_file (path)
+            return icon.scale_simple (size, size, GdkPixbuf.InterpType.BILINEAR)
         else:
             return missing
 
     def renderIcons (self, widget):
         self.configIcon = widget.render_icon ("gtk-properties",
-                                              gtk.ICON_SIZE_MENU, None)
+                                              Gtk.IconSize.MENU, None)
         self.appIcon = widget.render_icon ("gtk-execute",
-                                           gtk.ICON_SIZE_MENU, None)
+                                           Gtk.IconSize.MENU, None)
         self.unspecIcon = widget.render_icon ("gtk-dialog-question",
-                                              gtk.ICON_SIZE_MENU, None)
+                                              Gtk.IconSize.MENU, None)
         missing = widget.render_icon ("gtk-missing-image",
-                                      gtk.ICON_SIZE_MENU, None)
+                                      Gtk.IconSize.MENU, None)
         size = max (missing.get_width(), missing.get_height())
         self.screenIcon = self.iconFromShared ("screen.png", size, missing)
         self.driverIcon = self.iconFromShared ("card.png", size, missing)
@@ -287,14 +287,14 @@ class ConfigTreeModel (gtk.GenericTreeModel):
 
     # implementation of the GenericTreeModel interface
     def on_get_flags (self):
-        return gtk.TREE_MODEL_ITERS_PERSIST
+        return Gtk.TreeModelFlags.ITERS_PERSIST
     def on_get_n_columns (self):
         return 2
     def on_get_column_type (self, col):
         if col == 0:
-            return gobject.TYPE_OBJECT
+            return GObject.TYPE_OBJECT
         else:
-            return gobject.TYPE_STRING
+            return GObject.TYPE_STRING
     def on_get_path (self, node):
         if node.__class__ == dri.DRIConfig:
             return (self.configList.index(node),)
@@ -521,24 +521,24 @@ class ConfigTreeModel (gtk.GenericTreeModel):
         else:
             app.isValid = True
 
-class ConfigTreeView (gtk.TreeView):
+class ConfigTreeView (Gtk.TreeView):
     def __init__ (self, configList):
         self.model = ConfigTreeModel (configList)
-        gtk.TreeView.__init__ (self, self.model)
+        GObject.GObject.__init__ (self, self.model)
         self.model.renderIcons (self)
         self.connect ("style-set", lambda widget, prevStyle:
                       self.model.renderIcons (widget))
         self.set_size_request (200, -1)
         self.set_headers_visible (False)
         self.expand_all()
-        self.get_selection().set_mode (gtk.SELECTION_BROWSE)
+        self.get_selection().set_mode (Gtk.SelectionMode.BROWSE)
         self.get_selection().connect ("changed", self.selectionChangedSignal)
-        column = gtk.TreeViewColumn()
+        column = Gtk.TreeViewColumn()
         column.set_spacing (2)
-        renderPixbuf = gtk.CellRendererPixbuf()
+        renderPixbuf = Gtk.CellRendererPixbuf()
         column.pack_start (renderPixbuf, expand=False)
         column.add_attribute (renderPixbuf, "pixbuf", 0)
-        renderText = gtk.CellRendererText()
+        renderText = Gtk.CellRendererText()
         column.pack_start (renderText, expand=True)
         column.add_attribute (renderText, "markup", 1)
         self.append_column (column)
@@ -570,11 +570,11 @@ class ConfigTreeView (gtk.TreeView):
             app = node
             try:
                 driver = app.device.getDriver (commonui.dpy)
-            except dri.XMLError, problem:
+            except dri.XMLError as problem:
                 driver = None
-                dialog = gtk.MessageDialog (
-                    commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                    gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                dialog = Gtk.MessageDialog (
+                    commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                     _("Parsing the driver's configuration information: %s") %
                     problem)
                 dialog.connect ("response", lambda d,r: d.destroy())
@@ -610,22 +610,22 @@ class ConfigTreeView (gtk.TreeView):
         node = self.getSelection()
         if node.__class__ == dri.AppConfig:
             parent = node.device
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.QUESTION, Gtk.ButtonsType.YES_NO,
                 _("Really delete application \"%s\"?") % node.name)
         elif node.__class__ == dri.DeviceConfig:
             parent = node.config
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.QUESTION, Gtk.ButtonsType.YES_NO,
                 _("Really delete device and all applications in it?"))
         else:
             # The remove button should be unsensitive.
             assert False
         response = dialog.run()
         dialog.destroy ()
-        if response != gtk.RESPONSE_YES:
+        if response != Gtk.ResponseType.YES:
             return
         if node.__class__ == dri.AppConfig:
             commonui.mainWindow.removeApp (node)
@@ -674,20 +674,20 @@ class ConfigTreeView (gtk.TreeView):
             for app in device.apps:
                 valid = valid and driver.validate (app.options)
         if not valid:
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.QUESTION, Gtk.ButtonsType.YES_NO,
                 _("The configuration contains invalid entries. Save anyway?"))
             response = dialog.run()
             dialog.destroy()
-            if response != gtk.RESPONSE_YES:
+            if response != Gtk.ResponseType.YES:
                 return
         try:
             file = open (config.fileName, "w")
         except IOError:
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                 _("Can't open \"%s\" for writing.") % config.fileName)
             dialog.run()
             dialog.destroy()
@@ -704,20 +704,20 @@ class ConfigTreeView (gtk.TreeView):
             config = node.config
         else:
             config = node
-        dialog = gtk.MessageDialog (
-            commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+        dialog = Gtk.MessageDialog (
+            commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+            Gtk.MessageType.QUESTION, Gtk.ButtonsType.YES_NO,
             _("Really reload \"%s\" from disk?") % config.fileName)
         response = dialog.run()
         dialog.destroy()
-        if response != gtk.RESPONSE_YES:
+        if response != Gtk.ResponseType.YES:
             return
         try:
             cfile = open (config.fileName, "r")
         except IOError:
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                 _("Couldn't open \"%s\" for reading. "
                   "The file was not reloaded.") % config.fileName)
             dialog.run()
@@ -726,10 +726,10 @@ class ConfigTreeView (gtk.TreeView):
         # Try to parse the configuration file.
         try:
             newConfig = dri.DRIConfig (cfile)
-        except dri.XMLError, problem:
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
-                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+        except dri.XMLError as problem:
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                 _("Configuration file \"%s\" contains errors:\n"
                   "%s\n"
                   "The file was not reloaded.") %
@@ -777,7 +777,7 @@ class ConfigTreeView (gtk.TreeView):
             return
         siblings.remove (node)
         siblings.insert (newIndex, node)
-        newOrder = range(len(siblings))
+        newOrder = list(range(len(siblings)))
         newOrder[index] = newIndex
         newOrder[newIndex] = index
         path = self.model.getPathFromNode (parent)
@@ -819,24 +819,24 @@ class ConfigTreeView (gtk.TreeView):
         self.get_selection().select_path (path)
         self.scroll_to_cell (path=path, use_align=False)
 
-class MainWindow (gtk.Window):
+class MainWindow (Gtk.Window):
     """ The main window consiting of ConfigTree, DriverPanel and toolbar. """
     def __init__ (self, configList):
-        gtk.Window.__init__ (self)
+        GObject.GObject.__init__ (self)
         self.set_title ("DRIconf")
-        self.connect ("destroy", lambda dummy: gtk.main_quit())
+        self.connect ("destroy", lambda dummy: Gtk.main_quit())
         self.connect ("delete_event", self.exitHandler)
-        self.vbox = gtk.VBox()
-        self.paned = gtk.HPaned()
+        self.vbox = Gtk.VBox()
+        self.paned = Gtk.HPaned()
         self.configTree = ConfigTreeView (configList)
         self.configTree.show()
-        scrolledWindow = gtk.ScrolledWindow ()
-        scrolledWindow.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolledWindow = Gtk.ScrolledWindow ()
+        scrolledWindow.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrolledWindow.add (self.configTree)
         scrolledWindow.show()
         self.paned.add1(scrolledWindow)
         self.paned.show()
-        self.toolbar = gtk.Toolbar ()
+        self.toolbar = Gtk.Toolbar ()
         iconSize = self.toolbar.get_icon_size()
         self.saveButton = self.toolbar.insert_stock (
             "gtk-save", _("Save selected configuration file"),
@@ -863,7 +863,7 @@ class MainWindow (gtk.Window):
         self.toolbar.append_space()
         # The gtk-about stock item is available with gtk >= 2.6.
         # It's definitely not available with gtk 2.2. Not sure about 2.4.
-        if gtk.gtk_version[0] == 2 and gtk.gtk_version[1] < 6:
+        if Gtk.gtk_version[0] == 2 and Gtk.gtk_version[1] < 6:
             aboutStock = "gtk-dialog-info"
         else:
             aboutStock = "gtk-about"
@@ -882,14 +882,14 @@ class MainWindow (gtk.Window):
         self.vbox.show()
         self.add (self.vbox)
         self.curDriverPanel = None
-        self.logo = gtk.EventBox ()
+        self.logo = Gtk.EventBox ()
         logoPath = findInShared("drilogo.jpg")
         if logoPath:
-            image = gtk.Image()
+            image = Gtk.Image()
             image.set_from_file (logoPath)
             self.logo.add (image)
-        self.logo.modify_bg (gtk.STATE_NORMAL,
-                             gtk.gdk.Color (65535, 65535, 65535))
+        self.logo.modify_bg (Gtk.StateType.NORMAL,
+                             Gdk.Color (65535, 65535, 65535))
         self.logo.show_all()
         self.paned.add2 (self.logo)
 
@@ -983,24 +983,24 @@ class MainWindow (gtk.Window):
                 modified = True
                 break
         if modified:
-            dialog = gtk.MessageDialog (
-                commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT|gtk.DIALOG_MODAL,
-                gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO,
+            dialog = Gtk.MessageDialog (
+                commonui.mainWindow, Gtk.DialogFlags.DESTROY_WITH_PARENT|Gtk.DialogFlags.MODAL,
+                Gtk.MessageType.QUESTION, Gtk.ButtonsType.YES_NO,
                 _("There are unsaved modifications. Exit anyway?"))
             dialog.connect ("response", self.doExit)
             dialog.show()
             return True
         elif event == None:
             # called from toolbar button: main_quit!
-            gtk.main_quit()
+            Gtk.main_quit()
         else:
             # called from delete_event: indicate it's ok to destroy
             return False
 
     def doExit (self, dialog, response):
         dialog.destroy()
-        if response == gtk.RESPONSE_YES:
-            gtk.main_quit()
+        if response == Gtk.ResponseType.YES:
+            Gtk.main_quit()
 
 def start (configList):
     # initSelection must be called before and after mainWindow.show().

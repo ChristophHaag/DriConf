@@ -41,34 +41,34 @@ for prefix in [None, "/usr/local"]:
         if isfile (path):
             obsoleteFiles.append (path)
 if obsoleteFiles:
-    print "\n*** Obsolete files from previous DRIconf versions were found on " \
+    print("\n*** Obsolete files from previous DRIconf versions were found on " \
           "your system.\n*** Unless you tweaked setup.cfg you can probably " \
-          "delete them:"
+          "delete them:")
     for f in obsoleteFiles:
-        print "***\t%s" % f
+        print("***\t%s" % f)
 
 #
 # Check if required packages are installed
 #
 errors = 0
 try:
-    import pygtk
-    pygtk.require ("2.0")
-    import gtk
+    import gi
+    pyGtk.require ("2.0")
+    from gi.repository import Gtk
 except:
-    print "\n*** Warning: importing GTK version 2 doesn't work."
+    print("\n*** Warning: importing GTK version 2 doesn't work.")
     errors = 1
 else:
-    if gtk.check_version(2, 4, 0):
-        print "\n*** Warning: DRIconf requires GTK 2.4 or newer."
+    if Gtk.check_version(2, 4, 0):
+        print("\n*** Warning: DRIconf requires GTK 2.4 or newer.")
         errors = 1
 try:
     import xml.parsers.expat
 except:
     if not errors:
-        print
-    print "*** Warning: importing xml.parsers.expat doesn't work."
+        print()
+    print("*** Warning: importing xml.parsers.expat doesn't work.")
     errors = 1
 
 if errors:
-    print "*** Warning: DRIconf will probably not work for the above reason(s)."
+    print("*** Warning: DRIconf will probably not work for the above reason(s).")
