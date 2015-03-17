@@ -23,8 +23,13 @@ import locale
 import gettext
 import math
 import dri
-import pygtk
-pygtk.require ("2.0")
+#import pygtk
+from gi import pygtkcompat
+
+pygtkcompat.enable()
+pygtkcompat.enable_gtk(version='3.0')
+from functools import reduce
+#pygtk.require ("2.0")
 import gtk
 import gobject
 
@@ -33,7 +38,8 @@ import gobject
 # /usr/local/share/locale. If all this fails fall back to the null
 # translation.
 try:
-    _ = gettext.translation ("driconf", ".").ugettext
+    #_ = gettext.translation ("driconf", ".").ugettext
+    _ = lambda x: str(x) #TODO: gettext translation
 except IOError:
     try:
         _ = gettext.translation ("driconf").ugettext
@@ -76,7 +82,7 @@ def findInShared (name):
     # try name in the current directory
     if os.path.isfile (name):
         return name
-    print "Warning: could not find %s." % name
+    print("Warning: could not find %s." % name)
     # nothing found
     return None
 
@@ -285,22 +291,22 @@ class OptionLine:
         typeString = opt.type
         if opt.valid:
             typeString = typeString+" ["+ \
-                         reduce(lambda x,y: x+','+y, map(str,opt.valid))+"]"
+                         reduce(lambda x,y: x+','+y, list(map(str,opt.valid)))+"]"
         # a check button with an option description
         desc = opt.getDesc([lang])
         if desc != None:
             desc = desc.text
         else:
-            desc = u"(no description available)"
+            desc = "(no description available)"
         if simple:
             self.label = WrappingDummyCheckButton (desc, width=200)
         else:
             self.label = WrappingCheckButton (desc, width=200)
-            self.label.set_active (page.app.options.has_key (opt.name))
+            self.label.set_active (opt.name in page.app.options)
             self.label.set_sensitive (page.app.device.config.writable)
             self.label.connect ("clicked", self.checkOpt)
         tooltipString = str(opt)
-        page.tooltips.set_tip (self.label, tooltipString)
+        #page.tooltips.set_tip (self.label, tooltipString) #TODO: tooltip
         self.label.show()
         page.table.attach (self.label, 0, 1, i, i+1,
                            gtk.EXPAND|gtk.FILL, 0, 5, 5)
@@ -316,16 +322,16 @@ class OptionLine:
         self.resetButton.set_relief (gtk.RELIEF_NONE)
         self.resetButton.set_sensitive (sensitive)
         if removable:
-            page.tooltips.set_tip(self.resetButton, _("Remove"))
+            #page.tooltips.set_tip(self.resetButton, _("Remove"))
             self.resetButton.connect ("clicked", self.removeOpt)
         else:
-            page.tooltips.set_tip(self.resetButton, _("Reset to default value"))
+            #page.tooltips.set_tip(self.resetButton, _("Reset to default value"))
             self.resetButton.connect ("clicked", self.resetOpt)
         self.resetButton.show()
         page.table.attach (self.resetButton, 2, 3, i, i+1, 0, 0, 5, 5)
 
         # get the option value, if it's invalid leave it as a string
-        if page.app.options.has_key (opt.name):
+        if opt.name in page.app.options:
             self.isValid = opt.validate (page.app.options[opt.name])
             try:
                 value = dri.StrToValue (page.app.options[opt.name], opt.type)
@@ -368,14 +374,14 @@ class OptionLine:
             self.widget.setValue (value)
         elif type == "enum" or \
              (type != "invalid" and opt.valid and
-              reduce (lambda x,y: x and y, map(dri.Range.empty, opt.valid))):
+              reduce (lambda x,y: x and y, list(map(dri.Range.empty, opt.valid)))):
             desc = opt.getDesc([lang])
             optValList = []
             for r in opt.valid:
                 if type == "enum":
                     for v in range (r.start, r.end+1):
                         vString = dri.ValueToStr(v, type)
-                        if type == "enum" and desc and desc.enums.has_key(v):
+                        if type == "enum" and desc and v in desc.enums:
                             string = desc.enums[v]
                         else:
                             string = vString
@@ -510,7 +516,7 @@ class SectionPage (gtk.ScrolledWindow):
         self.optSection = optSection
         self.app = app
         self.simple = simple
-        self.tooltips = gtk.Tooltips()
+        self.tooltips = None #gtk.Tooltips() #TODO: Tooltip
         self.table = gtk.Table (len(optSection.optList), 3)
         self.optLines = []
         for i in range (len(optSection.optList)):
@@ -546,7 +552,7 @@ class SectionPage (gtk.ScrolledWindow):
         for optLine in self.optLines:
             name = optLine.opt.name
             value = optLine.getValue()
-            if value == None and self.app.options.has_key(name):
+            if value == None and name in self.app.options:
                 del self.app.options[name]
             elif value != None:
                 self.app.options[name] = value
@@ -564,7 +570,7 @@ class UnknownSectionPage(gtk.VBox):
         self.valueEditable = app.device.config.writable
         # copy options (dict function does not exist in Python 2.1 :( )
         opts = {}
-        for name,val in app.options.items():
+        for name,val in list(app.options.items()):
             opts[name] = val
         # remove all options known to the driver
         self.driverOpts = {}
@@ -572,7 +578,7 @@ class UnknownSectionPage(gtk.VBox):
             for sect in driver.optSections:
                 for opt in sect.optList:
                     self.driverOpts[opt.name] = opt
-                    if opts.has_key (opt.name):
+                    if opt.name in opts:
                         del opts[opt.name]
         # short cut
         self.opts = []
@@ -593,7 +599,7 @@ class UnknownSectionPage(gtk.VBox):
                                      text=1, editable=3)
         self.view.append_column (column)
         self.view.get_selection().set_mode (gtk.SELECTION_MULTIPLE)
-        for name,val in opts.items():
+        for name,val in list(opts.items()):
             self.store.set (self.store.append(),
                             0, str(name), 1, str(val),
                             2, self.nameEditable, 3, self.valueEditable)
@@ -656,8 +662,8 @@ class UnknownSectionPage(gtk.VBox):
         name = "option"
         val = ""
         i = 0
-        while self.app.options.has_key(name) or \
-                  self.driverOpts.has_key(name):
+        while name in self.app.options or \
+                  name in self.driverOpts:
             i = i + 1
             name = "option%d" % i
         self.app.options[name] = val
@@ -695,8 +701,8 @@ class UnknownSectionPage(gtk.VBox):
             self.store.set (cursor, 0, str(name), 1, str(newVal),
                             2, self.nameEditable, 3, self.valueEditable)
         else:
-            if name == newVal or self.app.options.has_key(newVal) or \
-                   self.driverOpts.has_key(newVal):
+            if name == newVal or newVal in self.app.options or \
+                   newVal in self.driverOpts:
                 return
             val = self.app.options.pop(name)
             name = newVal
@@ -706,7 +712,7 @@ class UnknownSectionPage(gtk.VBox):
                             2, self.nameEditable, 3, self.valueEditable)
         self.app.modified(self.app)
 
-if gtk.__dict__.has_key("AboutDialog"):
+if "AboutDialog" in gtk.__dict__:
     # About Dialog was added in gtk 2.6.
     class AboutDialog (gtk.AboutDialog):
         def __init__ (self):
@@ -716,10 +722,10 @@ if gtk.__dict__.has_key("AboutDialog"):
                 translators = None
             self.set_name("DRIconf")
             self.set_version(version)
-            self.set_copyright(u"Copyright \u00a9 2003-2005  "
-                               u"Felix K\u00fchling")
+            self.set_copyright("Copyright \u00a9 2003-2005  "
+                               "Felix K\u00fchling")
             self.set_comments(_("A configuration applet for DRI drivers"))
-            self.set_website(u"http://dri.freedesktop.org/wiki/DriConf")
+            self.set_website("http://dri.freedesktop.org/wiki/DriConf")
             if translators:
                 self.set_translator_credits(translators)
             logoPath = findInShared("drilogo.jpg")
@@ -732,14 +738,14 @@ else:
             translators = _("translator-credits")
             if translators == "translator-credits":
                 translators = None
-            text = u"DRIconf %s\n" \
-                   u"%s\n" \
-                   u"Copyright \u00a9 2003-2005  Felix K\u00fchling\n" \
-                   u"\n" \
-                   u"http://dri.freedesktop.org/wiki/DriConf" \
+            text = "DRIconf %s\n" \
+                   "%s\n" \
+                   "Copyright \u00a9 2003-2005  Felix K\u00fchling\n" \
+                   "\n" \
+                   "http://dri.freedesktop.org/wiki/DriConf" \
                    % (version,  _("A configuration applet for DRI drivers"))
             if translators:
-                text = text + (u"\n\n%s: %s" % (_("Translated by"),
+                text = text + ("\n\n%s: %s" % (_("Translated by"),
                                               _("translator-credits")))
             gtk.MessageDialog.__init__(
                 self, mainWindow,

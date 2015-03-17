@@ -104,11 +104,11 @@ COL_TYPE = 2
 COL_INDEX = 2
 
 def addToTreeStore (treestore, parent, dictionary):
-    keys = dictionary.keys()
+    keys = list(dictionary.keys())
     keys.sort()
     for key in keys:
         value = dictionary[key]
-        if type(value) is types.DictType:
+        if type(value) is dict:
             if value:
                 node = treestore.append(parent, [key, "", PREDEF_CATEGORY])
                 addToTreeStore(treestore, node, value)

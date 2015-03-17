@@ -19,8 +19,12 @@
 # Contact: http://fxk.de.vu/
 
 import dri
-import pygtk
-pygtk.require ("2.0")
+#import pygtk
+#pygtk.require ("2.0")
+from gi import pygtkcompat
+
+pygtkcompat.enable()
+pygtkcompat.enable_gtk(version='3.0')
 import gtk
 import gobject
 
@@ -212,7 +216,7 @@ class DeviceDialog (gtk.Dialog):
         table.attach (screenLabel, 0, 1, 1, 2, 0, gtk.EXPAND, 10, 5)
         self.screenCombo = gtk.Combo()
         self.screenCombo.set_popdown_strings (
-            [""]+map(str,range(len(commonui.dpy.screens))))
+            [""]+list(map(str,list(range(len(commonui.dpy.screens))))))
         self.screenCombo.entry.connect ("activate", self.screenSignal)
         self.screenCombo.list.connect ("select_child", self.screenSignal)
         self.screenCombo.show()
@@ -223,7 +227,7 @@ class DeviceDialog (gtk.Dialog):
         table.attach (driverLabel, 0, 1, 2, 3, 0, gtk.EXPAND, 10, 5)
         self.driverCombo = gtk.Combo()
         self.driverCombo.set_popdown_strings (
-            [""]+[str(driver.name) for driver in dri.DisplayInfo.drivers.values()])
+            [""]+[str(driver.name) for driver in list(dri.DisplayInfo.drivers.values())])
         self.driverCombo.show()
         table.attach (self.driverCombo, 1, 2, 2, 3,
                       gtk.EXPAND|gtk.FILL, gtk.EXPAND, 10, 5)
@@ -570,7 +574,7 @@ class ConfigTreeView (gtk.TreeView):
             app = node
             try:
                 driver = app.device.getDriver (commonui.dpy)
-            except dri.XMLError, problem:
+            except dri.XMLError as problem:
                 driver = None
                 dialog = gtk.MessageDialog (
                     commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -726,7 +730,7 @@ class ConfigTreeView (gtk.TreeView):
         # Try to parse the configuration file.
         try:
             newConfig = dri.DRIConfig (cfile)
-        except dri.XMLError, problem:
+        except dri.XMLError as problem:
             dialog = gtk.MessageDialog (
                 commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
@@ -777,7 +781,7 @@ class ConfigTreeView (gtk.TreeView):
             return
         siblings.remove (node)
         siblings.insert (newIndex, node)
-        newOrder = range(len(siblings))
+        newOrder = list(range(len(siblings)))
         newOrder[index] = newIndex
         newOrder[newIndex] = index
         path = self.model.getPathFromNode (parent)

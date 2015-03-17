@@ -21,14 +21,19 @@
 import sys
 import os
 import dri
-import pygtk
-pygtk.require ("2.0")
+#import pygtk
+from gi import pygtkcompat
+
+pygtkcompat.enable()
+pygtkcompat.enable_gtk(version='3.0')
+from functools import reduce
+#pygtk.require ("2.0")
 import gtk
 import gobject
 
-if gtk.check_version(2, 4, 0):
-    print "Error: DRIconf requires GTK 2.4 or newer."
-    sys.exit(1)
+#if gtk.check_version(2, 4, 0):
+#    print("Error: DRIconf requires GTK 2.4 or newer.")
+#    sys.exit(1)
 
 import driconf_commonui
 import driconf_complexui
@@ -50,13 +55,13 @@ def main():
     # read configuration information from the drivers
     try:
         commonui.dpy = dri.DisplayInfo ()
-    except dri.DRIError, problem:
+    except dri.DRIError as problem:
         dialog = gtk.MessageDialog (None, 0, gtk.MESSAGE_ERROR,
                                     gtk.BUTTONS_OK, str(problem))
         dialog.run()
         dialog.destroy()
         return
-    except dri.XMLError, problem:
+    except dri.XMLError as problem:
         dialog = gtk.MessageDialog (
             None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
             _("There are errors in a driver's configuration information:\n"
@@ -84,7 +89,7 @@ def main():
     newFiles = []
     for fileName in fileNameList:
         try:
-            cfile = open (fileName, "r")
+            cfile = open (fileName, "rb")
         except IOError:
             # Make a default configuration file.
             config = dri.DRIConfig (None, fileName)
@@ -108,7 +113,7 @@ def main():
             # Try to parse the configuration file.
             try:
                 config = dri.DRIConfig (cfile)
-            except dri.XMLError, problem:
+            except dri.XMLError as problem:
                 dialog = gtk.MessageDialog (
                     None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
                     _("Configuration file \"%s\" contains errors:\n"
@@ -155,7 +160,7 @@ def main():
             gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
             _("Created new DRI configuration files %s for you.") %
             reduce(lambda a, b: str(a) + ", " + str(b),
-                   map (lambda a: "\"%s\"" % str(a), newFiles)))
+                   ["\"%s\"" % str(a) for a in newFiles]))
         dialog.run()
         dialog.destroy()
 

@@ -20,8 +20,12 @@
 
 import os
 import dri
-import pygtk
-pygtk.require ("2.0")
+from gi import pygtkcompat
+
+pygtkcompat.enable()
+pygtkcompat.enable_gtk(version='3.0')
+#import pygtk
+#pygtk.require ("2.0")
 import gtk
 import gobject
 
@@ -72,7 +76,7 @@ def genNormalDeviceConfigs (configList, dpy):
         defaultApp = dri.AppConfig(deviceConfig, "Default")
         deviceConfig.apps.append(defaultApp)
         for sect in driver.optSections:
-            for opt in sect.options.values():
+            for opt in list(sect.options.values()):
                 defaultApp.options[opt.name] = dri.ValueToStr(opt.default, opt.type)
         deviceConfig.isNormalized = True
         deviceConfigs.append(deviceConfig)
@@ -104,7 +108,7 @@ def genNormalDeviceConfigs (configList, dpy):
                     # Update all option settings. Non-existing options
                     # or invalid values are only considered in
                     # redundant device sections.
-                    for opt,value in app.options.items():
+                    for opt,value in list(app.options.items()):
                         isValid = False
                         if configIsUser and \
                                device.screen != None and device.driver != None:
@@ -344,7 +348,7 @@ class AppPage (gtk.ScrolledWindow):
         self.set_policy (gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         self.driver = driver
         self.app = app
-        self.tooltips = gtk.Tooltips()
+        #self.tooltips = gtk.Tooltips() #TODO: tooltip
         self.table = None
         self.refreshOptions()
 
@@ -363,7 +367,7 @@ class AppPage (gtk.ScrolledWindow):
             sectHasOpts = False
             optI = 0
             for opt in sect.optList:
-                if self.app.options.has_key(opt.name):
+                if opt.name in self.app.options:
                     self.optLines.append(
                         commonui.OptionLine(self, i, opt, True, True))
                     i = i + 1
@@ -380,7 +384,7 @@ class AppPage (gtk.ScrolledWindow):
                                                          width=200)
             addLabel.show()
             self.table.attach(addLabel, 0, 1, i, i+1, gtk.EXPAND|gtk.FILL, 0, 5, 5)
-            addCombo = gtk.ComboBox(self.optionTree)
+            addCombo = gtk.ComboBox() #self.optionTree) #TODO
             addCombo.connect("changed", self.addOption)
             cell = gtk.CellRendererText()
             addCombo.pack_start(cell, True)
@@ -419,7 +423,7 @@ class AppPage (gtk.ScrolledWindow):
         for optLine in self.optLines:
             name = optLine.opt.name
             value = optLine.getValue()
-            if value == None and self.app.options.has_key(name):
+            if value == None and name in self.app.options:
                 del self.app.options[name]
             elif value != None:
                 self.app.options[name] = value
@@ -492,8 +496,7 @@ class MainWindow (gtk.Window):
         buttonBox.set_child_secondary(aboutButton, True)
         buttonBox.show()
         self.vbox.pack_end(buttonBox, False, False, 0)
-        self.expander = gtk.Expander(
-            "<b>" + commonui.escapeMarkup(_("Application settings")) + "</b>")
+        self.expander = gtk.Expander() #"<b>" + commonui.escapeMarkup(_("Application settings")) + "</b>")
         self.expander.set_use_markup(True)
         self.expander.connect("activate", self.expanderChanged)
         self.expander.show()
@@ -574,8 +577,8 @@ class MainWindow (gtk.Window):
             self.sectLabels.append (sectLabel)
         if len(self.sectLabels) > 0:
             style = self.sectLabels[0].get_style()
-            self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
-            self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy()
+            #self.default_normal_fg = style.fg[gtk.STATE_NORMAL].copy()
+            #self.default_active_fg = style.fg[gtk.STATE_ACTIVE].copy() #TODO
         self.validate()
         self.notebook.show()
         self.vbox.pack_start(self.notebook, True, True, 0)
@@ -589,7 +592,7 @@ class MainWindow (gtk.Window):
                                             i])
         self.appTree.append(None,
                             [_("Other application ..."), "", appdb.CUSTOM_APP])
-        self.appCombo = gtk.ComboBox(self.appTree)
+        self.appCombo = gtk.ComboBox()#self.appTree) #TODO: combobox
         if hasattr(self.appCombo, "set_row_separator_func"):
             # Available as of gtk 2.6
             self.appCombo.set_row_separator_func(appdb.isSeparator)
@@ -670,10 +673,11 @@ class MainWindow (gtk.Window):
                 self.sectLabels[index].modify_fg (
                     gtk.STATE_ACTIVE, gtk.gdk.Color (65535, 0, 0))
             else:
-                self.sectLabels[index].modify_fg (
-                    gtk.STATE_NORMAL, self.default_normal_fg)
-                self.sectLabels[index].modify_fg (
-                    gtk.STATE_ACTIVE, self.default_active_fg)
+                pass #TODO
+                #self.sectLabels[index].modify_fg (
+                #    gtk.STATE_NORMAL, self.default_normal_fg)
+                #self.sectLabels[index].modify_fg (
+                #    gtk.STATE_ACTIVE, self.default_active_fg)
             allValid = allValid and valid
             index = index+1
         return allValid        
