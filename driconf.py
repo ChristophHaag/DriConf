@@ -25,6 +25,7 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 import gobject
+import argparse
 
 if gtk.check_version(2, 4, 0):
     print "Error: DRIconf requires GTK 2.4 or newer."
@@ -42,10 +43,10 @@ from driconf_commonui import _
 
 
 def main():
-    if len(sys.argv) >= 2 and sys.argv[1] == "-e":
-        expert = True
-    else:
-        expert = False
+    parser = argparse.ArgumentParser(description='Customize performance and visual quality settings of OpenGL drivers on a per-driver, per-screen and/or per-application level.')
+    parser.add_argument("-e", "--expert", help="Start driconf in Expert Mode", action="store_true", dest="expertui")
+    args = parser.parse_args()
+    expert = args.expertui
 
     # read configuration information from the drivers
     try:
