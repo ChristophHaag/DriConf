@@ -385,6 +385,7 @@ class AppPage (gtk.ScrolledWindow):
             cell = gtk.CellRendererText()
             addCombo.pack_start(cell, True)
             addCombo.add_attribute(cell, 'text', 0)
+            addCombo.set_wrap_width(sectI) # workaround: displays entries horizontally, so it autoexpands sub entries
             addCombo.show()
             self.table.attach(addCombo, 1, 2, i, i+1, gtk.FILL, 0, 5, 5)
         self.table.show()
