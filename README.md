@@ -2,7 +2,7 @@
 Mirror of the essentially dead freedesktop project for configuring dri2/3 on oss drivers
 
 ### Purpose of git:
-The purpose of this git is to continue development of the python program 'DriConf' and carry its feature support into newer graphics drivers such as the recent amdgpu/amdgpu-pro as well as the foss intel and nvidia drivers
+The purpose of this git is to continue development of the python program 'DriConf' and carry its feature support into newer graphics drivers such as the recent **amdgpu/amdgpu-pro** as well as the foss **intel** and **nvidia** drivers
 
 Introduction
 ------------
