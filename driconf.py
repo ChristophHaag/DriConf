@@ -22,7 +22,7 @@ import sys
 import os
 import dri
 import pygtk
-pygtk.require ("2.0")
+pygtk.require("2.0")
 import gtk
 import gobject
 
@@ -34,7 +34,7 @@ import driconf_commonui
 import driconf_complexui
 import driconf_simpleui
 
-commonui = driconf_commonui     # short cuts
+commonui = driconf_commonui  # short cuts
 complexui = driconf_complexui
 simpleui = driconf_simpleui
 
@@ -49,15 +49,15 @@ def main():
 
     # read configuration information from the drivers
     try:
-        commonui.dpy = dri.DisplayInfo ()
+        commonui.dpy = dri.DisplayInfo()
     except dri.DRIError, problem:
-        dialog = gtk.MessageDialog (None, 0, gtk.MESSAGE_ERROR,
-                                    gtk.BUTTONS_OK, str(problem))
+        dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                                   str(problem))
         dialog.run()
         dialog.destroy()
         return
     except dri.XMLError, problem:
-        dialog = gtk.MessageDialog (
+        dialog = gtk.MessageDialog(
             None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
             _("There are errors in a driver's configuration information:\n"
               "%s\n"
@@ -70,46 +70,46 @@ def main():
     configScreens = [screen for screen in commonui.dpy.screens
                      if screen != None]
     if len(configScreens) == 0:
-        dialog = gtk.MessageDialog (
+        dialog = gtk.MessageDialog(
             None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
             _("Could not detect any configurable direct-rendering capable "
-              "devices.")+" "+_("DRIconf will be started in expert mode."))
+              "devices.") + " " + _("DRIconf will be started in expert mode."))
         dialog.run()
         dialog.destroy()
         expert = True
 
     # read or create configuration files
-    fileNameList = ["/etc/drirc", os.path.join (os.environ["HOME"], ".drirc")]
+    fileNameList = ["/etc/drirc", os.path.join(os.environ["HOME"], ".drirc")]
     configList = []
     newFiles = []
     for fileName in fileNameList:
         try:
-            cfile = open (fileName, "r")
+            cfile = open(fileName, "r")
         except IOError:
             # Make a default configuration file.
-            config = dri.DRIConfig (None, fileName)
+            config = dri.DRIConfig(None, fileName)
             config.writable = True
             for screen in configScreens:
-                device = dri.DeviceConfig (config, str(screen.num),
-                                           screen.driver.name)
-                app = dri.AppConfig (device, "all")
-                device.apps.append (app)
-                config.devices.append (device)
+                device = dri.DeviceConfig(config, str(screen.num),
+                                          screen.driver.name)
+                app = dri.AppConfig(device, "all")
+                device.apps.append(app)
+                config.devices.append(device)
             # Try to write the new file. If it fails, don't add this config.
             try:
-                file = open (config.fileName, "w")
+                file = open(config.fileName, "w")
             except IOError:
                 config = None
             else:
-                file.write (str(config))
+                file.write(str(config))
                 file.close()
-                newFiles.append (fileName)
+                newFiles.append(fileName)
         else:
             # Try to parse the configuration file.
             try:
-                config = dri.DRIConfig (cfile)
+                config = dri.DRIConfig(cfile)
             except dri.XMLError, problem:
-                dialog = gtk.MessageDialog (
+                dialog = gtk.MessageDialog(
                     None, 0, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
                     _("Configuration file \"%s\" contains errors:\n"
                       "%s\n"
@@ -121,13 +121,13 @@ def main():
                 continue
             else:
                 # Check if the file is writable in the end.
-                config.writable = commonui.fileIsWritable (fileName)
+                config.writable = commonui.fileIsWritable(fileName)
             cfile.close()
         if config:
-            configList.append (config)
+            configList.append(config)
 
     if len(configList) == 0:
-        dialog = gtk.MessageDialog (
+        dialog = gtk.MessageDialog(
             None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
             _("There are no usable DRI configuration files and a new one "
               "could not be created. Exiting now."))
@@ -142,20 +142,20 @@ def main():
         simpleui.start(configList)
 
     if len(newFiles) == 1:
-        dialog = gtk.MessageDialog (
+        dialog = gtk.MessageDialog(
             commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
-            _("Created a new DRI configuration file \"%s\" for you.")
-            % newFiles[0])
+            _("Created a new DRI configuration file \"%s\" for you.") %
+            newFiles[0])
         dialog.run()
         dialog.destroy()
     elif len(newFiles) > 1:
-        dialog = gtk.MessageDialog (
+        dialog = gtk.MessageDialog(
             commonui.mainWindow, gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
-            _("Created new DRI configuration files %s for you.") %
-            reduce(lambda a, b: str(a) + ", " + str(b),
-                   map (lambda a: "\"%s\"" % str(a), newFiles)))
+            _("Created new DRI configuration files %s for you.") % reduce(
+                lambda a, b: str(a) + ", " + str(b),
+                map(lambda a: "\"%s\"" % str(a), newFiles)))
         dialog.run()
         dialog.destroy()
 
