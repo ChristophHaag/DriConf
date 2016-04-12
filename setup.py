@@ -3,8 +3,8 @@ from distutils.core import setup
 langs = ["de", "es", "it", "ru", "nl"]
 translations = []
 for lang in langs:
-    translations.append (("share/locale/%s/LC_MESSAGES" % lang,
-                          ["%s/LC_MESSAGES/driconf.mo" % lang]))
+    translations.append(("share/locale/%s/LC_MESSAGES" % lang,
+                         ["%s/LC_MESSAGES/driconf.mo" % lang]))
 
 setup(name="driconf",
       version="0.9.1",
@@ -15,9 +15,9 @@ setup(name="driconf",
       py_modules=["dri", "driconf", "driconf_commonui", "driconf_complexui",
                   "driconf_simpleui"],
       scripts=["driconf"],
-      data_files=[("share/driconf", ["card.png", "screen.png", "screencard.png",
-                                     "drilogo.jpg", "driconf-icon.png"])
-                  ] + translations)
+      data_files=[("share/driconf",
+                   ["card.png", "screen.png", "screencard.png", "drilogo.jpg",
+                    "driconf-icon.png"])] + translations)
 
 #
 # Search for obsolete files.
@@ -33,14 +33,14 @@ for prefix in [None, "/usr/local"]:
         pyLibPath = get_python_lib()
     else:
         pyLibPath = get_python_lib(prefix=prefix)
-    if not isdir (pyLibPath):
+    if not isdir(pyLibPath):
         continue
     for f in ["driconf_xpm.py", "driconf_xpm.pyc", "driconf_xpm.pyo",
-              "driconf.py", "driconf.pyc", "driconf.pyo",
-              "dri.py", "dri.pyc", "dri.pyo"]:
-        path = join (pyLibPath, f)
-        if isfile (path):
-            obsoleteFiles.append (path)
+              "driconf.py", "driconf.pyc", "driconf.pyo", "dri.py", "dri.pyc",
+              "dri.pyo"]:
+        path = join(pyLibPath, f)
+        if isfile(path):
+            obsoleteFiles.append(path)
 if obsoleteFiles:
     print "\n*** Obsolete files from previous DRIconf versions were found on " \
           "your system.\n*** Unless you tweaked setup.cfg you can probably " \
@@ -54,7 +54,7 @@ if obsoleteFiles:
 errors = 0
 try:
     import pygtk
-    pygtk.require ("2.0")
+    pygtk.require("2.0")
     import gtk
 except:
     print "\n*** Warning: importing GTK version 2 doesn't work."
