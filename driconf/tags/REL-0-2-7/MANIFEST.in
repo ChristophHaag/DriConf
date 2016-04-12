@@ -1,9 +1,0 @@
-include CHANGELOG COPYING TODO
-include driconf setup.cfg
-include card.png screen.png screencard.png drilogo.jpg
-include Makefile
-include *.po
-recursive-include de *.mo
-recursive-include es *.mo
-recursive-include it *.mo
-recursive-include ru *.mo

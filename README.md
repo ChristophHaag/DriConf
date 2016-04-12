@@ -29,6 +29,8 @@ you may also have to adjust the driconf start-up script accordingly.
 
 To start the installation run the following command as root:
 
+From the 'python' folder
+
     python setup.py install
 
 If everything goes well you should see something like this:
